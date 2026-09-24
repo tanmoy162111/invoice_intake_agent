@@ -12,3 +12,4 @@ node_modules/
 .next/
 storage/
 .claude/settings.local.json
+.planning/HANDOFF.json
