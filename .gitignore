@@ -15,3 +15,4 @@ storage/
 .planning/HANDOFF.json
 *.tsbuildinfo
 data/inbox/
+build/

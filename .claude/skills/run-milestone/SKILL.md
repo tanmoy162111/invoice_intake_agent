@@ -35,5 +35,11 @@ Propose a plan and **stop for approval before writing any code**:
 - Run `make check` and report the real output. If a command doesn't exist yet, say so.
 - Walk through each acceptance criterion for `$ARGUMENTS` and state whether it is met, with evidence (test name, command output, or screenshot). Do not claim a criterion is met without running it.
 
+## 4b. Update the report and manual
+- Add or update the milestone chapter in `docs/report.md` (all three layers, evidence, what is left open), move it on the status board and roadmap, and log new decisions and risks.
+- Update `docs/manual.md`: new guides, reference rows, availability, troubleshooting.
+- Run `make check`; `tests/unit/test_docs.py` fails if they drift from the code.
+- Run `make docs-page`, then republish `build/handbook.html` with the Artifact tool using `url: https://claude.ai/artifact/FThoUF8mfXZwgbeVJSQEEb` so the shared handbook page stays current (it renders the same two Markdown files).
+
 ## 5. Prepare the PR
 Draft the PR description using the template in playbook §14: What changed, Why (link the issue), How it was tested, Screenshots (UI), Eval report (if required), Docs updated. Use conventional commit messages. Do not open, merge, or push without the user asking.

@@ -6,6 +6,11 @@ and routes anything uncertain to a human. It never pays or moves money.
 The full spec is in [`docs/playbook.md`](docs/playbook.md). Working rules for contributors
 (and Claude Code) are in [`CLAUDE.md`](CLAUDE.md).
 
+**Start here, whoever you are:**
+- [`docs/manual.md`](docs/manual.md): how to run and use it (plain words, steps, technical notes).
+- [`docs/report.md`](docs/report.md): what has been built, why, how it works, and what was proved,
+  milestone by milestone. Both are updated in every milestone PR.
+
 ## Run it
 
 Requirements: Docker with Compose. For local development also `uv`, Node 24 and `pnpm`.

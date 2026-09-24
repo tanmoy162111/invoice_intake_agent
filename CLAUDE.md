@@ -9,7 +9,7 @@ Invoice Intake Agent (BeyondAI Demo A). The full spec is in `docs/playbook.md`.
 - Keep all decision logic (validation, dedupe, matching, routing) in `apps/api/src/intake/core/` as pure functions with unit tests. No DB, network, or file I/O there.
 - Money is integer minor units + ISO currency. Never floats.
 - Every state change writes an audit event.
-- Update docs in the same PR as code.
+- Update docs in the same PR as code. Every milestone PR also updates `docs/report.md` (a chapter with all three layers: plain words, how it works, under the hood) and `docs/manual.md`; `test_docs.py` guards them.
 - Run `make check` before saying a task is done.
 
 ## Never

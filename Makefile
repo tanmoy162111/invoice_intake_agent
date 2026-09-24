@@ -1,4 +1,4 @@
-.PHONY: dev seed ingest-inbox generate check check-api check-web eval demo-reset gen-api
+.PHONY: dev seed ingest-inbox docs-page generate check check-api check-web eval demo-reset gen-api
 
 dev:            ## start everything (db, api, worker, web)
 	./scripts/ensure-env.sh
@@ -9,6 +9,9 @@ seed:           ## load demo master data into the db and stage invoices in data/
 
 ingest-inbox:   ## feed data/inbox through ingestion; the worker (make dev) then processes it
 	./scripts/ingest-inbox.sh
+
+docs-page:      ## build build/handbook.html from docs/report.md and docs/manual.md (publish after each milestone)
+	python3 scripts/build-docs-page.py
 
 generate:       ## regenerate the synthetic dataset (deterministic; existing golden files are kept)
 	PYTHONPATH=data uv run --project apps/api --group generator python -m generator.generate
