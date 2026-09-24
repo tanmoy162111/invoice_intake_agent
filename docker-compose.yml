@@ -1,0 +1,62 @@
+# Host ports are configurable so the stack can coexist with other local services.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: intake
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-intake}
+      POSTGRES_DB: intake
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U intake -d intake"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./apps/api
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://intake:${POSTGRES_PASSWORD:-intake}@db:5432/intake
+      STORAGE_DIR: /data/storage
+    command: sh -c "alembic upgrade head && uvicorn intake.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: ./apps/api
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://intake:${POSTGRES_PASSWORD:-intake}@db:5432/intake
+      STORAGE_DIR: /data/storage
+    command: python -m intake.worker
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./apps/web
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+
+volumes:
+  db_data:
+  storage:
