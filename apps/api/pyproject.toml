@@ -16,6 +16,7 @@ dependencies = [
   "python-multipart>=0.0.32",
   "pypdfium2>=5.13.0",
   "pillow>=12.3.0",
+  "anthropic>=1.8.0",
 ]
 
 [dependency-groups]

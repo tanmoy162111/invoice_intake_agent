@@ -71,3 +71,73 @@ def test_money_subtraction() -> None:
     assert Money(500, "USD") - Money(200, "USD") == Money(300, "USD")
     with pytest.raises(ValueError):
         Money(500, "USD") - Money(200, "GBP")
+
+
+def test_parse_same_amount_in_both_number_formats() -> None:
+    assert parse_money("1.234,56", "EUR") == parse_money("1,234.56", "EUR") == Money(123456, "EUR")
+
+
+def test_parse_comma_decimal_without_thousands() -> None:
+    assert parse_money("12,50", "EUR") == Money(1250, "EUR")
+
+
+def test_parse_space_thousands_separator() -> None:
+    assert parse_money("1 234,56", "EUR") == Money(123456, "EUR")
+
+
+def test_parse_leading_minus_for_credit_notes() -> None:
+    assert parse_money("-45.00", "USD") == Money(-4500, "USD")
+
+
+def test_parse_single_dot_with_three_digits_is_rejected_not_guessed() -> None:
+    # "1.234" could be 1234 (thousands) or 1.234 (too precise): uncertain means human.
+    with pytest.raises(ValueError):
+        parse_money("1.234", "EUR")
+
+
+def test_parse_currency_symbol_after_amount() -> None:
+    assert parse_money("1.234,56 €", "EUR") == Money(123456, "EUR")
+
+
+@pytest.mark.parametrize("text", ["7.620,05 EUR", "EUR 7.620,05", "7.620,05 eur", "€ 7.620,05 EUR"])
+def test_parse_accepts_the_matching_currency_code(text: str) -> None:
+    assert parse_money(text, "EUR") == Money(762005, "EUR")
+
+
+def test_parse_rejects_a_different_currency_code() -> None:
+    with pytest.raises(ValueError):
+        parse_money("7,620.05 USD", "EUR")
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["0,500", "1.234.56", "1,23.45", "12,34,567", "01,234", "1,234,56"],
+)
+def test_malformed_or_misgrouped_amounts_are_rejected(text: str) -> None:
+    with pytest.raises(ValueError):
+        parse_money(text, "USD")
+
+
+@pytest.mark.parametrize(
+    ("text", "currency"), [("£100.00", "EUR"), ("€100.00", "USD"), ("$5", "GBP"), ("¥500", "USD")]
+)
+def test_a_currency_symbol_must_match_the_currency(text: str, currency: str) -> None:
+    with pytest.raises(ValueError):
+        parse_money(text, currency)
+
+
+@pytest.mark.parametrize(
+    ("text", "currency", "minor"),
+    [
+        ("$1,234.50", "USD", 123450),
+        ("£100.00", "GBP", 10000),
+        ("¥1,500", "JPY", 1500),
+        ("€ 12,50", "EUR", 1250),
+    ],
+)
+def test_matching_symbols_are_accepted(text: str, currency: str, minor: int) -> None:
+    assert parse_money(text, currency) == Money(minor, currency)
+
+
+def test_comma_before_three_digits_is_thousands_for_two_decimal_currencies() -> None:
+    assert parse_money("1,234", "USD") == Money(123400, "USD")

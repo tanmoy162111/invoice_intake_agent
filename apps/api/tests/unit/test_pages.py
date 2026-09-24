@@ -1,4 +1,5 @@
 import io
+import os
 
 import pytest
 from PIL import Image
@@ -64,3 +65,25 @@ def test_tone_range_separates_blank_from_content() -> None:
         for y in range(40, 60):
             page.putpixel((x, y), (0, 0, 0))
     assert tone_range(blank) < 15 < tone_range(page)
+
+
+def test_fit_for_model_leaves_small_pages_alone() -> None:
+    from intake.extract.pages import fit_for_model
+
+    buf = io.BytesIO()
+    Image.new("RGB", (200, 200), "white").save(buf, "PNG")
+    png = buf.getvalue()
+    assert fit_for_model(png) == (png, "image/png")
+
+
+def test_fit_for_model_shrinks_huge_pages_under_the_limit() -> None:
+    from intake.extract.pages import fit_for_model
+
+    noisy = Image.frombytes("RGB", (1800, 1800), os.urandom(1800 * 1800 * 3))
+    buf = io.BytesIO()
+    noisy.save(buf, "PNG")
+    assert len(buf.getvalue()) > 6_000_000
+    data, media = fit_for_model(buf.getvalue(), max_bytes=1_000_000)
+    assert media == "image/jpeg"
+    assert len(data) <= 1_000_000
+    assert data[:2] == b"\xff\xd8"  # a JPEG

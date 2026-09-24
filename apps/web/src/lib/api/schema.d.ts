@@ -75,6 +75,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/extraction/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Extraction Status
+         * @description Model spend against today's cap, and whether extraction is paused.
+         */
+        get: operations["extraction_status_extraction_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -120,6 +140,27 @@ export interface components {
             /** Fix */
             fix: string;
         };
+        /** ExtractionStatus */
+        ExtractionStatus: {
+            /** Configured */
+            configured: boolean;
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Spent Today Usd Micros */
+            spent_today_usd_micros: number;
+            /** Daily Cap Usd Micros */
+            daily_cap_usd_micros: number;
+            /** Cap Reached */
+            cap_reached: boolean;
+            /** Paused Jobs */
+            paused_jobs: number;
+            /** Resumes At */
+            resumes_at: string | null;
+        };
         /** FailedJob */
         FailedJob: {
             /**
@@ -152,6 +193,8 @@ export interface components {
             };
             /** Stuck */
             stuck: number;
+            /** Paused */
+            paused: number;
             /** Oldest Queued Age S */
             oldest_queued_age_s: number | null;
             /** Failed */
@@ -312,6 +355,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extraction_status_extraction_status_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionStatus"];
                 };
             };
             /** @description Validation Error */

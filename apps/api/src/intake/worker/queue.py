@@ -3,7 +3,7 @@ reaper for jobs whose worker died. All timestamps come from the database clock."
 
 import uuid
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy import func, select
@@ -16,6 +16,16 @@ from intake.core.statuses import ActorType, JobStatus
 from intake.db.models import Job
 
 MAX_ERROR_CHARS = 500
+# Reasons a job is paused on purpose (not failed). Deferring does not use up an attempt.
+PAUSE_REASONS = ("SPEND_CAP_REACHED", "EXTRACTION_NOT_CONFIGURED")
+
+
+@dataclass(frozen=True)
+class Deferral:
+    """A handler's answer when it can't do the work yet (spend cap reached, not configured)."""
+
+    until: datetime
+    reason: str
 
 
 def enqueue(
@@ -74,6 +84,22 @@ def complete(session: Session, job: Job, *, attempt: int | None = None) -> bool:
     job.status = JobStatus.DONE.value
     job.locked_at = None
     job.last_error = None
+    session.flush()
+    return True
+
+
+def defer(
+    session: Session, job: Job, *, until: datetime, reason: str, attempt: int | None = None
+) -> bool:
+    """Pause a running job until `until` without counting the run as an attempt (the work never
+    started). Returns False, recording nothing, if this worker no longer owns the job."""
+    if not _still_ours(session, job, attempt):
+        return False
+    job.status = JobStatus.QUEUED.value
+    job.attempts = max(job.attempts - 1, 0)
+    job.run_after = until
+    job.locked_at = None
+    job.last_error = reason
     session.flush()
     return True
 
@@ -146,6 +172,7 @@ class QueueStats:
     counts: dict[str, int]
     stuck: int
     oldest_queued_age_s: float | None
+    paused: int = 0  # deferred on purpose (spend cap, extraction not configured)
 
 
 def stats(session: Session, *, timeout_s: int, tenant_id: uuid.UUID | None = None) -> QueueStats:
@@ -170,4 +197,16 @@ def stats(session: Session, *, timeout_s: int, tenant_id: uuid.UUID | None = Non
             *scope, Job.status == JobStatus.QUEUED.value, Job.run_after <= func.now()
         )
     )
-    return QueueStats(counts, int(stuck or 0), float(age) if age is not None else None)
+    paused = session.scalar(
+        select(func.count())
+        .select_from(Job)
+        .where(
+            *scope,
+            Job.status == JobStatus.QUEUED.value,
+            Job.run_after > func.now(),
+            Job.last_error.in_(PAUSE_REASONS),
+        )
+    )
+    return QueueStats(
+        counts, int(stuck or 0), float(age) if age is not None else None, int(paused or 0)
+    )

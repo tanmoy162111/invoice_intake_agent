@@ -1,4 +1,6 @@
+from decimal import Decimal
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -12,7 +14,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     storage_dir: str = "./storage"
     anthropic_api_key: str = ""
-    extraction_model: str = ""
+    extraction_model: str = "claude-sonnet-5"
     bank_encryption_key: str = ""
 
     # Auth (interim static token until real login in M8). Empty means all protected routes refuse.
@@ -25,12 +27,30 @@ class Settings(BaseSettings):
     render_dpi: int = 200
     max_image_pixels: int = 25_000_000
 
+    # Which model backend reads invoices. "ollama" is an optional local, demo-only backend.
+    llm_provider: Literal["anthropic", "ollama"] = "anthropic"
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_num_ctx: int = 8192
+
+    # Extraction (playbook §6.2). Money is Decimal dollars here, integer micros everywhere else.
+    extraction_prompt_version: str = "v1"
+    extract_max_output_tokens: int = 8000
+    extract_max_input_tokens: int = 100_000
+    extract_timeout_s: float = 120.0
+    daily_spend_cap_usd: Decimal = Decimal("5")  # 0 pauses all extraction
+    extract_not_configured_retry_s: int = 300
+    field_confidence_min: Decimal = Decimal("0.8")  # playbook §6.3
+
     # Job queue
     job_max_attempts: int = 3
     job_backoff_base_s: int = 10
     job_backoff_cap_s: int = 600
     job_visibility_timeout_s: int = 300
     worker_poll_interval_s: float = 2.0
+
+    @property
+    def daily_spend_cap_micros(self) -> int:
+        return int(self.daily_spend_cap_usd * 1_000_000)
 
 
 @lru_cache

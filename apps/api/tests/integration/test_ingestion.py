@@ -45,7 +45,9 @@ def make_settings(db_url: str, tmp_path: Path, **kw: Any) -> Settings:
 @pytest.fixture(autouse=True)
 def clean_tables(engine: Engine) -> None:
     with engine.begin() as conn:
-        for t in ("jobs", "invoice_lines", "invoices", "documents"):
+        for t in (
+            "jobs", "llm_calls", "field_extractions", "invoice_lines", "invoices", "documents",
+        ):  # fmt: skip
             conn.execute(text(f"delete from {t}"))
 
 
@@ -145,8 +147,9 @@ def test_worker_picks_up_the_job_and_processes_the_document(
 ) -> None:
     name, content = sample("clean")
     body = upload(client, name, content).json()
-    assert run_once(engine, storage, settings) is True
-    assert run_once(engine, storage, settings) is False  # queue drained
+    assert run_once(engine, storage, settings) is True  # process_document
+    assert run_once(engine, storage, settings) is True  # extract_invoice: no API key, so paused
+    assert run_once(engine, storage, settings) is False  # nothing runnable until it resumes
 
     with Session(engine) as s:
         doc = s.get_one(Document, uuid.UUID(body["document_id"]))
@@ -157,7 +160,8 @@ def test_worker_picks_up_the_job_and_processes_the_document(
     assert events(engine, body["invoice_id"]) == [
         "document_received", "status_changed", "document_processed",
     ]  # fmt: skip
-    assert client.get("/jobs", headers=AUTH).json()["counts"]["done"] == 1
+    counts = client.get("/jobs", headers=AUTH).json()["counts"]
+    assert (counts["done"], counts["queued"]) == (1, 1)  # the paused extract job waits
     assert (
         client.get(f"/documents/{body['document_id']}", headers=AUTH).json()["doc_quality"]
         == "clean"

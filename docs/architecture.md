@@ -84,3 +84,44 @@ Worker: claim (SKIP LOCKED) ─▶ render pages (200 DPI PNG) + text layer ─�
 - **Lost workers:** the reaper re-queues (or fails) jobs whose lock expired using the same retry rule as
   normal failures, and writes an audit event. A worker that finishes after losing its lock cannot record
   a result (the claim is fenced by status and attempt number).
+
+## Extraction (M3)
+
+```
+process_document ─▶ enqueue extract_invoice ─▶ blank? ─▶ over budget? ─▶ cache hit? ─▶ cap reached?
+   (M2)                                         fail       fail           reuse          defer to 00:00 UTC
+                                                                                            │ no
+        ┌───────────────────────────────────────────────────────────────────────────────────┘
+        ▼
+  LlmClient.extract (strict tool, forced choice where allowed) ─▶ validate (schema + Python) ─┬─ ok ─▶ log + cache
+        ▲                                                                                    └─ bad ─▶ retry once with the error
+        └─────────────────────────────────────────────────────────────────────────────────── then `failed`
+  ─▶ core/extraction.interpret (normalize, score) ─▶ invoices, invoice_lines, field_extractions ─▶ extracted
+```
+
+- **Seam:** `extract/llm.py::LlmClient` (`extract`, `cost_micros`). Implementations: `AnthropicClient`
+  (default), `OllamaClient` (optional, demo only), `RecordedClient` (tests). `extract/factory.py` picks
+  one from `LLM_PROVIDER`, or none when not configured (jobs then pause, they do not fail).
+- **Anthropic call:** one strict tool `record_invoice` whose `input_schema` is generated from the
+  Pydantic `InvoiceExtraction`. `tool_choice` is forced except on Opus 5.5 and Fable 5.1, which reject
+  it (they get `auto` plus `strict`). Page images go first, each labelled, then the text layer, then the
+  instruction. The SDK retries connection errors, 408/409/429 and 5xx twice; what survives becomes a job
+  failure, which the queue retries with backoff.
+- **Cache and spend** (`extract/service.py`): `llm_calls.response` holds the validated answer (bank
+  account sealed); a hit makes no call and writes no row. Spend is the sum of `cost_usd_micros` since
+  00:00 UTC. Every row is written in its own transaction, so a paid answer survives a later rollback.
+- **Deferral:** a handler may return `Deferral(until, reason)`. The runner re-queues the job for later
+  without using an attempt. Reasons: `SPEND_CAP_REACHED`, `EXTRACTION_NOT_CONFIGURED`. One
+  `extraction_paused` audit event per pause.
+- **Gave up:** when a `process_document` or `extract_invoice` job uses its last attempt, the invoice
+  becomes `failed` with reason `JOB_FAILED:<ExceptionClass>` (it never stays in `received`).
+- **Decision logic** is in `core/`: `numbers.py` (strict number shapes), `money.py`, `normalize.py`,
+  `confidence.py`, `extraction.py`, `llm_budget.py`. All pure; the pipeline only loads, calls, stores.
+- **Uncertain means empty:** ambiguous dates, numbers (`1.200`), currencies (a bare `$` or `¥` unless
+  the supplier's default currency settles it), unreadable amounts and unknown currencies become null
+  with confidence 0 and a `normalize_error` code in `signals`.
+- **Field names** in `field_extractions`: the 13 header fields by name, line fields as
+  `line.<n>.<field>`.
+- **Known limits of the text-layer check:** it asks whether a value appears anywhere in the document
+  text, not where. A swapped invoice and due date, or a total equal to a line amount, still agrees.
+  Position-aware checks come with validation (M4).

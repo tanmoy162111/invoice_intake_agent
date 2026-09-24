@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M2 (ingestion and job queue), 2026-09-25.
+> **Describes:** the system after M3 (extraction), 2026-09-25.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -47,13 +47,13 @@ Every invoice moves through these steps. Each change is written to a permanent h
 | Status | Plain meaning | Reached by |
 |---|---|---|
 | `received` | We have the file and it is waiting to be read | Today (M2) |
-| `extracting` / `extracted` | Fields are being read / have been read | [M3] |
+| `extracting` / `extracted` | Fields are being read / have been read | Today (M3) |
 | `checking` | The checks are running | [M4 to M7] |
 | `cleared` | All checks passed and confidence is high; waits for one-click approval | [M7] |
 | `needs_review` | A person must look | [M7] |
 | `approved` / `rejected` | A person decided | [M8] |
 | `exported` | Handed to the accounting system | [M12] |
-| `failed` | Reading failed; can be retried | [M3] |
+| `failed` | Reading failed, with a reason (section 5.6); can be retried | Today (M3) |
 
 An invoice above the approval limit always needs a person, even if every check passed.
 
@@ -69,8 +69,14 @@ Each has a **severity**:
 
 ### Confidence and document quality
 
-- **Confidence** says how sure the system is about each field it read [M3]. Low confidence sends the
-  invoice to a person. **Uncertain means human.**
+- **Confidence** says how sure the system is about each field it read (0 to 100%). It combines four
+  signals: the model's own opinion, whether the value appears in the document's text, whether the
+  arithmetic supports it, and whether the supplier is already known. The model's opinion is never
+  enough on its own, and any signal that *contradicts* a value keeps it under 80%. Low confidence
+  will send the invoice to a person once routing exists (M7). **Uncertain means human.**
+- **Not found is not guessed.** A value that is not on the invoice is stored as empty. A value that
+  cannot be read without guessing (a date like 03/04/2026, a quantity like 1.200, a bare `$` from a
+  supplier that normally bills in another currency) is also left empty, with confidence 0.
 - **Document quality** describes the file: `clean` (a digital PDF with real text), `scanned` (a picture
   of a page), `photo` (a phone picture), `unknown` (blank or unusable). Accuracy is always reported
   separately for each, because a photo is harder than a clean PDF.
@@ -172,6 +178,71 @@ docker compose down        # stop, keep data
 docker compose down -v     # stop and erase the database and stored files
 ```
 
+### 4.6 Turn reading on
+
+Reading invoices needs a model. Set these in `.env`, then restart the worker
+(`docker compose restart worker`):
+
+| Setting | Value |
+|---|---|
+| `ANTHROPIC_API_KEY` | Your key from the Claude Console |
+| `EXTRACTION_MODEL` | `claude-sonnet-5` (the default) |
+| `BANK_ENCRYPTION_KEY` | Generated for you by `make dev` |
+
+Until this is set, extraction jobs **wait** (they are not failed): `GET /extraction/status` says
+`"configured": false`, and `GET /jobs` shows them under `paused`. Nothing is lost. Once configured, the
+waiting jobs run on their own within a few minutes.
+
+**Cost.** Model calls are the only part of the system that costs money. They are estimated (not yet
+measured) at one to three US cents for a one-page invoice. A daily limit protects you (next guide). The
+same file is never read twice: the answer is kept.
+
+### 4.7 Watch the spending limit
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/extraction/status
+```
+
+| Field | Meaning |
+|---|---|
+| `configured` | A model, credentials and the bank key are set |
+| `spent_today_usd_micros`, `daily_cap_usd_micros` | Spend since 00:00 UTC and the limit, in millionths of a dollar (1,000,000 = 1 USD) |
+| `cap_reached` | `true`: reading is paused until `resumes_at` (next 00:00 UTC) |
+| `paused_jobs` | Jobs waiting because of the limit or because reading is not configured |
+
+Raise the limit with `DAILY_SPEND_CAP_USD` in `.env` and restart the worker; paused jobs then resume.
+`DAILY_SPEND_CAP_USD=0` pauses all reading. The limit is checked before each call, so with several workers
+it can be overshot by about one call each.
+
+### 4.8 See what was read
+
+There is no reviewer screen yet (M8). To look at one invoice, ask the database:
+
+```bash
+docker compose exec db psql -U intake -c "
+  select field, raw_value, normalized_value, confidence, signals
+  from field_extractions
+  where invoice_id = '<invoice-id>' and field <> 'supplier_bank_account'
+  order by field;"
+```
+
+Amounts appear in `normalized_value` as whole cents. `confidence` is 0 to 1. `signals` says *why*
+(model opinion, text check, arithmetic, known supplier) or, for a value left empty, the reason
+(section 5.7). Bank accounts are stored encrypted and are deliberately left out of this query. The
+invoice's own columns (number, dates, totals, currency) and its lines are in `invoices` and
+`invoice_lines`.
+
+### 4.9 Try it with a local model (demo only)
+
+To run the demo with nothing leaving your computer, install [Ollama](https://ollama.com), pull a vision
+model, then set in `.env`: `LLM_PROVIDER=ollama`, `EXTRACTION_MODEL=<the model name from ollama list>`,
+and inside Docker `OLLAMA_BASE_URL=http://host.docker.internal:11434`. Restart the worker.
+
+Know the trade-offs: small local models read invoices noticeably worse than Claude, they are slower and
+need a lot of memory, and **any accuracy you measure does not apply to the Claude-based system**. Invoice
+pages are sent to whatever address `OLLAMA_BASE_URL` points at, so keep it on hardware you control.
+Never use hosted free-tier models with real data: they may learn from what you send.
+
 ---
 
 ## 5. Reference
@@ -195,8 +266,9 @@ invoice exception (section 6).
 |---|---|---|
 | `GET /health` | Is the API alive? | No |
 | `POST /documents` | Upload a file | Yes |
-| `GET /documents/{id}` | Look up a document | Yes |
-| `GET /jobs` | Queue health | Yes |
+| `GET /documents/{document_id}` | Look up a document | Yes |
+| `GET /jobs` | Queue health, including jobs paused on purpose | Yes |
+| `GET /extraction/status` | Model spend against the daily limit, and whether reading is paused | Yes |
 | `GET /openapi.json` | Machine-readable description of the API | Yes |
 
 Send the token as `Authorization: Bearer <token>`. The token is a temporary arrangement until real
@@ -229,7 +301,17 @@ login arrives in M8. If no token is configured the server refuses everything exc
 | `JOB_BACKOFF_BASE_S` / `_CAP_S` | 10 / 600 | Wait before a retry: 10 s, 20 s, 40 s ... up to 10 min |
 | `JOB_VISIBILITY_TIMEOUT_S` | 300 | When a running job counts as stuck |
 | `WORKER_POLL_INTERVAL_S` | 2 | How often the worker looks for work |
-| `ANTHROPIC_API_KEY`, `EXTRACTION_MODEL` | empty | Used from M3 |
+| `LLM_PROVIDER` | `anthropic` | `anthropic`, or `ollama` (local, demo only) |
+| `ANTHROPIC_API_KEY` | empty | Your key. Empty means reading is paused, not failed |
+| `EXTRACTION_MODEL` | `claude-sonnet-5` | Which model reads invoices. Must have a known price, or it is refused |
+| `DAILY_SPEND_CAP_USD` | 5 | Most model spend per UTC day. 0 pauses all reading |
+| `EXTRACTION_PROMPT_VERSION` | `v1` | Which prompt file is used (`apps/api/src/intake/extract/prompts/`) |
+| `EXTRACT_MAX_OUTPUT_TOKENS` | 8000 | Longest answer the model may give |
+| `EXTRACT_MAX_INPUT_TOKENS` | 100000 | Largest estimated document; bigger is failed before any spend |
+| `EXTRACT_TIMEOUT_S` | 120 | How long one model call may take before it counts as a failure to retry |
+| `EXTRACT_NOT_CONFIGURED_RETRY_S` | 300 | How often a paused job checks whether reading has been configured |
+| `FIELD_CONFIDENCE_MIN` | 0.8 | Below this a critical field counts as doubtful |
+| `OLLAMA_BASE_URL`, `OLLAMA_NUM_CTX` | `http://localhost:11434`, 8192 | Local model address and context size |
 
 `.env` holds secrets and is never committed to version control.
 
@@ -237,7 +319,7 @@ login arrives in M8. If no token is configured the server refuses everything exc
 
 | Folder | Contents |
 |---|---|
-| `apps/api` | The API and worker (Python) |
+| `apps/api` | The API and worker (Python). Prompts are in `src/intake/extract/prompts/` |
 | `apps/web` | The web page (Next.js) |
 | `data/seed` | The 120 demo invoices, answer keys (`truth/`), `master.json`, `MANIFEST.md` |
 | `data/golden` | The fixed 60-invoice test set for accuracy. Never edited |
@@ -247,6 +329,33 @@ login arrives in M8. If no token is configured the server refuses everything exc
 **Technical notes.** Stored files live under `storage/<tenant>/originals/` (named by SHA-256) and
 `storage/<tenant>/pages/<document>/` (page PNGs and `text.json`). In Compose this is the `storage`
 volume shared by the API and worker.
+
+### 5.6 Why an invoice can be `failed`
+
+The reason is in the invoice's history (`status_changed` and `extraction_failed`).
+
+| Reason | Meaning | What to do |
+|---|---|---|
+| `UNREADABLE_DOCUMENT` | The page is blank; nothing was sent to the model | Ask the supplier for a clear copy |
+| `TOO_MANY_PAGES`, `TOO_MANY_TOKENS` | Over the per-document budget; nothing was sent | Upload only the invoice pages |
+| `SCHEMA_INVALID` | The model twice gave an answer that did not fit the required form | Try again later; report if it repeats |
+| `JOB_FAILED:<Class>` | A background job used all its attempts; the class names the kind of error (for example `TransientLlmError` for a provider outage, `PermanentLlmError` for a rejected key) | Fix the cause, then re-queue (runbook) |
+
+Other history entries: `extraction_completed` (model, prompt version, whether the answer was reused,
+cost, and any doubtful critical fields) and `extraction_paused` (the limit was reached).
+
+### 5.7 Why a value was left empty
+
+Shown in `signals.normalize_error` of `field_extractions`. Confidence is 0 for all of these.
+
+| Code | Meaning |
+|---|---|
+| `AMBIGUOUS_DATE` | Could be day-first or month-first (`03/04/2026`). Dotted dates (`07.06.2026`) are read day-first |
+| `AMBIGUOUS_NUMBER` | Could be a thousands mark or a decimal mark (`1.200`, `1.234` as an amount) |
+| `AMBIGUOUS_CURRENCY` | A bare `$` or `¥`, and the supplier's usual currency does not settle it |
+| `UNSUPPORTED_CURRENCY` | A currency we do not handle yet (supported: USD, EUR, GBP, JPY) |
+| `NO_CURRENCY` | An amount was printed but the currency is unknown, so the amount was not read |
+| `UNPARSEABLE` | Not a date or number we can read (`about a thousand`, `1.234.56`, a currency that does not match) |
 
 ---
 
@@ -283,7 +392,6 @@ today and every one is planted in the demo data.** The exact wording comes from
 
 | When | You will be able to |
 |---|---|
-| M3 | See fields read from each invoice, with confidence and page location |
 | M4 to M7 | See every problem explained with real numbers and a suggested fix, and each invoice routed |
 | M8 | Work the review queue in a browser, on a phone too; correct fields; approve or reject |
 | M9 | Read the complete history of any invoice |
@@ -305,6 +413,12 @@ today and every one is planted in the demo data.** The exact wording comes from
 - **Nothing pays or transfers money.** There is no code that can.
 - **The history cannot be tampered with.** The database itself blocks edits and deletes.
 - **Limits protect the system** from oversized or booby-trapped files.
+- **The model's answer is checked, not trusted.** It must fit a strict form, is validated again, and
+  nothing it says can change a status or a decision. Text inside an invoice that tries to give
+  instructions is ignored.
+- **Bank details stay protected** in the extracted fields and in the saved model answers.
+- **Spending has a daily limit** and every model call is logged with its cost.
+- **What the model provider sees** and how long they keep it: [`data-handling.md`](data-handling.md).
 
 **Before using real client data,** read the open items in the report (section 7): sandboxing, container
 hardening, the database password and encryption of stored files.
@@ -322,6 +436,11 @@ hardening, the database password and encryption of stored files.
 | Upload gives `201` but `doc_quality` stays `unknown` | Worker has not run yet | Wait a few seconds; check `/jobs` and the worker logs |
 | `make ingest-inbox` says `data/inbox is missing` | Demo not seeded | Run `make seed` first |
 | Same file "not created" | It was already uploaded (`200`, `duplicate: true`) | Expected behaviour |
+| Invoices stay `received` and `/jobs` shows `paused` | Reading is not configured, or the daily limit is reached | `GET /extraction/status`; set the key (section 4.6) or raise the limit (4.7) |
+| `extraction_paused` in an invoice's history | The daily limit was reached | It resumes at 00:00 UTC, or raise `DAILY_SPEND_CAP_USD` |
+| Invoice is `failed` | See the reason in section 5.6 | Fix the cause, then re-queue (runbook) |
+| Currency and amounts are empty for an invoice | A bare `$` the supplier's usual currency does not settle, or another reason in section 5.7 | Expected: a person confirms it (M8) |
+| Almost every scanned or photo field is under 80% | No text layer to check against | Expected: they need supporting evidence, or a person |
 
 More on operations: [`runbook.md`](runbook.md). Design details: [`architecture.md`](architecture.md).
 
@@ -334,9 +453,12 @@ More on operations: [`runbook.md`](runbook.md). Design details: [`architecture.m
 | **Accounts payable (AP)** | The team that checks and pays supplier invoices |
 | **API** | The front door programs use to talk to the system |
 | **Audit log** | The permanent, tamper-proof history of every action |
+| **Cache (saved answer)** | The model's answer for a file, kept so the same file is never paid for twice |
 | **Confidence** | How sure the system is about a value it read |
+| **Daily spend cap** | The most the system may spend on model calls in one UTC day; reading pauses when it is reached |
 | **Duplicate** | The same invoice received more than once |
 | **Exception** | A problem the system found, with an explanation and a suggested fix |
+| **Extraction** | Reading an invoice into fields: supplier, dates, amounts, lines |
 | **False clear** | An invoice wrongly passed as fine. The number we most want at zero |
 | **Golden set** | 60 documents kept fixed to measure accuracy honestly over time |
 | **Goods receipt** | Record that ordered goods actually arrived |
@@ -346,6 +468,7 @@ More on operations: [`runbook.md`](runbook.md). Design details: [`architecture.m
 | **SHA-256 fingerprint** | A short code that identifies a file's exact contents |
 | **Synthetic data** | Made-up documents that look real |
 | **Tenant** | One client's separate slice of the system |
+| **Text layer** | The text already inside a digital PDF, used to double-check what was read from the picture |
 | **Three-way match** | Comparing the invoice, the purchase order and the goods receipt |
 | **Touchless rate** | Share of invoices cleared with no human work |
 | **Worker** | The background program that processes jobs |

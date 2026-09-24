@@ -279,6 +279,7 @@ class AuditEvent(Base):
 
 class LlmCall(Base):
     __tablename__ = "llm_calls"
+    __table_args__ = (Index("ix_llm_calls_tenant_created", "tenant_id", "created_at"),)
     id: Mapped[uuid.UUID] = uuid_pk()
     tenant_id: Mapped[uuid.UUID] = tenant_fk()
     invoice_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -292,6 +293,8 @@ class LlmCall(Base):
     latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(Text, nullable=False)
     request_hash: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    # The validated model answer of an "ok" call: this is the cache (key: request_hash).
+    response: Mapped[dict[str, Any] | None] = mapped_column(Json)
     created_at: Mapped[datetime] = created_at()
 
 
