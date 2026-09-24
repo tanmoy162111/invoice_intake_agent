@@ -252,7 +252,8 @@ def test_bank_accounts_are_never_stored_in_the_clear(env: Env) -> None:
 
 def test_every_call_is_logged_once_with_cost(env: Env) -> None:
     with Session(env.engine) as s:
-        rows = s.execute(select(LlmCall)).scalars().all()
+        tenant = uuid.UUID(MASTER["tenant"]["id"])
+        rows = s.execute(select(LlmCall).where(LlmCall.tenant_id == tenant)).scalars().all()
     assert len(rows) == len(TRUTHS) == env.client.calls
     assert {r.model for r in rows} == {MODEL} and {r.prompt_version for r in rows} == {"v1"}
     assert all(r.status == "ok" and r.cost_usd_micros == 10_000 for r in rows)  # 1500 in + 700 out
