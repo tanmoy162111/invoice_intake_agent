@@ -6,7 +6,7 @@ Anything ambiguous raises rather than guessing: uncertain means human.
 import re
 import unicodedata
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from intake.core.money import CURRENCY_EXPONENT
 
@@ -107,10 +107,7 @@ def parse_quantity(text: str) -> Decimal:
         dec_pos = -1 if pos < 0 or thousands else pos
     whole, frac = (raw[:dec_pos], raw[dec_pos + 1 :]) if dec_pos >= 0 else (raw, "")
     digits = whole.replace(".", "").replace(",", "")
-    try:
-        value = Decimal(f"{digits}.{frac}" if frac else digits)
-    except InvalidOperation:
-        raise ValueError(f"not a quantity: {text!r}") from None
+    value = Decimal(f"{digits}.{frac}" if frac else digits)
     return -value if negative else value
 
 

@@ -44,7 +44,9 @@ def test_parse_date_same_day_and_month_is_not_ambiguous() -> None:
     assert parse_date("05/05/2026") == date(2026, 5, 5)
 
 
-@pytest.mark.parametrize("bad", ["", "not a date", "31/02/2026", "2026-13-01", "13/13/2026"])
+@pytest.mark.parametrize(
+    "bad", ["", "not a date", "31/02/2026", "2026-13-01", "13/13/2026", "13 Foo 2026"]
+)
 def test_parse_date_rejects_garbage_and_impossible_dates(bad: str) -> None:
     with pytest.raises(ValueError):
         parse_date(bad)
