@@ -1,4 +1,17 @@
-from intake.core.normalize import normalize_bank_account
+from datetime import date
+from decimal import Decimal
+
+import pytest
+
+from intake.core.normalize import (
+    AmbiguousDateError,
+    normalize_bank_account,
+    normalize_currency,
+    normalize_supplier_name,
+    parse_date,
+    parse_quantity,
+    parse_tax_rate,
+)
 
 
 def test_bank_account_strips_spaces_and_dashes_and_uppercases() -> None:
@@ -7,3 +20,103 @@ def test_bank_account_strips_spaces_and_dashes_and_uppercases() -> None:
 
 def test_bank_account_empty() -> None:
     assert normalize_bank_account(" - ") == ""
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["2026-03-13", "13/03/2026", "13.03.2026", "03/13/2026", "March 13, 2026", "13 Mar 2026"],
+)
+def test_parse_date_unambiguous_formats(text: str) -> None:
+    assert parse_date(text) == date(2026, 3, 13)
+
+
+def test_parse_date_ambiguous_slash_raises_instead_of_guessing() -> None:
+    with pytest.raises(AmbiguousDateError):
+        parse_date("03/04/2026")
+
+
+def test_parse_date_ambiguous_resolved_by_hint() -> None:
+    assert parse_date("03/04/2026", day_first=True) == date(2026, 4, 3)
+    assert parse_date("03/04/2026", day_first=False) == date(2026, 3, 4)
+
+
+def test_parse_date_same_day_and_month_is_not_ambiguous() -> None:
+    assert parse_date("05/05/2026") == date(2026, 5, 5)
+
+
+@pytest.mark.parametrize("bad", ["", "not a date", "31/02/2026", "2026-13-01", "13/13/2026"])
+def test_parse_date_rejects_garbage_and_impossible_dates(bad: str) -> None:
+    with pytest.raises(ValueError):
+        parse_date(bad)
+
+
+def test_parse_date_two_digit_year_is_rejected() -> None:
+    with pytest.raises(ValueError):
+        parse_date("13/03/26")
+
+
+@pytest.mark.parametrize(
+    ("text", "code"),
+    [("USD", "USD"), (" eur ", "EUR"), ("€", "EUR"), ("£", "GBP"), ("$", "USD"), ("¥", "JPY")],
+)
+def test_normalize_currency(text: str, code: str) -> None:
+    assert normalize_currency(text) == code
+
+
+@pytest.mark.parametrize("bad", ["", "XXX", "dollars", "US"])
+def test_normalize_currency_rejects_unknown(bad: str) -> None:
+    with pytest.raises(ValueError):
+        normalize_currency(bad)
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("12", "12"),
+        ("12.5", "12.5"),
+        ("1,200", "1200"),
+        ("1.200,5", "1200.5"),
+        ("1,200.5", "1200.5"),
+        ("1,5", "1.5"),
+        ("0.25", "0.25"),
+        (" 3 ", "3"),
+    ],
+)
+def test_parse_quantity(text: str, expected: str) -> None:
+    assert parse_quantity(text) == Decimal(expected)
+
+
+@pytest.mark.parametrize("bad", ["", "abc", "1.2.3x", "-", "1e3"])
+def test_parse_quantity_rejects_garbage(bad: str) -> None:
+    with pytest.raises(ValueError):
+        parse_quantity(bad)
+
+
+def test_parse_quantity_negative_for_credit_notes() -> None:
+    assert parse_quantity("-2") == Decimal("-2")
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [("19%", "19"), ("19.00 %", "19"), ("7,5%", "7.5"), ("0%", "0"), ("20", "20")],
+)
+def test_parse_tax_rate_is_percent(text: str, expected: str) -> None:
+    assert parse_tax_rate(text) == Decimal(expected)
+
+
+@pytest.mark.parametrize("bad", ["", "abc", "-5%", "150%"])
+def test_parse_tax_rate_rejects_out_of_range_or_garbage(bad: str) -> None:
+    with pytest.raises(ValueError):
+        parse_tax_rate(bad)
+
+
+def test_supplier_name_trimmed_casefolded_whitespace_collapsed() -> None:
+    assert normalize_supplier_name("  Rheinwerk   Bürobedarf\tGmbH ") == "rheinwerk bürobedarf gmbh"
+
+
+def test_supplier_name_unicode_forms_compare_equal() -> None:
+    assert normalize_supplier_name("Büro AG") == normalize_supplier_name("Büro AG")
+
+
+def test_supplier_name_casefold_handles_sharp_s() -> None:
+    assert normalize_supplier_name("STRASSE Ltd") == normalize_supplier_name("Straße Ltd")

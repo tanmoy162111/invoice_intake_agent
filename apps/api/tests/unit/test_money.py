@@ -71,3 +71,29 @@ def test_money_subtraction() -> None:
     assert Money(500, "USD") - Money(200, "USD") == Money(300, "USD")
     with pytest.raises(ValueError):
         Money(500, "USD") - Money(200, "GBP")
+
+
+def test_parse_same_amount_in_both_number_formats() -> None:
+    assert parse_money("1.234,56", "EUR") == parse_money("1,234.56", "EUR") == Money(123456, "EUR")
+
+
+def test_parse_comma_decimal_without_thousands() -> None:
+    assert parse_money("12,50", "EUR") == Money(1250, "EUR")
+
+
+def test_parse_space_thousands_separator() -> None:
+    assert parse_money("1 234,56", "EUR") == Money(123456, "EUR")
+
+
+def test_parse_leading_minus_for_credit_notes() -> None:
+    assert parse_money("-45.00", "USD") == Money(-4500, "USD")
+
+
+def test_parse_single_dot_with_three_digits_is_rejected_not_guessed() -> None:
+    # "1.234" could be 1234 (thousands) or 1.234 (too precise): uncertain means human.
+    with pytest.raises(ValueError):
+        parse_money("1.234", "EUR")
+
+
+def test_parse_currency_symbol_after_amount() -> None:
+    assert parse_money("1.234,56 €", "EUR") == Money(123456, "EUR")
