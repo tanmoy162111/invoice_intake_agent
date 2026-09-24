@@ -34,7 +34,16 @@ class PermanentLlmError(LlmError):
 
 
 class LlmOutputError(LlmError):
-    """The model answered but not with a complete tool call (none, or cut off at max tokens)."""
+    """The model answered but not with a complete tool call (none, or cut off at max tokens).
+    The call was billed, so its usage is carried for cost accounting."""
+
+    def __init__(
+        self, message: str, *, input_tokens: int = 0, output_tokens: int = 0, latency_ms: int = 0
+    ) -> None:
+        super().__init__(message)
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+        self.latency_ms = latency_ms
 
 
 @dataclass(frozen=True)
@@ -51,6 +60,7 @@ class LlmRequest:
     schema: dict[str, Any]
     max_output_tokens: int
     validation_error: str | None = None  # set on the one schema retry
+    key: str = ""  # the cache key (request hash); recorded fixtures are looked up by it
 
 
 @dataclass(frozen=True)
@@ -110,7 +120,9 @@ class AnthropicClient:
         self._price = price_for(model)  # refuse a model we can't cost
         self.model = model
         # The SDK retries connection errors, 408/409/429 and 5xx twice with backoff by default.
-        self._sdk = sdk or anthropic.Anthropic(api_key=api_key, timeout=timeout_s, max_retries=2)
+        self._sdk: Any = sdk or anthropic.Anthropic(
+            api_key=api_key, timeout=timeout_s, max_retries=2
+        )
 
     def cost_micros(self, input_tokens: int, output_tokens: int) -> int:
         return cost_usd_micros(input_tokens, output_tokens, self._price)
@@ -152,17 +164,22 @@ class AnthropicClient:
             ) from None
         latency_ms = int((time.monotonic() - started) * 1000)
 
+        usage = {
+            "input_tokens": response.usage.input_tokens,
+            "output_tokens": response.usage.output_tokens,
+            "latency_ms": latency_ms,
+        }
         if response.stop_reason == "max_tokens":
-            raise LlmOutputError("answer was cut off at max_tokens")
+            raise LlmOutputError("answer was cut off at max_tokens", **usage)
         block = next(
             (b for b in response.content if b.type == "tool_use" and b.name == TOOL_NAME), None
         )
         if block is None:
-            raise LlmOutputError("no tool call in the answer")
+            raise LlmOutputError("no tool call in the answer", **usage)
         return LlmResult(
             payload=dict(block.input),
-            input_tokens=response.usage.input_tokens,
-            output_tokens=response.usage.output_tokens,
+            input_tokens=usage["input_tokens"],
+            output_tokens=usage["output_tokens"],
             latency_ms=latency_ms,
             request_id=getattr(response, "_request_id", None),
         )

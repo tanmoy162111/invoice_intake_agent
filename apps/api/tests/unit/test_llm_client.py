@@ -127,9 +127,10 @@ def test_unknown_model_refused_at_construction() -> None:
         AnthropicClient(model="mystery-model", api_key="k", sdk=FakeSdk())
 
 
-def test_truncated_answer_is_an_output_error() -> None:
-    with pytest.raises(LlmOutputError):
+def test_truncated_answer_is_an_output_error_that_keeps_its_usage() -> None:
+    with pytest.raises(LlmOutputError) as info:
         client(FakeSdk(tool_response(stop="max_tokens"))).extract(request())
+    assert (info.value.input_tokens, info.value.output_tokens) == (1200, 300)
 
 
 def test_answer_without_tool_call_is_an_output_error() -> None:
