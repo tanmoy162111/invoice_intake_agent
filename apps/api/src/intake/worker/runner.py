@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from intake.audit.writer import record_event
 from intake.config import Settings
+from intake.core.llm_budget import ExtractionFailure
 from intake.core.statuses import ActorType
 from intake.db.invoices import fail_invoice_after_job_gave_up
 from intake.db.models import Job
@@ -85,7 +86,9 @@ def _record_failure(
         return
     invoice_id = job.payload.get("invoice_id")
     if not retrying and invoice_id and job.type in (PROCESS_JOB, EXTRACT_JOB):
-        fail_invoice_after_job_gave_up(session, uuid.UUID(invoice_id), f"JOB_FAILED:{error}")
+        fail_invoice_after_job_gave_up(
+            session, uuid.UUID(invoice_id), f"{ExtractionFailure.JOB_FAILED}:{error}"
+        )
     record_event(
         session, tenant_id=job.tenant_id,
         invoice_id=uuid.UUID(invoice_id) if invoice_id else None,

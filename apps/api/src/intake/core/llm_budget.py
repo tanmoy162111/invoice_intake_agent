@@ -8,12 +8,23 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from enum import StrEnum
 
 from intake.core.statuses import DocQuality
 
 MICROS_PER_USD = 1_000_000
 _PATCH_PX = 28  # Claude reads images in 28x28 px patches (one visual token each)
 _MAX_VISUAL_TOKENS = 4784  # per-image cap for Claude 4.7+ models
+
+
+class ExtractionFailure(StrEnum):
+    """Why an invoice was marked `failed` during extraction (see the manual, section 5.6)."""
+
+    UNREADABLE_DOCUMENT = "UNREADABLE_DOCUMENT"  # blank page: nothing sent to the model
+    TOO_MANY_PAGES = "TOO_MANY_PAGES"
+    TOO_MANY_TOKENS = "TOO_MANY_TOKENS"
+    SCHEMA_INVALID = "SCHEMA_INVALID"  # the model twice gave an answer that did not fit
+    JOB_FAILED = "JOB_FAILED"  # written as JOB_FAILED:<ExceptionClass>
 
 
 class UnknownModelError(ValueError):
@@ -90,16 +101,16 @@ def estimate_input_tokens(
 
 def budget_violation(
     *, pages: int, est_input_tokens: int, max_pages: int, max_input_tokens: int
-) -> str | None:
+) -> ExtractionFailure | None:
     """Reason code if the document is over budget, else None."""
     if pages > max_pages:
-        return "TOO_MANY_PAGES"
+        return ExtractionFailure.TOO_MANY_PAGES
     if est_input_tokens > max_input_tokens:
-        return "TOO_MANY_TOKENS"
+        return ExtractionFailure.TOO_MANY_TOKENS
     return None
 
 
-def skip_reason(doc_quality: DocQuality) -> str | None:
+def skip_reason(doc_quality: DocQuality) -> ExtractionFailure | None:
     """Why a document must not be sent to the model, if any. A blank page has nothing to read,
     and asking anyway only invites made-up values."""
-    return "UNREADABLE_DOCUMENT" if doc_quality is DocQuality.UNKNOWN else None
+    return ExtractionFailure.UNREADABLE_DOCUMENT if doc_quality is DocQuality.UNKNOWN else None

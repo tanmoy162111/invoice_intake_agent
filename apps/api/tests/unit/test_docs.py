@@ -5,8 +5,12 @@ from pathlib import Path
 
 import pytest
 
+from intake.config import Settings
 from intake.core.exceptions import ExceptionCode
+from intake.core.extraction import NormalizeError
 from intake.core.ingest import IngestErrorCode
+from intake.core.llm_budget import ExtractionFailure
+from intake.main import create_app
 
 ROOT = Path(__file__).resolve().parents[4]
 DOCS = ROOT / "docs"
@@ -52,3 +56,31 @@ def test_report_chapters_have_all_three_layers() -> None:
     for name, body in zip(built, bodies, strict=True):
         for layer in ("**In plain words.**", "**How it works.**", "**Under the hood.**"):
             assert layer in body, f"{name} is missing {layer}"
+
+
+@pytest.mark.parametrize("code", [c.value for c in NormalizeError])
+def test_manual_explains_every_reason_a_value_is_left_empty(code: str) -> None:
+    assert f"`{code}`" in MANUAL
+
+
+@pytest.mark.parametrize("code", [c.value for c in ExtractionFailure])
+def test_manual_explains_every_reason_an_invoice_can_fail(code: str) -> None:
+    assert f"`{code}" in MANUAL  # JOB_FAILED is written `JOB_FAILED:<Class>`
+
+
+EXTRACTION_SETTING_PREFIXES = ("llm_", "ollama_", "extraction_", "extract_", "daily_", "field_")
+
+
+@pytest.mark.parametrize(
+    "name",
+    [n for n in Settings.model_fields if n.startswith(EXTRACTION_SETTING_PREFIXES)],
+)
+def test_manual_lists_every_extraction_setting(name: str) -> None:
+    assert name.upper() in MANUAL, f"{name.upper()} is missing from manual section 5.4"
+
+
+def test_manual_lists_every_api_route() -> None:
+    app = create_app(Settings(database_url="postgresql+psycopg://x:y@localhost/none"))
+    for path, methods in app.openapi()["paths"].items():
+        for method in methods:
+            assert f"`{method.upper()} {path}`" in MANUAL, f"{method.upper()} {path} not documented"

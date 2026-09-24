@@ -34,7 +34,7 @@ You can read only the first layer of each chapter and still understand the whole
 - **What is not built yet.** The checks (M4 to M7), the reviewer screen (M8), audit timeline (M9),
   accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
   proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
-- **Health.** 532 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
+- **Health.** 677 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
   checks (CI) pass on the earlier pull requests.
 
 ### Status board
@@ -295,7 +295,10 @@ never costs twice.
 5. **Wrong shape.** If the answer does not fit the required form, the model is asked once more with a
    description of the problem. If it still does not fit, the invoice is marked failed with a reason.
 6. **Cleaning.** Dates become one format, amounts become whole cents, currencies become codes.
-   `1.234,56` and `1,234.56` both mean the same amount. Anything ambiguous is left empty, never guessed.
+   `1.234,56` and `1,234.56` both mean the same amount. Number shapes are checked strictly:
+   `1.234.56` or `1,23.45` are refused, not repaired. Anything a person could read two ways is left
+   empty, never guessed. A dotted date (`07.06.2026`) is read day-first, the European convention. A bare
+   `$` or `¥` is only accepted when the supplier's usual currency says which one it is.
 7. **How sure are we (0 to 100%).** Four signals are combined: the model's own confidence, whether the
    value appears in the document's own text, whether the arithmetic supports it (lines add up to the
    subtotal, subtotal plus tax equals the total), and whether the supplier is already known. The model
@@ -304,8 +307,10 @@ never costs twice.
 8. **Bank details** are stored encrypted and compared by a keyed fingerprint. They are also encrypted in the saved answers.
 
 **Under the hood.**
-- **Pure logic** in `core/`, written test-first: `normalize.py` (dates, currency, quantity, tax rate,
-  supplier name; ambiguity raises), `money.py` (parses `1.234,56`, matching currency codes),
+- **Pure logic** in `core/`, written test-first: `numbers.py` (one strict parser for every printed
+  number: validates thousands grouping, refuses ambiguity), `normalize.py` (dates, currency, quantity,
+  tax rate, supplier name; ambiguity raises), `money.py` (amounts in whole cents; checks currency codes
+  and symbols),
   `confidence.py` (score, signals, text-layer agreement, critical-field check), `extraction.py`
   (turns the raw answer into typed values and per-field results), `llm_budget.py` (price table, cost in
   whole micro-dollars rounded up, cache key, spend cap, UTC-day rollover, per-document budget).
@@ -327,20 +332,29 @@ never costs twice.
   `status_changed` (received, extracting, extracted), `extraction_completed` (model, prompt version,
   cache use, cost, weak critical fields), `extraction_paused`, `extraction_failed`.
 
-**What we proved.** (Recorded answers built from the answer key, not real model output.)
+**What we proved.** (Recorded answers built from the answer key, not real model output. They exercise
+the real PDFs, the real text layers, the real worker and the real database, but not a real model.)
 
 | Check | Result |
 |---|---|
-| Every clean seed invoice filled `invoices`, `invoice_lines`, `field_extractions` | 59 of 59 (numbers, dates in five layouts, EUR and USD formats, lines, 13 + 6 per line fields) |
+| Every clean seed invoice filled `invoices`, `invoice_lines`, `field_extractions` | 59 of 59 (dates in five layouts, EUR, GBP and USD formats, lines, 13 + 6 per line fields). One of them (`inv-092`, a planted currency mismatch) prints a bare `$` but comes from a supplier that normally bills in another currency, so its currency and amounts are correctly left empty for a person |
 | A missing PO number comes back empty, not invented | Yes, tested on the 2 clean invoices without one |
 | Re-processing the same file uses the saved answer | Yes: model not called, no new `llm_calls` row |
 | Hitting the daily cap pauses jobs and shows it | Yes: job waits, `GET /extraction/status` and `GET /jobs` show it, one audit entry, resumes when raised |
-| Critical fields trusted on invoices with no planted problems | 35 of 35 |
+| Critical fields trusted (at least 80%) on clean invoices with no planted problems | 35 of 35 |
 | Bank account digits found in the database in clear text | None (fields, saved answers, audit, signals) |
-| Ambiguous date, junk amount, unknown currency | Left empty with 0% confidence |
-| Automated tests | 532 pass; decision-logic coverage 99.9% |
+| Ambiguous date, ambiguous or misgrouped number, bare `$`, unknown currency, wrong-currency symbol | Left empty with 0% confidence |
+| A job that runs out of attempts | The invoice becomes `failed` with a reason (before, it stayed `received` unseen) |
+| Bank key rotated, prompt edited in place, NUL characters or invented page numbers in an answer | Old answer ignored and asked again; edited prompt never reuses an old answer; bad answer retried once, never stored |
+| Automated tests | 677 pass; decision-logic coverage 99.9%; the manual is checked for every failure reason, empty-value reason, setting and route |
 
-Two independent reviews (decision-logic and security) ran; findings are listed in the pull request.
+Two independent reviews (decision logic and security) ran. Nothing critical or high was found in
+security. The decision-logic review found four ways a wrong value could reach 80% confidence
+(misgrouped numbers such as `1,23.45`, a quantity `1.200` read as 1.2, a bare `$` treated as USD, a
+currency symbol accepted for the wrong currency). All four were fixed test-first, together with the
+daily-limit rollover for non-UTC clocks, the cache key (now includes the prompt text and answer schema),
+bounds on model output (no NUL characters, length, page range), a rotated bank key, and invoices whose
+job gave up. The remaining review notes are under "Left open".
 
 **Left open.**
 - **Accuracy with a real model is not measured.** The evaluation harness arrives in M10. Until then
@@ -350,7 +364,18 @@ Two independent reviews (decision-logic and security) ran; findings are listed i
 - Free or local models (Ollama) are supported as a demo backend only; their numbers do not apply to the Claude build.
 - Fields on scanned and photo documents will often score under 80% (no text to check against). That is intended: they go to a person.
 - A permanent provider rejection (bad key) fails the job visibly; fixing it and re-queueing is manual until M8.
-- Still open from M2: sandboxed parsing, deployment hardening.
+- **Text-layer check is not position-aware.** It asks whether a value appears anywhere in the document
+  text. A swapped invoice date and due date, or a total equal to a line amount, still agrees. Position-aware
+  checks come with the validation rules (M4).
+- **M4 must not rely on the parsed currency alone.** When the currency is left empty (bare `$`), a
+  currency-mismatch check has to compare the printed symbol with the supplier's usual currency.
+- **The daily limit is a check, not a reservation.** With several workers each can overshoot by about one
+  call. Failed database writes after a paid call are not counted.
+- The API container receives the model key (it only needs to know whether one is set); a later hardening
+  step can split the environments. The saved model answers hold supplier data in plain text with no purge
+  policy yet (bank account sealed); see `data-handling.md`.
+- Still open from M2: sandboxed parsing, deployment hardening. (The M2 item "a failed job leaves the
+  invoice in received" is closed: it becomes `failed` with a reason.)
 
 ---
 
@@ -381,7 +406,7 @@ or rule requires running the evaluation and reporting the result first.
 | M0 | 1 (plus 2 web) | n/a | Green | Stack starts; "API: healthy" |
 | M1 | 119 | 100% | Green | All 18 exception codes planted; audit log immutable |
 | M2 | 277 | 100% | Green on #1 and #2; #3 pending | 120/120 quality classification; hostile-upload guard |
-| M3 | 532 | 99.9% | Pending | 59/59 clean invoices extracted end to end; cache and spend cap proved; no bank digits in clear |
+| M3 | 677 | 99.9% | Pending | 59/59 clean invoices extracted end to end; cache and spend cap proved; no bank digits in clear |
 
 The build gates on decision-logic coverage of at least 90%.
 
@@ -408,6 +433,8 @@ The build gates on decision-logic coverage of at least 90%.
 | Default model `claude-sonnet-5` ($2 in / $10 out per million tokens), price table in code | Mid-tier start per the playbook; unknown models are refused, not guessed | M3 |
 | Dotted dates (07.06.2026) are day-first; slash and hyphen dates are ambiguous | European convention for dots; the rest needs a hint or a person | M3 |
 | Bank account encrypted in the saved answers and the field table | Playbook section 10 | M3 |
+| A job that runs out of attempts marks its invoice `failed` with a reason (`JOB_FAILED:<Class>`) | An invoice must never sit unseen in `received` | M3 |
+| Bare `$` and `¥` are settled only by the supplier's usual currency | `$` is also CAD and AUD; a guess would pass a wrong currency | M3 |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
 
 ## 7. Risks and open questions

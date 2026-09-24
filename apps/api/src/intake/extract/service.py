@@ -18,7 +18,12 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from intake.config import Settings
-from intake.core.llm_budget import cap_reached, next_utc_midnight, request_hash
+from intake.core.llm_budget import (
+    ExtractionFailure,
+    cap_reached,
+    next_utc_midnight,
+    request_hash,
+)
 from intake.db.models import LlmCall
 from intake.extract.llm import (
     LlmClient,
@@ -237,4 +242,4 @@ def run_extraction(
             latency_ms=result.latency_ms, response=_seal(parsed.model_dump(mode="json"), vault),
         )  # fmt: skip
         return Extracted(parsed, cached=False, calls=calls, cost_micros=total_cost)
-    raise ExtractionFailed("SCHEMA_INVALID")
+    raise ExtractionFailed(ExtractionFailure.SCHEMA_INVALID)

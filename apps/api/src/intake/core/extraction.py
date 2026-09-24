@@ -9,6 +9,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 
 from intake.core.confidence import (
     SelfConfidence,
@@ -39,6 +40,17 @@ from intake.core.statuses import DocQuality
 _ZERO = Decimal(0)
 _MONEY_FIELDS = frozenset({"subtotal", "tax_total", "total"})
 _DATE_FIELDS = frozenset({"invoice_date", "due_date"})
+
+
+class NormalizeError(StrEnum):
+    """Why a value was left empty (stored in `signals["normalize_error"]`; see the manual)."""
+
+    AMBIGUOUS_DATE = "AMBIGUOUS_DATE"
+    AMBIGUOUS_NUMBER = "AMBIGUOUS_NUMBER"
+    AMBIGUOUS_CURRENCY = "AMBIGUOUS_CURRENCY"
+    UNSUPPORTED_CURRENCY = "UNSUPPORTED_CURRENCY"
+    NO_CURRENCY = "NO_CURRENCY"
+    UNPARSEABLE = "UNPARSEABLE"
 
 
 def line_field_name(line_no: int, name: str) -> str:
@@ -111,7 +123,7 @@ class _Parsed:
 
     typed: object | None = None
     text: str | None = None
-    error: str | None = None
+    error: NormalizeError | None = None
     weak: bool = False  # read only with a hint (an ambiguous date): the text layer proves nothing
 
 
@@ -127,13 +139,13 @@ def _parse_money(value: str | None, currency: str | None) -> _Parsed:
     if value is None:
         return _Parsed()
     if currency is None:
-        return _Parsed(error="NO_CURRENCY")
+        return _Parsed(error=NormalizeError.NO_CURRENCY)
     try:
         money = parse_money(value, currency)
     except AmbiguousNumberError:
-        return _Parsed(error="AMBIGUOUS_NUMBER")
+        return _Parsed(error=NormalizeError.AMBIGUOUS_NUMBER)
     except ValueError:
-        return _Parsed(error="UNPARSEABLE")
+        return _Parsed(error=NormalizeError.UNPARSEABLE)
     return _Parsed(typed=money, text=str(money.minor))
 
 
@@ -149,9 +161,9 @@ def _parse_date(value: str | None, day_first: bool | None) -> _Parsed:
                 raise
             d, weak = parse_date(value, day_first=day_first), True
     except AmbiguousDateError:
-        return _Parsed(error="AMBIGUOUS_DATE")
+        return _Parsed(error=NormalizeError.AMBIGUOUS_DATE)
     except ValueError:
-        return _Parsed(error="UNPARSEABLE")
+        return _Parsed(error=NormalizeError.UNPARSEABLE)
     return _Parsed(typed=d, text=d.isoformat(), weak=weak)
 
 
@@ -161,9 +173,9 @@ def _parse_decimal(value: str | None, parser: Callable[[str], Decimal]) -> _Pars
     try:
         d = parser(value)
     except AmbiguousNumberError:
-        return _Parsed(error="AMBIGUOUS_NUMBER")
+        return _Parsed(error=NormalizeError.AMBIGUOUS_NUMBER)
     except ValueError:
-        return _Parsed(error="UNPARSEABLE")
+        return _Parsed(error=NormalizeError.UNPARSEABLE)
     return _Parsed(typed=d, text=format(d.normalize(), "f"))
 
 
@@ -173,9 +185,9 @@ def _parse_currency(value: str | None, hint: str | None) -> _Parsed:
     try:
         code = normalize_currency(value, hint=hint)
     except AmbiguousCurrencyError:
-        return _Parsed(error="AMBIGUOUS_CURRENCY")
+        return _Parsed(error=NormalizeError.AMBIGUOUS_CURRENCY)
     except ValueError:
-        return _Parsed(error="UNSUPPORTED_CURRENCY")
+        return _Parsed(error=NormalizeError.UNSUPPORTED_CURRENCY)
     return _Parsed(typed=code, text=code)
 
 

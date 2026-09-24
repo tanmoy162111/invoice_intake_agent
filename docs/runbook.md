@@ -29,6 +29,23 @@ says why and how to fix it).
   re-queue: `update jobs set status='queued', attempts=0, run_after=now(), last_error=null where id='...'`.
   Each retry and final failure also writes `job_retry_scheduled` / `job_failed` to the audit log.
 
+## Extraction: paused, capped or failed
+`GET /extraction/status` (same bearer token) is the first stop.
+- `configured: false`: set `ANTHROPIC_API_KEY` (or `LLM_PROVIDER=ollama` with a model), `EXTRACTION_MODEL`
+  and `BANK_ENCRYPTION_KEY` in `.env`, then `docker compose restart worker api`. Waiting jobs resume by
+  themselves (`last_error = EXTRACTION_NOT_CONFIGURED`, retried every `EXTRACT_NOT_CONFIGURED_RETRY_S`).
+- `cap_reached: true`: spend hit `DAILY_SPEND_CAP_USD`. Jobs wait with `last_error = SPEND_CAP_REACHED`
+  until 00:00 UTC. To resume sooner, raise the cap, restart the worker and pull the jobs forward:
+  `update jobs set run_after=now() where last_error='SPEND_CAP_REACHED' and status='queued'`.
+- An invoice `failed` with `JOB_FAILED:PermanentLlmError`: the provider rejected the key or request
+  (check the key, model name and account access). `JOB_FAILED:TransientLlmError`: an outage or rate limit
+  outlasted the retries. After fixing, re-queue the job as above; the extract step accepts an invoice in
+  `failed` and reuses any saved answer, so nothing is paid for twice.
+- Every model call is a row in `llm_calls` (status `ok`, `schema_invalid`, `output_invalid`,
+  `transient_error`, `rejected`). Compare `sum(cost_usd_micros)` for today with the cap to audit spend.
+- `llm_calls.response` holds supplier data in the clear (bank account sealed). Purge or scrub it before
+  sharing a database.
+
 ## Limits worth knowing
 - Uploads are capped by `MAX_UPLOAD_BYTES` (15 MB) and `MAX_PAGES` (10). The API refuses oversized
   files after reading at most limit+1 bytes, but the web server still receives the request body first.
