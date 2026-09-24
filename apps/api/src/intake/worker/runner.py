@@ -11,7 +11,10 @@ from sqlalchemy.orm import Session
 from intake.audit.writer import record_event
 from intake.config import Settings
 from intake.core.statuses import ActorType
+from intake.db.invoices import fail_invoice_after_job_gave_up
 from intake.db.models import Job
+from intake.extract.pipeline import EXTRACT_JOB
+from intake.ingest.service import PROCESS_JOB
 from intake.ingest.storage import LocalStorage
 from intake.worker import queue
 from intake.worker.handlers import HANDLERS, Handler
@@ -81,6 +84,8 @@ def _record_failure(
         log.warning("job %s failed after losing its lock; ignored", job_id)
         return
     invoice_id = job.payload.get("invoice_id")
+    if not retrying and invoice_id and job.type in (PROCESS_JOB, EXTRACT_JOB):
+        fail_invoice_after_job_gave_up(session, uuid.UUID(invoice_id), f"JOB_FAILED:{error}")
     record_event(
         session, tenant_id=job.tenant_id,
         invoice_id=uuid.UUID(invoice_id) if invoice_id else None,

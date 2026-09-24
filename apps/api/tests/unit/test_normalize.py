@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from intake.core.normalize import (
+    AmbiguousCurrencyError,
     AmbiguousDateError,
     normalize_bank_account,
     normalize_currency,
@@ -12,6 +13,7 @@ from intake.core.normalize import (
     parse_quantity,
     parse_tax_rate,
 )
+from intake.core.numbers import AmbiguousNumberError
 
 
 def test_bank_account_strips_spaces_and_dashes_and_uppercases() -> None:
@@ -75,7 +77,7 @@ def test_parse_date_two_digit_year_is_rejected() -> None:
 
 @pytest.mark.parametrize(
     ("text", "code"),
-    [("USD", "USD"), (" eur ", "EUR"), ("€", "EUR"), ("£", "GBP"), ("$", "USD"), ("¥", "JPY")],
+    [("USD", "USD"), (" eur ", "EUR"), ("€", "EUR"), ("£", "GBP"), ("JPY", "JPY")],
 )
 def test_normalize_currency(text: str, code: str) -> None:
     assert normalize_currency(text) == code
@@ -92,10 +94,11 @@ def test_normalize_currency_rejects_unknown(bad: str) -> None:
     [
         ("12", "12"),
         ("12.5", "12.5"),
-        ("1,200", "1200"),
         ("1.200,5", "1200.5"),
         ("1,200.5", "1200.5"),
         ("1,5", "1.5"),
+        ("0,500", "0.5"),
+        ("12,345.6", "12345.6"),
         ("0.25", "0.25"),
         (" 3 ", "3"),
     ],
@@ -138,3 +141,39 @@ def test_supplier_name_unicode_forms_compare_equal() -> None:
 
 def test_supplier_name_casefold_handles_sharp_s() -> None:
     assert normalize_supplier_name("STRASSE Ltd") == normalize_supplier_name("Straße Ltd")
+
+
+def test_dollar_and_yen_symbols_are_ambiguous_without_a_hint() -> None:
+    for symbol in ("$", "¥"):
+        with pytest.raises(AmbiguousCurrencyError):
+            normalize_currency(symbol)
+
+
+def test_a_suppliers_default_currency_can_settle_a_symbol() -> None:
+    assert normalize_currency("$", hint="USD") == "USD"
+    assert normalize_currency("¥", hint="JPY") == "JPY"
+    for bad_hint in ("EUR", "GBP", None):
+        with pytest.raises(AmbiguousCurrencyError):
+            normalize_currency("$", hint=bad_hint)
+
+
+def test_a_hint_never_overrides_a_printed_code() -> None:
+    assert normalize_currency("EUR", hint="USD") == "EUR"
+
+
+@pytest.mark.parametrize("text", ["1.200", "1,200", "12.345"])
+def test_quantities_with_a_lone_separator_before_three_digits_are_ambiguous(text: str) -> None:
+    with pytest.raises(AmbiguousNumberError):
+        parse_quantity(text)
+
+
+@pytest.mark.parametrize("text", ["0,075", "0.5", ".5"])
+def test_a_tax_rate_below_one_without_a_percent_sign_is_ambiguous(text: str) -> None:
+    with pytest.raises(ValueError):
+        parse_tax_rate(text)
+
+
+def test_a_tax_rate_below_one_with_a_percent_sign_is_a_percentage() -> None:
+    assert parse_tax_rate("0,075%") == Decimal("0.075")
+    assert parse_tax_rate("0%") == Decimal("0")
+    assert parse_tax_rate("0") == Decimal("0")

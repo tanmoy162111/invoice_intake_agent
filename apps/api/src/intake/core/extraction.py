@@ -14,7 +14,7 @@ from intake.core.confidence import (
     SelfConfidence,
     Signals,
     amount_in_text,
-    currency_in_text,
+    currency_agreement,
     date_in_text,
     number_in_text,
     percent_in_text,
@@ -24,6 +24,7 @@ from intake.core.confidence import (
 )
 from intake.core.money import Money, exponent, line_amount_minor, parse_money
 from intake.core.normalize import (
+    AmbiguousCurrencyError,
     AmbiguousDateError,
     normalize_bank_account,
     normalize_currency,
@@ -32,6 +33,8 @@ from intake.core.normalize import (
     parse_quantity,
     parse_tax_rate,
 )
+from intake.core.numbers import AmbiguousNumberError
+from intake.core.statuses import DocQuality
 
 _ZERO = Decimal(0)
 _MONEY_FIELDS = frozenset({"subtotal", "tax_total", "total"})
@@ -61,6 +64,7 @@ class MasterData:
 
     tax_id_known: bool = False
     name_known: bool = False
+    default_currency: str | None = None  # the matched supplier's usual currency
 
 
 @dataclass(frozen=True)
@@ -108,6 +112,7 @@ class _Parsed:
     typed: object | None = None
     text: str | None = None
     error: str | None = None
+    weak: bool = False  # read only with a hint (an ambiguous date): the text layer proves nothing
 
 
 def _blank_to_none(value: str | None) -> str | None:
@@ -125,6 +130,8 @@ def _parse_money(value: str | None, currency: str | None) -> _Parsed:
         return _Parsed(error="NO_CURRENCY")
     try:
         money = parse_money(value, currency)
+    except AmbiguousNumberError:
+        return _Parsed(error="AMBIGUOUS_NUMBER")
     except ValueError:
         return _Parsed(error="UNPARSEABLE")
     return _Parsed(typed=money, text=str(money.minor))
@@ -133,13 +140,19 @@ def _parse_money(value: str | None, currency: str | None) -> _Parsed:
 def _parse_date(value: str | None, day_first: bool | None) -> _Parsed:
     if value is None:
         return _Parsed()
+    weak = False
     try:
-        d = parse_date(value, day_first=day_first)
+        try:
+            d = parse_date(value)
+        except AmbiguousDateError:
+            if day_first is None:
+                raise
+            d, weak = parse_date(value, day_first=day_first), True
     except AmbiguousDateError:
         return _Parsed(error="AMBIGUOUS_DATE")
     except ValueError:
         return _Parsed(error="UNPARSEABLE")
-    return _Parsed(typed=d, text=d.isoformat())
+    return _Parsed(typed=d, text=d.isoformat(), weak=weak)
 
 
 def _parse_decimal(value: str | None, parser: Callable[[str], Decimal]) -> _Parsed:
@@ -147,16 +160,20 @@ def _parse_decimal(value: str | None, parser: Callable[[str], Decimal]) -> _Pars
         return _Parsed()
     try:
         d = parser(value)
+    except AmbiguousNumberError:
+        return _Parsed(error="AMBIGUOUS_NUMBER")
     except ValueError:
         return _Parsed(error="UNPARSEABLE")
     return _Parsed(typed=d, text=format(d.normalize(), "f"))
 
 
-def _parse_currency(value: str | None) -> _Parsed:
+def _parse_currency(value: str | None, hint: str | None) -> _Parsed:
     if value is None:
         return _Parsed()
     try:
-        code = normalize_currency(value)
+        code = normalize_currency(value, hint=hint)
+    except AmbiguousCurrencyError:
+        return _Parsed(error="AMBIGUOUS_CURRENCY")
     except ValueError:
         return _Parsed(error="UNSUPPORTED_CURRENCY")
     return _Parsed(typed=code, text=code)
@@ -178,9 +195,14 @@ def _money_of(p: _Parsed) -> Money | None:
     return p.typed if isinstance(p.typed, Money) else None
 
 
+def _decimal_of(p: _Parsed) -> Decimal | None:
+    return p.typed if isinstance(p.typed, Decimal) else None
+
+
 def _text_agrees(name: str, p: _Parsed, currency: str | None, text: str) -> bool | None:
-    """Does the normalized value appear in the text layer? None when not applicable."""
-    if p.error or p.typed is None or name == "supplier_bank_account":
+    """Does the normalized value appear in the text layer? None when that proves nothing (not
+    applicable, a value read only through a hint, or a number too small to be evidence)."""
+    if p.error or p.typed is None or p.weak or name == "supplier_bank_account":
         return None
     typed = p.typed
     if isinstance(typed, Money):
@@ -188,9 +210,9 @@ def _text_agrees(name: str, p: _Parsed, currency: str | None, text: str) -> bool
     if isinstance(typed, date):
         return date_in_text(typed, text)
     if name == "currency" and currency:
-        return currency_in_text(currency, text)
+        return currency_agreement(currency, text)
     if name.endswith("quantity") and isinstance(typed, Decimal):
-        return number_in_text(typed, text)
+        return None if abs(typed) < 10 else number_in_text(typed, text)  # a lone "1" is everywhere
     if name.endswith("tax_rate") and isinstance(typed, Decimal):
         return percent_in_text(typed, text)
     if isinstance(typed, str):
@@ -235,14 +257,14 @@ def _relation(qty: Decimal | None, unit: Money | None, amount: Money | None) -> 
 def interpret(
     raw: RawInvoice,
     *,
-    doc_quality: str,
+    doc_quality: DocQuality,
     page_texts: Sequence[str],
     master: MasterData | None = None,
     day_first: bool | None = None,
 ) -> Interpreted:
     master = master or MasterData()
     text = "\n".join(page_texts)
-    use_text = doc_quality == "clean" and bool(text.strip())
+    use_text = doc_quality is DocQuality.CLEAN and bool(text.strip())
     missing = RawField(None, SelfConfidence.LOW, None)
 
     def value(f: RawField) -> str | None:
@@ -252,7 +274,7 @@ def interpret(
         return RawField(value(f), f.self_confidence, f.page)
 
     header = {k: clean(v) for k, v in raw.header.items()}
-    cur = _parse_currency(header.get("currency", missing).value)
+    cur = _parse_currency(header.get("currency", missing).value, master.default_currency)
     currency = cur.typed if isinstance(cur.typed, str) else None
 
     parsed: dict[str, _Parsed] = {}
@@ -301,10 +323,12 @@ def interpret(
         lines_ok if totals_ok is None else totals_ok if lines_ok is None else lines_ok and totals_ok
     )
     header_rules = {"total": totals_ok, "tax_total": totals_ok, "subtotal": subtotal_rule}
-    masters = {
+    masters: dict[str, bool | None] = {
         "supplier_name": True if master.name_known else None,
         "supplier_tax_id": True if master.tax_id_known else None,
     }
+    if currency and master.default_currency:  # the supplier's usual currency backs or contradicts
+        masters["currency"] = master.default_currency == currency
 
     fields: list[FieldResult] = []
     for name, f in header.items():
@@ -318,9 +342,7 @@ def interpret(
     lines: list[LineResult] = []
     for n, (line, lp) in enumerate(zip(raw.lines, line_parsed, strict=True), start=1):
         rel = _relation(
-            lp.get("quantity", _Parsed()).typed  # type: ignore[arg-type]
-            if isinstance(lp.get("quantity", _Parsed()).typed, Decimal)
-            else None,
+            _decimal_of(lp.get("quantity", _Parsed())),
             _money_of(lp.get("unit_price", _Parsed())),
             _money_of(lp.get("amount", _Parsed())),
         )
@@ -332,8 +354,8 @@ def interpret(
                     currency=currency, rule=line_rules.get(name),
                 )
             )  # fmt: skip
-        qty = lp.get("quantity", _Parsed()).typed
-        rate = lp.get("tax_rate", _Parsed()).typed
+        qty = _decimal_of(lp.get("quantity", _Parsed()))
+        rate = _decimal_of(lp.get("tax_rate", _Parsed()))
         unit = _money_of(lp.get("unit_price", _Parsed()))
         amount = _money_of(lp.get("amount", _Parsed()))
         lines.append(
@@ -341,10 +363,10 @@ def interpret(
                 line_no=n,
                 description=_as_str(lp.get("description", _Parsed()).typed),
                 sku=_as_str(lp.get("sku", _Parsed()).typed),
-                quantity=qty if isinstance(qty, Decimal) else None,
+                quantity=qty,
                 unit_price_minor=unit.minor if unit else None,
                 amount_minor=amount.minor if amount else None,
-                tax_rate=rate if isinstance(rate, Decimal) else None,
+                tax_rate=rate,
             )
         )
 

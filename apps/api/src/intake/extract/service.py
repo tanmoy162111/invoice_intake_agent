@@ -5,11 +5,14 @@ is recorded (and cached) even if the invoice's own transaction later rolls back.
 no call and writes no row. The cache key is (file sha256, model, prompt version).
 """
 
+import hashlib
+import json
 import uuid
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from typing import Any
 
+from cryptography.fernet import InvalidToken
 from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -26,7 +29,7 @@ from intake.extract.llm import (
     PermanentLlmError,
     TransientLlmError,
 )
-from intake.extract.schema import InvoiceExtraction, tool_input_schema
+from intake.extract.schema import InvoiceExtraction, pages_out_of_range, tool_input_schema
 from intake.security import BankVault
 
 MAX_ATTEMPTS = 2  # the first call, plus one retry that includes the validation error
@@ -52,6 +55,14 @@ class Extracted:
     cached: bool
     calls: int
     cost_micros: int
+
+
+def cache_key(file_sha256: str, model: str, prompt_version: str, system_prompt: str) -> str:
+    """The cache key: (file, model, prompt version) plus a fingerprint of the prompt text and the
+    answer schema, so editing either in place can never reuse a stale answer."""
+    body = system_prompt + "\n" + json.dumps(tool_input_schema(), sort_keys=True)
+    fingerprint = hashlib.sha256(body.encode()).hexdigest()[:16]
+    return request_hash(file_sha256, model, f"{prompt_version}:{fingerprint}")
 
 
 def db_now(session: Session) -> datetime:
@@ -112,12 +123,8 @@ def _cached(
         return None
     try:
         return InvoiceExtraction.model_validate(_unseal(dict(row), vault))
-    except (
-        ValidationError,
-        KeyError,
-        ValueError,
-        TypeError,
-    ):  # a schema change made the old answer unusable: ask again
+    except (ValidationError, KeyError, ValueError, TypeError, InvalidToken):
+        # the schema changed, or the bank key was rotated: the old answer is unusable, ask again
         return None
 
 
@@ -164,7 +171,7 @@ def run_extraction(
     text_layers: list[str],
 ) -> Extracted:
     prompt_version = settings.extraction_prompt_version
-    key = request_hash(file_sha256, client.model, prompt_version)
+    key = cache_key(file_sha256, client.model, prompt_version, system_prompt)
     hit = _cached(session, tenant_id, key, vault)
     if hit is not None:
         return Extracted(hit, cached=True, calls=0, cost_micros=0)
@@ -213,12 +220,17 @@ def run_extraction(
             raise
         try:
             parsed = InvoiceExtraction.model_validate(result.payload)
-        except ValidationError as exc:
+            bad_pages = pages_out_of_range(parsed, len(pages))
+            if bad_pages:
+                raise ValueError(
+                    f"page must be between 1 and {len(pages)}: {', '.join(bad_pages[:10])}"
+                )
+        except (ValidationError, ValueError) as exc:  # ValidationError is a ValueError
             total_cost += record(
                 "schema_invalid", input_tokens=result.input_tokens,
                 output_tokens=result.output_tokens, latency_ms=result.latency_ms,
             )  # fmt: skip
-            validation_error = _summarize(exc)
+            validation_error = _summarize(exc) if isinstance(exc, ValidationError) else str(exc)
             continue
         total_cost += record(
             "ok", input_tokens=result.input_tokens, output_tokens=result.output_tokens,

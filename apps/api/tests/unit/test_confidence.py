@@ -8,7 +8,7 @@ from intake.core.confidence import (
     SelfConfidence,
     Signals,
     amount_in_text,
-    currency_in_text,
+    currency_agreement,
     date_in_text,
     fields_below_threshold,
     number_in_text,
@@ -103,6 +103,10 @@ def test_fields_below_threshold_lists_weak_and_missing_critical_fields() -> None
     ]
 
 
+def test_missing_critical_fields_are_below_even_a_zero_threshold() -> None:
+    assert fields_below_threshold({}, CRITICAL_FIELDS, D(0)) == list(CRITICAL_FIELDS)
+
+
 def test_fields_below_threshold_empty_when_all_good() -> None:
     scores = {f: D("0.9") for f in CRITICAL_FIELDS}
     assert fields_below_threshold(scores, CRITICAL_FIELDS, D("0.8")) == []
@@ -182,16 +186,22 @@ def test_sum_supports_none_when_nothing_to_check() -> None:
 
 @pytest.mark.parametrize(
     ("code", "text"),
-    [("EUR", "Total 7.620,05 EUR"), ("USD", "Total $1,105.92"), ("GBP", "Amount £12.00"),
-     ("JPY", "合計 ¥1,500"), ("USD", "amounts in usd")],
+    [("EUR", "Total 7.620,05 EUR"), ("EUR", "Total €7.620,05"), ("GBP", "Amount £12.00"),
+     ("USD", "amounts in usd"), ("JPY", "total jpy 1500")],
 )  # fmt: skip
-def test_currency_in_text_matches_code_or_symbol(code: str, text: str) -> None:
-    assert currency_in_text(code, text)
+def test_currency_agreement_true_for_a_code_or_an_unambiguous_symbol(code: str, text: str) -> None:
+    assert currency_agreement(code, text) is True
+
+
+@pytest.mark.parametrize(("code", "text"), [("USD", "Total $1,105.92"), ("JPY", "合計 ¥1,500")])
+def test_a_bare_dollar_or_yen_symbol_is_not_evidence(code: str, text: str) -> None:
+    # $ is also CAD and AUD, and ¥ is also CNY: not corroboration, and not a contradiction either
+    assert currency_agreement(code, text) is None
 
 
 @pytest.mark.parametrize(("code", "text"), [("EUR", "Total $10.00"), ("USD", "Total 10,00 EUR")])
-def test_currency_in_text_absent(code: str, text: str) -> None:
-    assert not currency_in_text(code, text)
+def test_currency_agreement_false_when_absent(code: str, text: str) -> None:
+    assert currency_agreement(code, text) is False
 
 
 @pytest.mark.parametrize("text", ["Tax (19%)", "TAX 19 %", "19% VAT", "19,0%", "19.00%"])

@@ -43,6 +43,8 @@ services:
       DATABASE_URL: postgresql+psycopg://intake:${POSTGRES_PASSWORD:-intake}@db:5432/intake
       STORAGE_DIR: /data/storage
     mem_limit: 2g  # rendering hostile documents must not take the host down
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # reach a local Ollama from the container on Linux
     command: python -m intake.worker
     volumes:
       - storage:/data/storage

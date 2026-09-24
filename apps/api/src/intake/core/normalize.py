@@ -9,6 +9,7 @@ from datetime import date
 from decimal import Decimal
 
 from intake.core.money import CURRENCY_EXPONENT
+from intake.core.numbers import AmbiguousNumberError, parse_number
 
 _NON_ALNUM = re.compile(r"[^A-Za-z0-9]")
 
@@ -79,48 +80,46 @@ def parse_date(text: str, *, day_first: bool | None = None) -> date:
     return _build(year, _MONTHS[name], day, text)
 
 
-_CURRENCY_SYMBOLS = {"€": "EUR", "£": "GBP", "$": "USD", "¥": "JPY"}
+class AmbiguousCurrencyError(ValueError):
+    """A bare symbol for more than one currency ($ is also CAD and AUD, ¥ is also CNY)."""
 
 
-def normalize_currency(text: str) -> str:
-    """ISO 4217 code from a code or common symbol. Unsupported currencies raise."""
+_UNAMBIGUOUS_SYMBOLS = {"€": "EUR", "£": "GBP"}
+_AMBIGUOUS_SYMBOLS = {"$": "USD", "¥": "JPY"}
+
+
+def normalize_currency(text: str, *, hint: str | None = None) -> str:
+    """ISO 4217 code from a printed code or symbol. A bare `$` or `¥` is ambiguous and raises,
+    unless `hint` (the supplier's default currency) is the one currency it would stand for.
+    Unsupported currencies raise."""
     raw = text.strip()
-    code = _CURRENCY_SYMBOLS.get(raw, raw.upper())
+    if raw in _UNAMBIGUOUS_SYMBOLS:
+        return _UNAMBIGUOUS_SYMBOLS[raw]
+    if raw in _AMBIGUOUS_SYMBOLS:
+        if hint == _AMBIGUOUS_SYMBOLS[raw]:
+            return hint
+        raise AmbiguousCurrencyError(f"{raw!r} could be more than one currency")
+    code = raw.upper()
     if code not in CURRENCY_EXPONENT:
         raise ValueError(f"unsupported currency: {text!r}")
     return code
 
 
-_DECIMAL_TEXT = re.compile(r"^-?\d+(?:[.,]\d+)*$")
-
-
 def parse_quantity(text: str) -> Decimal:
-    """Parse a quantity in either number format ('1,200', '1.200,5', '1,5')."""
-    raw = text.strip().replace(" ", "")
-    if not _DECIMAL_TEXT.match(raw):
-        raise ValueError(f"not a quantity: {text!r}")
-    negative = raw.startswith("-")
-    raw = raw.lstrip("-")
-    last_dot, last_comma = raw.rfind("."), raw.rfind(",")
-    if last_dot >= 0 and last_comma >= 0:
-        dec_pos = max(last_dot, last_comma)
-    else:
-        sep = "." if last_dot >= 0 else ","
-        pos = raw.rfind(sep)
-        thousands = pos >= 0 and (raw.count(sep) > 1 or (sep == "," and len(raw) - pos - 1 == 3))
-        dec_pos = -1 if pos < 0 or thousands else pos
-    whole, frac = (raw[:dec_pos], raw[dec_pos + 1 :]) if dec_pos >= 0 else (raw, "")
-    digits = whole.replace(".", "").replace(",", "")
-    value = Decimal(f"{digits}.{frac}" if frac else digits)
-    return -value if negative else value
+    """Parse a quantity in either number format. '1.200' and '1,200' are ambiguous and raise."""
+    return parse_number(text, max_decimals=None)
 
 
 def parse_tax_rate(text: str) -> Decimal:
-    """A tax rate as a percentage (19 means 19%). Outside 0-100 raises."""
-    raw = text.strip().removesuffix("%").strip()
-    value = parse_quantity(raw)
+    """A tax rate as a percentage (19 means 19%), 0 to 100. Below 1 needs a % sign: '0,075' could
+    be a fraction (7.5%) or a percentage, so it raises."""
+    raw = text.strip()
+    has_percent = raw.endswith("%")
+    value = parse_quantity(raw.removesuffix("%").strip())
     if not Decimal(0) <= value <= Decimal(100):
         raise ValueError(f"tax rate out of range: {text!r}")
+    if not has_percent and Decimal(0) < value < Decimal(1):
+        raise AmbiguousNumberError(f"fraction or percentage? {text!r}")
     return value
 
 

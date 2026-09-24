@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
@@ -15,6 +15,7 @@ from intake.core.llm_budget import (
     request_hash,
     skip_reason,
 )
+from intake.core.statuses import DocQuality
 
 
 def test_sonnet_5_price_matches_docs() -> None:
@@ -122,11 +123,26 @@ def test_budget_too_many_tokens() -> None:
     )
 
 
-@pytest.mark.parametrize(("quality", "reason"), [("unknown", "UNREADABLE_DOCUMENT")])
-def test_blank_documents_never_reach_the_model(quality: str, reason: str) -> None:
-    assert skip_reason(quality) == reason
+def test_blank_documents_never_reach_the_model() -> None:
+    assert skip_reason(DocQuality.UNKNOWN) == "UNREADABLE_DOCUMENT"
 
 
-@pytest.mark.parametrize("quality", ["clean", "scanned", "photo"])
-def test_readable_documents_go_to_the_model(quality: str) -> None:
+@pytest.mark.parametrize("quality", [DocQuality.CLEAN, DocQuality.SCANNED, DocQuality.PHOTO])
+def test_readable_documents_go_to_the_model(quality: DocQuality) -> None:
     assert skip_reason(quality) is None
+
+
+def test_next_utc_midnight_converts_other_timezones_first() -> None:
+    # 23:00 at +02:00 is 21:00 UTC: the cap resets at 00:00 UTC that night, not at local midnight
+    now = datetime(2026, 9, 25, 23, 0, tzinfo=timezone(timedelta(hours=2)))
+    assert next_utc_midnight(now) == datetime(2026, 9, 26, 0, 0, tzinfo=UTC)
+    early = datetime(
+        2026, 9, 26, 1, 0, tzinfo=timezone(timedelta(hours=2))
+    )  # 23:00 UTC on the 25th
+    assert next_utc_midnight(early) == datetime(2026, 9, 26, 0, 0, tzinfo=UTC)
+
+
+def test_non_ascii_text_is_counted_one_token_per_character() -> None:
+    assert estimate_input_tokens([], text_chars=3000, non_ascii_chars=0) == 1000
+    assert estimate_input_tokens([], text_chars=3000, non_ascii_chars=3000) == 3000
+    assert estimate_input_tokens([], text_chars=3000, non_ascii_chars=300) == 900 + 300

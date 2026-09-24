@@ -7,7 +7,9 @@ import hashlib
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+
+from intake.core.statuses import DocQuality
 
 MICROS_PER_USD = 1_000_000
 _PATCH_PX = 28  # Claude reads images in 28x28 px patches (one visual token each)
@@ -70,17 +72,20 @@ def next_utc_midnight(now: datetime) -> datetime:
     """When a spend-paused job may run again: the start of the next UTC day."""
     if now.tzinfo is None:
         raise ValueError("now must be timezone-aware")
-    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    start = now.astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     return start + timedelta(days=1)
 
 
-def estimate_input_tokens(page_sizes: Sequence[tuple[int, int]], text_chars: int) -> int:
-    """Upper-ish estimate of input tokens: image patches per page plus ~1 token per 3 chars."""
+def estimate_input_tokens(
+    page_sizes: Sequence[tuple[int, int]], text_chars: int, non_ascii_chars: int = 0
+) -> int:
+    """Upper-ish estimate of input tokens: image patches per page, ~1 token per 3 ASCII characters
+    and one token per non-ASCII character (CJK text costs far more per character)."""
     images = sum(
         min(math.ceil(w / _PATCH_PX) * math.ceil(h / _PATCH_PX), _MAX_VISUAL_TOKENS)
         for w, h in page_sizes
     )
-    return images + math.ceil(text_chars / 3)
+    return images + math.ceil((text_chars - non_ascii_chars) / 3) + non_ascii_chars
 
 
 def budget_violation(
@@ -94,7 +99,7 @@ def budget_violation(
     return None
 
 
-def skip_reason(doc_quality: str) -> str | None:
+def skip_reason(doc_quality: DocQuality) -> str | None:
     """Why a document must not be sent to the model, if any. A blank page has nothing to read,
     and asking anyway only invites made-up values."""
-    return "UNREADABLE_DOCUMENT" if doc_quality == "unknown" else None
+    return "UNREADABLE_DOCUMENT" if doc_quality is DocQuality.UNKNOWN else None

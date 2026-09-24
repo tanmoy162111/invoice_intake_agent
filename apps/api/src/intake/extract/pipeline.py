@@ -17,8 +17,8 @@ from intake.core.confidence import CRITICAL_FIELDS, fields_below_threshold
 from intake.core.extraction import MasterData, RawField, RawInvoice, interpret
 from intake.core.llm_budget import budget_violation, estimate_input_tokens, skip_reason
 from intake.core.normalize import normalize_supplier_name
-from intake.core.statuses import ActorType, InvoiceStatus
-from intake.db.invoices import set_invoice_status
+from intake.core.statuses import ActorType, DocQuality, InvoiceStatus
+from intake.db.invoices import fail_extraction, set_invoice_status
 from intake.db.models import Document, FieldExtraction, Invoice, InvoiceLine, Supplier
 from intake.extract.llm import LlmClient, PageInput
 from intake.extract.pages import fit_for_model, png_size
@@ -55,23 +55,18 @@ def _master(session: Session, tenant_id: uuid.UUID, raw: RawInvoice) -> MasterDa
     name = raw.header["supplier_name"].value
     wanted = normalize_supplier_name(name) if name and name.strip() else None
     tax_known = name_known = False
+    currencies: set[str] = set()
     for s in session.execute(select(Supplier).where(Supplier.tenant_id == tenant_id)).scalars():
-        if tax and s.tax_id and s.tax_id.strip().upper() == tax:
-            tax_known = True
-        if wanted and wanted in {normalize_supplier_name(n) for n in [s.name, *s.aliases]}:
-            name_known = True
-    return MasterData(tax_id_known=tax_known, name_known=name_known)
-
-
-def _fail(session: Session, inv: Invoice, reason: str) -> None:
-    set_invoice_status(
-        session, inv, InvoiceStatus.FAILED, actor_type=ActorType.SYSTEM, actor_id="worker",
-        reason=reason,
-    )  # fmt: skip
-    record_event(
-        session, tenant_id=inv.tenant_id, invoice_id=inv.id, event_type="extraction_failed",
-        actor_type=ActorType.SYSTEM, actor_id="worker", data={"reason": reason},
-    )  # fmt: skip
+        by_tax = bool(tax and s.tax_id and s.tax_id.strip().upper() == tax)
+        by_name = bool(
+            wanted and wanted in {normalize_supplier_name(n) for n in [s.name, *s.aliases]}
+        )
+        tax_known, name_known = tax_known or by_tax, name_known or by_name
+        if by_tax or by_name:
+            currencies.add(s.default_currency)
+    # a currency hint only when every matching supplier agrees on it
+    default = next(iter(currencies)) if len(currencies) == 1 else None
+    return MasterData(tax_id_known=tax_known, name_known=name_known, default_currency=default)
 
 
 def _load_pages(
@@ -106,18 +101,23 @@ def extract_invoice(
             session, inv, InvoiceStatus.EXTRACTING, actor_type=ActorType.SYSTEM, actor_id="worker"
         )
 
-    reason = skip_reason(doc.doc_quality)
+    quality = DocQuality(doc.doc_quality)
+    reason = skip_reason(quality)
     if reason:
-        return _fail(session, inv, reason)
+        return fail_extraction(session, inv, reason)
     pages, texts, sizes = _load_pages(storage, doc)
     reason = budget_violation(
         pages=len(pages),
-        est_input_tokens=estimate_input_tokens(sizes, sum(len(t) for t in texts)),
+        est_input_tokens=estimate_input_tokens(
+            sizes,
+            text_chars=sum(len(t) for t in texts),
+            non_ascii_chars=sum(1 for t in texts for ch in t if ord(ch) > 127),
+        ),
         max_pages=settings.max_pages,
         max_input_tokens=settings.extract_max_input_tokens,
     )
     if reason:
-        return _fail(session, inv, reason)
+        return fail_extraction(session, inv, reason)
 
     try:
         out = run_extraction(
@@ -127,11 +127,11 @@ def extract_invoice(
             pages=pages, text_layers=texts,
         )  # fmt: skip
     except ExtractionFailed as exc:
-        return _fail(session, inv, exc.reason)
+        return fail_extraction(session, inv, exc.reason)
 
     raw = to_raw_invoice(out.extraction)
     master = _master(session, inv.tenant_id, raw)
-    interpreted = interpret(raw, doc_quality=doc.doc_quality, page_texts=texts, master=master)
+    interpreted = interpret(raw, doc_quality=quality, page_texts=texts, master=master)
 
     inv.supplier_name = interpreted.supplier_name
     inv.invoice_number = interpreted.invoice_number

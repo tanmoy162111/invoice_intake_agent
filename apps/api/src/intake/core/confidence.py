@@ -78,8 +78,9 @@ def score_field(signals: Signals | None) -> FieldScore:
 def fields_below_threshold(
     scores: Mapping[str, Decimal], critical: Sequence[str], minimum: Decimal
 ) -> list[str]:
-    """Critical fields that are missing or below `minimum`, in `critical` order."""
-    return [f for f in critical if scores.get(f, _ZERO) < minimum]
+    """Critical fields that are missing or below `minimum`, in `critical` order. A missing field
+    is always below, whatever the threshold."""
+    return [f for f in critical if f not in scores or scores[f] < minimum]
 
 
 # ---- text-layer agreement -----------------------------------------------------------------
@@ -150,15 +151,20 @@ def text_in_text(value: str, text: str) -> bool:
     return f" {needle} " in f" {_squash(text)} "
 
 
-_SYMBOLS = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
+_UNAMBIGUOUS = {"EUR": "€", "GBP": "£"}
+_AMBIGUOUS = {"USD": "$", "JPY": "¥"}  # $ is also CAD/AUD and ¥ is also CNY
 
 
-def currency_in_text(code: str, text: str) -> bool:
-    """Is the currency printed as its code or its symbol?"""
+def currency_agreement(code: str, text: str) -> bool | None:
+    """Does the text support this currency? True for its code or an unambiguous symbol; None when
+    only a bare `$` or `¥` is printed (not evidence either way); False when nothing supports it."""
     if re.search(rf"(?<![A-Za-z]){re.escape(code)}(?![A-Za-z])", text, re.IGNORECASE):
         return True
-    symbol = _SYMBOLS.get(code)
-    return symbol is not None and symbol in text
+    if (symbol := _UNAMBIGUOUS.get(code)) and symbol in text:
+        return True
+    if (symbol := _AMBIGUOUS.get(code)) and symbol in text:
+        return None
+    return False
 
 
 def _decimal_pattern(value: Decimal) -> str:

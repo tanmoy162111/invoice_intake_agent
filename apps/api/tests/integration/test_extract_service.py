@@ -10,7 +10,12 @@ from sqlalchemy.orm import Session
 from intake.config import Settings
 from intake.db.models import Document, Invoice, LlmCall, Tenant
 from intake.extract.llm import LlmOutputError, PageInput, PermanentLlmError, TransientLlmError
-from intake.extract.service import ExtractionFailed, SpendCapReached, run_extraction
+from intake.extract.service import (
+    ExtractionFailed,
+    SpendCapReached,
+    cache_key,
+    run_extraction,
+)
 from intake.security import BankVault
 from tests.support.fakes import ScriptedClient, ok_payload, result
 
@@ -43,12 +48,15 @@ def settings(**kw: object) -> Settings:
     return Settings(**{**base, **kw})  # type: ignore[arg-type]
 
 
-def run(session: Session, client: ScriptedClient, ids: tuple[uuid.UUID, uuid.UUID], **kw: object):  # type: ignore[no-untyped-def]
+def run(  # type: ignore[no-untyped-def]
+    session: Session, client: ScriptedClient, ids: tuple[uuid.UUID, uuid.UUID], **kw: object
+):
     tenant_id, invoice_id = ids
+    vault = kw.pop("vault", VAULT)
+    prompt = kw.pop("system_prompt", "p")
     return run_extraction(
-        session, client, VAULT, settings(**kw), tenant_id=tenant_id, invoice_id=invoice_id,
-        file_sha256=SHA, system_prompt="p", pages=PAGES,
-        text_layers=["t"],
+        session, client, vault, settings(**kw), tenant_id=tenant_id, invoice_id=invoice_id,  # type: ignore[arg-type]
+        file_sha256=SHA, system_prompt=prompt, pages=PAGES, text_layers=["t"],  # type: ignore[arg-type]
     )  # fmt: skip
 
 
@@ -298,3 +306,48 @@ def test_a_missing_bank_account_stays_null_in_the_cache(
     stored = calls(engine, ids[0])[0].response
     assert stored is not None and stored["supplier_bank_account"]["value"] is None
     assert run(session, ScriptedClient([]), ids).extraction.supplier_bank_account.value is None
+
+
+def test_a_rotated_bank_key_falls_back_to_a_fresh_call(
+    session: Session, engine: Engine, ids: tuple[uuid.UUID, uuid.UUID]
+) -> None:
+    payload = ok_payload()
+    payload["supplier_bank_account"] = {"value": "DE20 3554", "self_confidence": "high", "page": 1}
+    run(session, ScriptedClient([result(payload)]), ids)
+    rotated = BankVault(Fernet.generate_key().decode())
+    client = ScriptedClient([result()])
+    out = run(session, client, ids, vault=rotated)  # the old sealed answer can't be opened
+    assert not out.cached and len(client.requests) == 1
+
+
+def test_a_nul_character_in_the_answer_is_retried_not_stored(
+    session: Session, engine: Engine, ids: tuple[uuid.UUID, uuid.UUID]
+) -> None:
+    bad = ok_payload()
+    bad["supplier_name"] = {"value": "Evil\x00Corp", "self_confidence": "high", "page": 1}
+    client = ScriptedClient([result(bad), result()])
+    out = run(session, client, ids)
+    assert out.calls == 2
+    assert [c.status for c in calls(engine, ids[0])] == ["schema_invalid", "ok"]
+    assert "NUL" in (client.requests[1].validation_error or "")
+
+
+def test_a_page_number_beyond_the_document_triggers_the_retry(
+    session: Session, engine: Engine, ids: tuple[uuid.UUID, uuid.UUID]
+) -> None:
+    bad = ok_payload()
+    bad["total"] = {"value": "9", "self_confidence": "high", "page": 5}  # the document has 1 page
+    client = ScriptedClient([result(bad), result()])
+    run(session, client, ids)
+    err = client.requests[1].validation_error or ""
+    assert "page" in err and "total" in err and "1" in err
+
+
+def test_editing_the_prompt_text_changes_the_cache_key(
+    session: Session, engine: Engine, ids: tuple[uuid.UUID, uuid.UUID]
+) -> None:
+    run(session, ScriptedClient([result()]), ids)
+    edited = ScriptedClient([result()])
+    assert not run(session, edited, ids, system_prompt="p, edited in place").cached
+    assert cache_key(SHA, "m", "v1", "a") != cache_key(SHA, "m", "v1", "b")
+    assert cache_key(SHA, "m", "v1", "a") == cache_key(SHA, "m", "v1", "a")

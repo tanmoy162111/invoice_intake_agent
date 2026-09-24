@@ -9,6 +9,7 @@ from intake.core.extraction import (
     interpret,
     line_field_name,
 )
+from intake.core.statuses import DocQuality
 
 HEADER = [
     "supplier_name",
@@ -88,8 +89,12 @@ def raw(**over: RawField | None) -> RawInvoice:
     return RawInvoice(header, lines)
 
 
+USD_SUPPLIER = MasterData(default_currency="USD")
+
+
 def run(r: RawInvoice | None = None, quality: str = "clean", text: str = TEXT, **kw: object):  # type: ignore[no-untyped-def]
-    return interpret(r or raw(), doc_quality=quality, page_texts=[text], **kw)  # type: ignore[arg-type]
+    kw.setdefault("master", USD_SUPPLIER)  # a known US supplier, so a bare "$" means USD
+    return interpret(r or raw(), doc_quality=DocQuality(quality), page_texts=[text], **kw)  # type: ignore[arg-type]
 
 
 def field(res, name: str):  # type: ignore[no-untyped-def]
@@ -152,9 +157,9 @@ def test_field_results_cover_every_header_field_and_line_field() -> None:
 def test_clean_doc_with_text_agreement_is_trusted() -> None:
     res = run()
     for name in ("invoice_number", "invoice_date", "total", "currency", "supplier_name"):
-        fr = field(res, name)
-        assert fr.confidence >= D("0.8"), name
-        assert fr.signals["text_layer"] is True
+        assert field(res, name).confidence >= D("0.8"), name
+    for name in ("invoice_number", "invoice_date", "total", "supplier_name"):
+        assert field(res, name).signals["text_layer"] is True  # currency: a bare $ is no evidence
 
 
 def test_value_missing_from_text_layer_is_contradicted() -> None:
@@ -203,7 +208,7 @@ def test_known_supplier_supports_name_and_tax_id() -> None:
 
 def test_unknown_supplier_is_not_a_contradiction_here() -> None:
     # UNKNOWN_SUPPLIER is a validation rule (M4); extraction just has no master-data support.
-    res = run(master=MasterData())
+    res = run(master=MasterData(default_currency="USD"))
     assert field(res, "supplier_name").signals["master_data"] is None
 
 
@@ -309,3 +314,70 @@ def test_mismatched_currency_code_in_an_amount_is_unparseable() -> None:
     res = run(raw(total=f("1,105.92 EUR")), text="")
     assert res.total_minor is None
     assert field(res, "total").signals["normalize_error"] == "UNPARSEABLE"
+
+
+def test_bare_dollar_sign_without_a_known_currency_is_not_guessed() -> None:
+    res = run(master=MasterData())  # unknown supplier: no default currency to settle "$"
+    assert res.currency is None
+    assert field(res, "currency").signals["normalize_error"] == "AMBIGUOUS_CURRENCY"
+    assert res.total_minor is None
+    assert field(res, "total").signals["normalize_error"] == "NO_CURRENCY"
+
+
+def test_dollar_sign_is_settled_by_the_suppliers_default_currency() -> None:
+    res = run()
+    assert res.currency == "USD"
+    cur = field(res, "currency")
+    assert cur.signals["master_data"] is True
+    assert cur.signals["text_layer"] is None  # a bare $ is not evidence
+    assert cur.confidence >= D("0.8")
+
+
+def test_dollar_sign_with_a_euro_supplier_is_still_ambiguous() -> None:
+    assert run(master=MasterData(default_currency="EUR")).currency is None
+
+
+def test_a_printed_code_that_differs_from_the_suppliers_currency_is_contradicted() -> None:
+    res = run(raw(currency=f("EUR")), text="", master=MasterData(default_currency="USD"))
+    assert res.currency == "EUR"
+    assert field(res, "currency").signals["master_data"] is False
+    assert field(res, "currency").confidence < D("0.8")
+
+
+def test_ambiguous_quantity_is_not_guessed() -> None:
+    r = raw()
+    line = dict(r.lines[0])
+    line["quantity"] = f("1.200")
+    res = run(RawInvoice(r.header, [line]))
+    assert res.lines[0].quantity is None
+    assert field(res, "line.1.quantity").signals["normalize_error"] == "AMBIGUOUS_NUMBER"
+
+
+def test_a_date_read_only_through_a_hint_gets_no_text_layer_credit() -> None:
+    text = TEXT.replace("2026-07-26", "03/04/2026")
+    res = run(raw(invoice_date=f("03/04/2026")), text=text, day_first=True)
+    assert res.invoice_date == date(2026, 4, 3)
+    fr = field(res, "invoice_date")
+    assert fr.signals["text_layer"] is None
+    assert fr.confidence < D("0.8")
+
+
+def test_a_single_digit_quantity_is_not_corroborated_by_the_text() -> None:
+    r = raw()
+    line = dict(r.lines[0])
+    line["quantity"] = f("1")
+    line["amount"] = f("$12.90")
+    res = run(RawInvoice(r.header, [line]))
+    assert field(res, "line.1.quantity").signals["text_layer"] is None
+
+
+def test_misgrouped_amount_is_unparseable() -> None:
+    res = run(raw(total=f("1.105.92")), text="")
+    assert res.total_minor is None
+    assert field(res, "total").signals["normalize_error"] == "UNPARSEABLE"
+
+
+def test_ambiguous_amount_is_flagged_as_ambiguous() -> None:
+    res = run(raw(total=f("1.105")), text="", master=MasterData(default_currency="USD"))
+    assert res.total_minor is None
+    assert field(res, "total").signals["normalize_error"] == "AMBIGUOUS_NUMBER"

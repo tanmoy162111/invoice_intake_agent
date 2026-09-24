@@ -107,3 +107,37 @@ def test_parse_accepts_the_matching_currency_code(text: str) -> None:
 def test_parse_rejects_a_different_currency_code() -> None:
     with pytest.raises(ValueError):
         parse_money("7,620.05 USD", "EUR")
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["0,500", "1.234.56", "1,23.45", "12,34,567", "01,234", "1,234,56"],
+)
+def test_malformed_or_misgrouped_amounts_are_rejected(text: str) -> None:
+    with pytest.raises(ValueError):
+        parse_money(text, "USD")
+
+
+@pytest.mark.parametrize(
+    ("text", "currency"), [("£100.00", "EUR"), ("€100.00", "USD"), ("$5", "GBP"), ("¥500", "USD")]
+)
+def test_a_currency_symbol_must_match_the_currency(text: str, currency: str) -> None:
+    with pytest.raises(ValueError):
+        parse_money(text, currency)
+
+
+@pytest.mark.parametrize(
+    ("text", "currency", "minor"),
+    [
+        ("$1,234.50", "USD", 123450),
+        ("£100.00", "GBP", 10000),
+        ("¥1,500", "JPY", 1500),
+        ("€ 12,50", "EUR", 1250),
+    ],
+)
+def test_matching_symbols_are_accepted(text: str, currency: str, minor: int) -> None:
+    assert parse_money(text, currency) == Money(minor, currency)
+
+
+def test_comma_before_three_digits_is_thousands_for_two_decimal_currencies() -> None:
+    assert parse_money("1,234", "USD") == Money(123400, "USD")

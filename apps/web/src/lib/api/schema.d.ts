@@ -144,6 +144,8 @@ export interface components {
         ExtractionStatus: {
             /** Configured */
             configured: boolean;
+            /** Provider */
+            provider: string;
             /** Model */
             model: string;
             /** Prompt Version */

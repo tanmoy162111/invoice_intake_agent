@@ -12,6 +12,9 @@ logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO").upper(),
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
+# Provider SDK and HTTP loggers can print request bodies (base64 page images) at DEBUG.
+for noisy in ("anthropic", "httpx", "httpx2", "httpcore"):
+    logging.getLogger(noisy).setLevel(logging.WARNING)
 
 
 def main() -> None:

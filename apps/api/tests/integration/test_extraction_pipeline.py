@@ -15,7 +15,7 @@ from sqlalchemy import Engine, create_engine, func, select, text, update
 from sqlalchemy.orm import Session
 
 from intake.config import Settings
-from intake.core.llm_budget import ModelPrice, request_hash
+from intake.core.llm_budget import ModelPrice
 from intake.db.models import (
     AuditEvent,
     Document,
@@ -26,7 +26,9 @@ from intake.db.models import (
     LlmCall,
 )
 from intake.extract.pipeline import EXTRACT_JOB, extract_invoice
+from intake.extract.prompt import load_prompt
 from intake.extract.recorded import RecordedClient, write_fixture
+from intake.extract.service import cache_key
 from intake.ingest.service import PROCESS_JOB, UploadIngestor
 from intake.ingest.storage import LocalStorage
 from intake.main import create_app
@@ -83,7 +85,8 @@ def ingest_all(engine: Engine, settings: Settings, storage: LocalStorage, fixtur
             res = ingestor.ingest(s, content=path.read_bytes(), filename=path.name, source="test")
             s.commit()
         ids[truth["file"]] = res.invoice_id
-        key = request_hash(res_sha(path), MODEL, settings.extraction_prompt_version)
+        version = settings.extraction_prompt_version
+        key = cache_key(res_sha(path), MODEL, version, load_prompt(version))
         write_fixture(fixtures, key, payload_from_truth(truth))
     return ids
 
@@ -134,6 +137,17 @@ def by_file(env: Env, truth: dict[str, Any]) -> uuid.UUID:
     return env.ids[truth["file"]]
 
 
+SUPPLIER_CURRENCY = {s["key"]: s["default_currency"] for s in MASTER["suppliers"]}
+
+
+def is_unsettled_bare_dollar(truth: dict[str, Any]) -> bool:
+    """A `$` alone could be USD, CAD or AUD. Only the supplier's usual currency settles it, so an
+    invoice printing `$` from a supplier that normally bills in another currency stays unsettled
+    (these are the planted currency-mismatch invoices)."""
+    usual = SUPPLIER_CURRENCY.get(truth["supplier_key"])
+    return truth["header"]["currency"] == "USD" and usual != "USD"
+
+
 def test_every_clean_seed_invoice_is_extracted(env: Env) -> None:
     assert len(TRUTHS) == 59
     with Session(env.engine) as s:
@@ -141,33 +155,66 @@ def test_every_clean_seed_invoice_is_extracted(env: Env) -> None:
             inv = s.get_one(Invoice, by_file(env, truth))
             h = truth["header"]
             assert inv.status == "extracted", truth["file"]
-            assert (inv.invoice_number, inv.currency) == (h["invoice_number"], h["currency"])
+            assert inv.invoice_number == h["invoice_number"]
             assert (
                 inv.invoice_date is not None and inv.invoice_date.isoformat() == h["invoice_date"]
             )
             assert inv.due_date is not None and inv.due_date.isoformat() == h["due_date"]
-            assert (inv.subtotal_minor, inv.tax_minor, inv.total_minor) == (
-                h["subtotal_minor"], h["tax_total_minor"], h["total_minor"],
-            )  # fmt: skip
             assert inv.po_number == h["po_number"]
             assert inv.supplier_name == h["supplier_name"]
             query = select(InvoiceLine).where(InvoiceLine.invoice_id == inv.id)
             lines = s.execute(query.order_by(InvoiceLine.line_no)).scalars().all()
-            assert [(x.line_no, x.qty, x.unit_price_minor, x.amount_minor) for x in lines] == [
-                (
-                    t["line_no"],
-                    Decimal(str(t["quantity"])),
-                    t["unit_price_minor"],
-                    t["amount_minor"],
-                )
-                for t in truth["lines"]
-            ]
+            if is_unsettled_bare_dollar(truth):
+                # Uncertain means human: the supplier's usual currency does not settle "$", so no
+                # currency or amounts are guessed. The quantities and text are still read.
+                assert inv.currency is None, truth["file"]
+                assert (inv.subtotal_minor, inv.tax_minor, inv.total_minor) == (None, None, None)
+                assert [(x.qty, x.unit_price_minor, x.amount_minor) for x in lines] == [
+                    (Decimal(str(t["quantity"])), None, None) for t in truth["lines"]
+                ]
+            else:
+                assert inv.currency == h["currency"], truth["file"]
+                assert (inv.subtotal_minor, inv.tax_minor, inv.total_minor) == (
+                    h["subtotal_minor"], h["tax_total_minor"], h["total_minor"],
+                )  # fmt: skip
+                assert [(x.line_no, x.qty, x.unit_price_minor, x.amount_minor) for x in lines] == [
+                    (
+                        t["line_no"],
+                        Decimal(str(t["quantity"])),
+                        t["unit_price_minor"],
+                        t["amount_minor"],
+                    )
+                    for t in truth["lines"]
+                ]
             n_fields = s.scalar(
                 select(func.count()).select_from(FieldExtraction).where(
                     FieldExtraction.invoice_id == inv.id
                 )
             )  # fmt: skip
             assert n_fields == 13 + 6 * len(truth["lines"])
+
+
+def test_an_unsettled_bare_dollar_is_flagged_not_guessed(env: Env) -> None:
+    unknown = [t for t in TRUTHS if is_unsettled_bare_dollar(t)]
+    assert unknown, "the seed set must include a clean $ invoice from a non-USD supplier"
+    with Session(env.engine) as s:
+        for truth in unknown:
+            row = s.execute(
+                select(FieldExtraction).where(
+                    FieldExtraction.invoice_id == by_file(env, truth),
+                    FieldExtraction.field == "currency",
+                )
+            ).scalar_one()
+            assert row.confidence == Decimal(0)
+            assert row.signals is not None
+            assert row.signals["normalize_error"] == "AMBIGUOUS_CURRENCY"
+            ev = s.execute(
+                select(AuditEvent).where(
+                    AuditEvent.invoice_id == by_file(env, truth),
+                    AuditEvent.event_type == "extraction_completed",
+                )
+            ).scalar_one()
+            assert "currency" in ev.data["low_confidence_critical_fields"]
 
 
 def test_a_missing_po_number_is_null_not_made_up(env: Env) -> None:
@@ -329,6 +376,7 @@ def test_hitting_the_daily_cap_pauses_jobs_and_shows_it_in_the_api(
         status = api.get("/extraction/status", headers=AUTH).json()
         assert status["cap_reached"] is True and status["paused_jobs"] == 1
         assert status["resumes_at"] is not None
+        assert (status["provider"], status["model"]) == ("anthropic", MODEL)
         assert api.get("/jobs", headers=AUTH).json()["paused"] == 1
     with Session(engine) as s:
         inv = s.get_one(Invoice, ids[truth["file"]])
@@ -374,3 +422,72 @@ def test_without_an_api_key_extraction_is_paused_not_failed(
     with TestClient(create_app(settings)) as api:
         assert api.get("/extraction/status", headers=AUTH).json()["configured"] is False
     engine.dispose()
+
+
+# ---- a job that gives up must not leave its invoice looking fine -----------------------------
+
+
+def failed_events(engine: Engine, invoice_id: uuid.UUID) -> list[tuple[str, dict[str, Any]]]:
+    with Session(engine) as s:
+        rows = s.execute(
+            select(AuditEvent).where(AuditEvent.invoice_id == invoice_id)
+            .order_by(AuditEvent.created_at, AuditEvent.id)
+        ).scalars().all()  # fmt: skip
+        return [(e.event_type, dict(e.data)) for e in rows]
+
+
+def test_an_extract_job_that_gives_up_marks_the_invoice_failed(
+    migrated_db_url: str, tmp_path: Path
+) -> None:
+    engine, settings, storage, fx = fresh_tenant_env(migrated_db_url, tmp_path)
+    truth = TRUTHS[5]
+    ids = ingest_all(engine, settings, storage, fx, [truth])
+    empty = RecordedClient(model=MODEL, directory=tmp_path / "no-fixtures", price=PRICE)
+    drain(engine, storage, settings, empty)  # every model call raises: 3 attempts, then gives up
+    with Session(engine) as s:
+        inv = s.get_one(Invoice, ids[truth["file"]])
+        assert inv.status == "failed"
+        is_this = Job.payload["invoice_id"].astext == str(inv.id)
+        job = s.execute(select(Job).where(Job.type == EXTRACT_JOB, is_this)).scalar_one()
+        assert (job.status, job.attempts, job.last_error) == ("failed", 3, "FixtureMissing")
+    events = failed_events(engine, ids[truth["file"]])
+    kinds = [k for k, _ in events]
+    assert kinds.count("job_failed") == 1 and kinds.count("extraction_failed") == 1
+    failed = dict(events)["extraction_failed"]
+    assert failed["reason"] == "JOB_FAILED:FixtureMissing"  # the class name only, never content
+    assert [d["to"] for k, d in events if k == "status_changed"] == [
+        "received", "extracting", "failed",
+    ]  # fmt: skip
+    engine.dispose()
+
+
+def test_a_processing_job_that_gives_up_also_marks_the_invoice_failed(
+    migrated_db_url: str, tmp_path: Path
+) -> None:
+    engine, settings, storage, fx = fresh_tenant_env(migrated_db_url, tmp_path)
+    truth = TRUTHS[6]
+    ids = ingest_all(engine, settings, storage, fx, [truth])
+    with Session(engine) as s:
+        doc = s.execute(
+            select(Document).join(Invoice).where(Invoice.id == ids[truth["file"]])
+        ).scalar_one()
+        stored = storage.base / doc.storage_path
+    stored.unlink()  # the original vanished: process_document can never succeed
+    client = RecordedClient(model=MODEL, directory=fx, price=PRICE)
+    drain(engine, storage, settings, client)
+    with Session(engine) as s:
+        assert s.get_one(Invoice, ids[truth["file"]]).status == "failed"
+    engine.dispose()
+
+
+def test_an_invoice_that_already_extracted_is_not_failed_by_a_late_job_failure(
+    env: Env,
+) -> None:
+    from intake.db.invoices import fail_invoice_after_job_gave_up
+
+    truth = TRUTHS[7]
+    with Session(env.engine) as s:
+        inv = s.get_one(Invoice, by_file(env, truth))
+        fail_invoice_after_job_gave_up(s, inv.id, "JOB_FAILED:Late")
+        s.commit()
+        assert inv.status == "extracted"

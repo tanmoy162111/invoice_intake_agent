@@ -16,7 +16,8 @@ router = APIRouter(prefix="/extraction", tags=["extraction"])
 
 
 class ExtractionStatus(BaseModel):
-    configured: bool  # a model, an API key and a bank-detail key are all set
+    configured: bool  # a model, its credentials (none for local Ollama) and a bank key are set
+    provider: str
     model: str
     prompt_version: str
     spent_today_usd_micros: int
@@ -38,10 +39,11 @@ def extraction_status(
     st = queue.stats(session, timeout_s=settings.job_visibility_timeout_s, tenant_id=tenant_id)
     return ExtractionStatus(
         configured=bool(
-            settings.anthropic_api_key
-            and settings.extraction_model
+            settings.extraction_model
             and settings.bank_encryption_key
+            and (settings.llm_provider == "ollama" or settings.anthropic_api_key)
         ),
+        provider=settings.llm_provider,
         model=settings.extraction_model,
         prompt_version=settings.extraction_prompt_version,
         spent_today_usd_micros=spent,
