@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     storage_dir: str = "./storage"
     anthropic_api_key: str = ""
     extraction_model: str = ""
+    bank_encryption_key: str = ""
 
 
 @lru_cache

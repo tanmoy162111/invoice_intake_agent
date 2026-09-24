@@ -2,8 +2,10 @@ from alembic import context
 from sqlalchemy import create_engine
 
 from intake.config import get_settings
+from intake.db import models  # noqa: F401,E402  (register tables)
+from intake.db.base import Base  # noqa: E402
 
-target_metadata = None  # models arrive in M1
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:

@@ -11,6 +11,7 @@ dependencies = [
   "sqlalchemy>=2.0",
   "psycopg[binary]>=3.2",
   "alembic>=1.13",
+  "cryptography>=50.0.1",
 ]
 
 [dependency-groups]
@@ -20,6 +21,13 @@ dev = [
   "httpx>=0.27",
   "ruff>=0.6",
   "mypy>=1.11",
+]
+generator = [
+    "numpy>=2.5.3",
+    "pillow>=12.3.0",
+    "pypdfium2>=5.13.0",
+    "rapidfuzz>=3.14.6",
+    "reportlab>=5.0.1",
 ]
 
 [build-system]
@@ -33,6 +41,7 @@ packages = ["src/intake"]
 line-length = 100
 target-version = "py312"
 src = ["src", "tests"]
+extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
