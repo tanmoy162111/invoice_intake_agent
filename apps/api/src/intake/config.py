@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     extract_timeout_s: float = 120.0
     daily_spend_cap_usd: Decimal = Decimal("5")  # 0 pauses all extraction
     extract_not_configured_retry_s: int = 300
+    field_confidence_min: Decimal = Decimal("0.8")  # playbook §6.3
 
     # Job queue
     job_max_attempts: int = 3

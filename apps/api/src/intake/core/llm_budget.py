@@ -92,3 +92,9 @@ def budget_violation(
     if est_input_tokens > max_input_tokens:
         return "TOO_MANY_TOKENS"
     return None
+
+
+def skip_reason(doc_quality: str) -> str | None:
+    """Why a document must not be sent to the model, if any. A blank page has nothing to read,
+    and asking anyway only invites made-up values."""
+    return "UNREADABLE_DOCUMENT" if doc_quality == "unknown" else None

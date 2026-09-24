@@ -13,6 +13,7 @@ from intake.core.llm_budget import (
     next_utc_midnight,
     price_for,
     request_hash,
+    skip_reason,
 )
 
 
@@ -119,3 +120,13 @@ def test_budget_too_many_tokens() -> None:
         budget_violation(pages=1, est_input_tokens=50_001, max_pages=10, max_input_tokens=50_000)
         == "TOO_MANY_TOKENS"
     )
+
+
+@pytest.mark.parametrize(("quality", "reason"), [("unknown", "UNREADABLE_DOCUMENT")])
+def test_blank_documents_never_reach_the_model(quality: str, reason: str) -> None:
+    assert skip_reason(quality) == reason
+
+
+@pytest.mark.parametrize("quality", ["clean", "scanned", "photo"])
+def test_readable_documents_go_to_the_model(quality: str) -> None:
+    assert skip_reason(quality) is None

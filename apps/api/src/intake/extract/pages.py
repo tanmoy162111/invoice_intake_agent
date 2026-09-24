@@ -137,3 +137,24 @@ def tone_range(img: Image.Image) -> float:
         return 255
 
     return float(percentile(0.995) - percentile(0.005))
+
+
+def fit_for_model(png: bytes, *, max_bytes: int = 7_000_000) -> tuple[bytes, str]:
+    """The bytes and media type to send. The API limits an image to 10 MB base64-encoded (about
+    7.5 MB raw), so an oversized page is re-encoded as JPEG and shrunk until it fits."""
+    if len(png) <= max_bytes:
+        return png, "image/png"
+    # These are pages we rendered ourselves, so Pillow's bomb guard (a process-wide setting that
+    # other code lowers for untrusted uploads) is lifted only for this call.
+    previous, Image.MAX_IMAGE_PIXELS = Image.MAX_IMAGE_PIXELS, None
+    try:
+        img = Image.open(io.BytesIO(png)).convert("RGB")
+    finally:
+        Image.MAX_IMAGE_PIXELS = previous
+    for _ in range(8):
+        buf = io.BytesIO()
+        img.save(buf, "JPEG", quality=85)
+        if buf.tell() <= max_bytes:
+            return buf.getvalue(), "image/jpeg"
+        img = img.resize((int(img.width * 0.8), int(img.height * 0.8)), Image.Resampling.LANCZOS)
+    raise UnreadableFile("page image is too large to send")
