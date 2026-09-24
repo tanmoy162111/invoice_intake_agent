@@ -13,3 +13,4 @@ node_modules/
 storage/
 .claude/settings.local.json
 .planning/HANDOFF.json
+*.tsbuildinfo
