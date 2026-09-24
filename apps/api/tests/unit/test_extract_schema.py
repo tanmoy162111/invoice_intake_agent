@@ -7,7 +7,9 @@ from intake.core.confidence import SelfConfidence
 from intake.extract.schema import (
     HEADER_FIELDS,
     LINE_FIELDS,
+    MAX_VALUE_CHARS,
     InvoiceExtraction,
+    pages_out_of_range,
     tool_input_schema,
 )
 
@@ -119,3 +121,33 @@ def test_value_must_be_a_string_or_null() -> None:
 
 def test_no_lines_is_allowed() -> None:
     assert InvoiceExtraction.model_validate(payload(lines=[])).lines == []
+
+
+def test_nul_characters_are_rejected() -> None:
+    # Postgres cannot store NUL in text or JSONB; a hostile document must not be able to make the
+    # answer unstorable after it was paid for.
+    with pytest.raises(ValidationError):
+        InvoiceExtraction.model_validate(payload(invoice_number=field("AB\x00CD")))
+
+
+def test_overlong_values_are_rejected() -> None:
+    ok = InvoiceExtraction.model_validate(payload(supplier_address=field("x" * MAX_VALUE_CHARS)))
+    assert len(ok.supplier_address.value or "") == MAX_VALUE_CHARS
+    with pytest.raises(ValidationError):
+        InvoiceExtraction.model_validate(
+            payload(supplier_address=field("x" * (MAX_VALUE_CHARS + 1)))
+        )
+
+
+def test_pages_out_of_range_lists_offending_fields() -> None:
+    data = payload(total=field("1", page=3), invoice_number=field("1", page=1))
+    data["lines"] = [{name: field("1", page=2) for name in LINE_FIELDS}]
+    parsed = InvoiceExtraction.model_validate(data)
+    assert pages_out_of_range(parsed, page_count=3) == []
+    bad = pages_out_of_range(parsed, page_count=1)
+    assert "total" in bad and "lines[1].amount" in bad and "invoice_number" not in bad
+
+
+def test_null_pages_are_never_out_of_range() -> None:
+    parsed = InvoiceExtraction.model_validate(payload(po_number=field(None, "low", None)))
+    assert "po_number" not in pages_out_of_range(parsed, page_count=1)

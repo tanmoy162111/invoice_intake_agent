@@ -12,6 +12,8 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from intake.core.confidence import SelfConfidence
 
+MAX_VALUE_CHARS = 2000  # no real invoice field is longer; bounds what a hostile document can store
+
 HEADER_FIELDS: tuple[str, ...] = (
     "supplier_name",
     "supplier_tax_id",
@@ -45,6 +47,16 @@ class ExtractedField(_Strict):
     value: str | None
     self_confidence: SelfConfidence
     page: int | None
+
+    @field_validator("value")
+    @classmethod
+    def _storable(cls, value: str | None) -> str | None:
+        if value is not None:
+            if "\x00" in value:  # Postgres cannot store NUL in text or JSONB
+                raise ValueError("contains a NUL character")
+            if len(value) > MAX_VALUE_CHARS:
+                raise ValueError("value is too long")
+        return value
 
     @field_validator("page")
     @classmethod
@@ -83,3 +95,18 @@ class InvoiceExtraction(_Strict):
 def tool_input_schema() -> dict[str, Any]:
     """JSON schema for the forced/strict extraction tool."""
     return InvoiceExtraction.model_json_schema()
+
+
+def pages_out_of_range(extraction: InvoiceExtraction, page_count: int) -> list[str]:
+    """Names of fields whose page number is beyond the document (the model made it up)."""
+    bad: list[str] = []
+    for name in HEADER_FIELDS:
+        page = getattr(extraction, name).page
+        if page is not None and page > page_count:
+            bad.append(name)
+    for n, line in enumerate(extraction.lines, start=1):
+        for name in LINE_FIELDS:
+            page = getattr(line, name).page
+            if page is not None and page > page_count:
+                bad.append(f"lines[{n}].{name}")
+    return bad
