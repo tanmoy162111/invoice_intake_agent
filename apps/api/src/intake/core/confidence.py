@@ -130,6 +130,7 @@ def date_in_text(value: date, text: str) -> bool:
                 forms.add(f"{mm}{sep}{dd}{sep}{y}")
         for name in (month, month[:3]):
             forms.add(f"{dd} {name} {y}")
+            forms.add(f"{dd}-{name}-{y}")
             forms.add(f"{name} {dd}, {y}")
             forms.add(f"{name} {dd} {y}")
     pattern = "|".join(re.escape(f) for f in sorted(forms, key=len, reverse=True))

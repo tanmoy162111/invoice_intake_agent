@@ -132,7 +132,7 @@ def test_amount_in_text_absent() -> None:
 
 @pytest.mark.parametrize(
     "text",
-    ["Date: 2026-03-13", "13/03/2026", "13.03.2026", "03/13/2026", "March 13, 2026", "13 Mar 2026"],
+    ["Date: 2026-03-13", "13/03/2026", "13.03.2026", "03/13/2026", "March 13, 2026", "13 Mar 2026", "13-Mar-2026"],
 )
 def test_date_in_text_matches_common_renderings(text: str) -> None:
     assert date_in_text(date(2026, 3, 13), text)
