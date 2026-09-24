@@ -3,6 +3,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 import pytest
+from cryptography.fernet import Fernet
 from sqlalchemy import Engine, func, select, text, update
 from sqlalchemy.orm import Session
 
@@ -10,9 +11,11 @@ from intake.config import Settings
 from intake.db.models import Document, Invoice, LlmCall, Tenant
 from intake.extract.llm import LlmOutputError, PageInput, PermanentLlmError, TransientLlmError
 from intake.extract.service import ExtractionFailed, SpendCapReached, run_extraction
+from intake.security import BankVault
 from tests.support.fakes import ScriptedClient, ok_payload, result
 
 SHA = "a" * 64
+VAULT = BankVault(Fernet.generate_key().decode())
 PAGES = [PageInput(b"\x89PNG", "image/png")]
 
 
@@ -43,7 +46,7 @@ def settings(**kw: object) -> Settings:
 def run(session: Session, client: ScriptedClient, ids: tuple[uuid.UUID, uuid.UUID], **kw: object):  # type: ignore[no-untyped-def]
     tenant_id, invoice_id = ids
     return run_extraction(
-        session, client, settings(**kw), tenant_id=tenant_id, invoice_id=invoice_id,
+        session, client, VAULT, settings(**kw), tenant_id=tenant_id, invoice_id=invoice_id,
         file_sha256=SHA, system_prompt="p", pages=PAGES,
         text_layers=["t"],
     )  # fmt: skip
@@ -78,7 +81,8 @@ def test_reprocessing_the_same_file_uses_the_cache_and_adds_no_llm_calls_row(
     first = run(session, client, ids)
     again = run(session, client, ids)  # no more scripted steps: a second call would raise
     assert again.cached and again.calls == 0 and again.cost_micros == 0
-    assert again.extraction == first.extraction
+    skip = {"supplier_bank_account"}  # comes back in its normalized form, by design
+    assert again.extraction.model_dump(exclude=skip) == first.extraction.model_dump(exclude=skip)
     assert len(calls(engine, ids[0])) == 1
     assert len(client.requests) == 1
 
@@ -265,3 +269,32 @@ def test_a_cached_answer_that_no_longer_fits_the_schema_is_ignored(
     client = ScriptedClient([result()])
     assert not run(session, client, ids).cached
     assert len(client.requests) == 1
+
+
+def test_bank_account_is_sealed_in_the_cache_and_restored_on_a_hit(
+    session: Session, engine: Engine, ids: tuple[uuid.UUID, uuid.UUID]
+) -> None:
+    payload = ok_payload()
+    payload["supplier_bank_account"] = {
+        "value": "DE20 3554 6670 1194 6383 4401", "self_confidence": "high", "page": 1,
+    }  # fmt: skip
+    run(session, ScriptedClient([result(payload)]), ids)
+    stored = calls(engine, ids[0])[0].response
+    assert stored is not None
+    sealed = stored["supplier_bank_account"]["value"]
+    assert sealed.startswith("enc:") and "3554" not in sealed  # no plaintext account at rest
+    assert stored["invoice_number"]["value"] == "x"  # everything else is stored as is
+    hit = run(session, ScriptedClient([]), ids)
+    assert hit.cached
+    assert hit.extraction.supplier_bank_account.value == "DE20355466701194638344" + "01"
+
+
+def test_a_missing_bank_account_stays_null_in_the_cache(
+    session: Session, engine: Engine, ids: tuple[uuid.UUID, uuid.UUID]
+) -> None:
+    payload = ok_payload()
+    payload["supplier_bank_account"] = {"value": None, "self_confidence": "low", "page": None}
+    run(session, ScriptedClient([result(payload)]), ids)
+    stored = calls(engine, ids[0])[0].response
+    assert stored is not None and stored["supplier_bank_account"]["value"] is None
+    assert run(session, ScriptedClient([]), ids).extraction.supplier_bank_account.value is None

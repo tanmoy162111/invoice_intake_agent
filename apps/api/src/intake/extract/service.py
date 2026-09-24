@@ -27,6 +27,7 @@ from intake.extract.llm import (
     TransientLlmError,
 )
 from intake.extract.schema import InvoiceExtraction, tool_input_schema
+from intake.security import BankVault
 
 MAX_ATTEMPTS = 2  # the first call, plus one retry that includes the validation error
 
@@ -75,7 +76,27 @@ def _summarize(exc: ValidationError) -> str:
     return "; ".join(f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in errs)[:1000]
 
 
-def _cached(session: Session, tenant_id: uuid.UUID, key: str) -> InvoiceExtraction | None:
+_SEALED = "enc:"
+
+
+def _seal(dump: dict[str, Any], vault: BankVault) -> dict[str, Any]:
+    """The cache must not hold a bank account in the clear (playbook §10): encrypt it."""
+    value = dump["supplier_bank_account"]["value"]
+    if value:
+        dump["supplier_bank_account"]["value"] = _SEALED + vault.encrypt(value)
+    return dump
+
+
+def _unseal(data: dict[str, Any], vault: BankVault) -> dict[str, Any]:
+    value = data.get("supplier_bank_account", {}).get("value")
+    if isinstance(value, str) and value.startswith(_SEALED):
+        data["supplier_bank_account"]["value"] = vault.decrypt(value[len(_SEALED) :])
+    return data
+
+
+def _cached(
+    session: Session, tenant_id: uuid.UUID, key: str, vault: BankVault
+) -> InvoiceExtraction | None:
     row = session.execute(
         select(LlmCall.response)
         .where(
@@ -90,8 +111,13 @@ def _cached(session: Session, tenant_id: uuid.UUID, key: str) -> InvoiceExtracti
     if row is None:
         return None
     try:
-        return InvoiceExtraction.model_validate(row)
-    except ValidationError:  # a schema change made the old answer unusable: ask again
+        return InvoiceExtraction.model_validate(_unseal(dict(row), vault))
+    except (
+        ValidationError,
+        KeyError,
+        ValueError,
+        TypeError,
+    ):  # a schema change made the old answer unusable: ask again
         return None
 
 
@@ -127,6 +153,7 @@ def _log_call(
 def run_extraction(
     session: Session,
     client: LlmClient,
+    vault: BankVault,
     settings: Settings,
     *,
     tenant_id: uuid.UUID,
@@ -138,7 +165,7 @@ def run_extraction(
 ) -> Extracted:
     prompt_version = settings.extraction_prompt_version
     key = request_hash(file_sha256, client.model, prompt_version)
-    hit = _cached(session, tenant_id, key)
+    hit = _cached(session, tenant_id, key, vault)
     if hit is not None:
         return Extracted(hit, cached=True, calls=0, cost_micros=0)
 
@@ -195,7 +222,7 @@ def run_extraction(
             continue
         total_cost += record(
             "ok", input_tokens=result.input_tokens, output_tokens=result.output_tokens,
-            latency_ms=result.latency_ms, response=parsed.model_dump(mode="json"),
+            latency_ms=result.latency_ms, response=_seal(parsed.model_dump(mode="json"), vault),
         )  # fmt: skip
         return Extracted(parsed, cached=False, calls=calls, cost_micros=total_cost)
     raise ExtractionFailed("SCHEMA_INVALID")

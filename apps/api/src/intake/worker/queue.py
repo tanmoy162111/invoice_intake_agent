@@ -20,6 +20,14 @@ MAX_ERROR_CHARS = 500
 PAUSE_REASONS = ("SPEND_CAP_REACHED", "EXTRACTION_NOT_CONFIGURED")
 
 
+@dataclass(frozen=True)
+class Deferral:
+    """A handler's answer when it can't do the work yet (spend cap reached, not configured)."""
+
+    until: datetime
+    reason: str
+
+
 def enqueue(
     session: Session,
     *,

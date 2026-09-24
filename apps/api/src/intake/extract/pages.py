@@ -6,6 +6,7 @@ UnreadableFile. Document text is returned to the caller and never logged here.
 
 import io
 import math
+import struct
 from collections.abc import Iterator
 from dataclasses import dataclass
 
@@ -158,3 +159,10 @@ def fit_for_model(png: bytes, *, max_bytes: int = 7_000_000) -> tuple[bytes, str
             return buf.getvalue(), "image/jpeg"
         img = img.resize((int(img.width * 0.8), int(img.height * 0.8)), Image.Resampling.LANCZOS)
     raise UnreadableFile("page image is too large to send")
+
+
+def png_size(png: bytes) -> tuple[int, int]:
+    """Width and height from a PNG header, without decoding (or trusting) the image."""
+    if png[:8] != b"\x89PNG\r\n\x1a\n" or png[12:16] != b"IHDR":
+        raise UnreadableFile("not a PNG")
+    return struct.unpack(">II", png[16:24])

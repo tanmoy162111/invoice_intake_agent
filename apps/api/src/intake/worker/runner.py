@@ -42,8 +42,17 @@ def run_once(
     with Session(engine) as session:
         job = session.get_one(Job, job_id)
         try:
-            handlers[job_type](session, storage, settings, job)
-            if queue.complete(session, job, attempt=attempt):
+            outcome = handlers[job_type](session, storage, settings, job)
+            if isinstance(outcome, queue.Deferral):
+                if queue.defer(
+                    session, job, until=outcome.until, reason=outcome.reason, attempt=attempt
+                ):
+                    session.commit()
+                    log.warning("job %s (%s) paused: %s", job_id, job_type, outcome.reason)
+                else:
+                    session.rollback()
+                    log.warning("job %s paused after losing its lock; ignored", job_id)
+            elif queue.complete(session, job, attempt=attempt):
                 session.commit()
                 log.info("job %s (%s) done", job_id, job_type)
             else:
