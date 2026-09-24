@@ -58,3 +58,16 @@ def test_line_amount_exact() -> None:
 def test_line_amount_rounds_half_up() -> None:
     assert line_amount_minor(Decimal("0.5"), 5) == 3  # 2.5 -> 3
     assert line_amount_minor(Decimal("1.5"), 333) == 500  # 499.5 -> 500
+
+
+def test_unsupported_currency_is_rejected() -> None:
+    with pytest.raises(ValueError, match="unsupported currency"):
+        Money(100, "XXX")
+    with pytest.raises(ValueError):
+        parse_money("1.00", "ZZZ")
+
+
+def test_money_subtraction() -> None:
+    assert Money(500, "USD") - Money(200, "USD") == Money(300, "USD")
+    with pytest.raises(ValueError):
+        Money(500, "USD") - Money(200, "GBP")

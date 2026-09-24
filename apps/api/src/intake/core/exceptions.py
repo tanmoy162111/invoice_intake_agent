@@ -217,3 +217,17 @@ def explain(code: ExceptionCode, **params: str) -> str:
 
 def sample_params(code: ExceptionCode) -> dict[str, str]:
     return dict(SPECS[code].sample_params)
+
+
+def taxonomy_markdown() -> str:
+    """The table in docs/exception-taxonomy.md. A test keeps the doc in sync with SPECS."""
+    rows = [
+        "| Code | Severity | Example explanation | Suggested fix |",
+        "|---|---|---|---|",
+    ]
+    for code in ExceptionCode:
+        spec = SPECS[code]
+        example = explain(code, **spec.sample_params)
+        cells = [f"`{code.value}`", spec.severity.value, example, spec.suggested_fix]
+        rows.append("| " + " | ".join(cells) + " |")
+    return "\n".join(rows)

@@ -14,3 +14,4 @@ storage/
 .claude/settings.local.json
 .planning/HANDOFF.json
 *.tsbuildinfo
+data/inbox/

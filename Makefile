@@ -1,15 +1,18 @@
-.PHONY: dev seed check check-api check-web eval demo-reset gen-api
+.PHONY: dev seed generate check check-api check-web eval demo-reset gen-api
 
 dev:            ## start everything (db, api, worker, web)
 	docker compose up --build
 
-seed:           ## load demo data (arrives in M1)
-	@echo "seed: not implemented yet (M1)"
+seed:           ## load demo master data into the db and stage invoices in data/inbox
+	./scripts/seed.sh
+
+generate:       ## regenerate the synthetic dataset (deterministic; existing golden files are kept)
+	PYTHONPATH=data uv run --project apps/api --group generator python -m generator.generate
 
 check: check-api check-web   ## lint + types + tests
 
 check-api:
-	cd apps/api && uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest -q
+	cd apps/api && uv run ruff check . ../../data/generator && uv run ruff format --check . ../../data/generator && uv run mypy && uv run pytest -q --cov=intake.core --cov-fail-under=90
 
 check-web:
 	cd apps/web && pnpm lint && pnpm typecheck && pnpm test && pnpm build

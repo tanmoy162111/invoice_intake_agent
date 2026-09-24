@@ -28,7 +28,9 @@ The web page reaches the API over the Compose network, so changing `API_PORT` on
 | `make dev` | start db, api, worker, web |
 | `make check` | lint + types + tests for api and web |
 | `make gen-api` | regenerate web API types from the running API's OpenAPI schema |
-| `make seed` / `make eval` / `make demo-reset` | stubs until M1 / M10 / M13 |
+| `make seed` | load demo master data, stage 120 invoice files in `data/inbox/` (safe to re-run) |
+| `make generate` | rebuild the synthetic dataset in `data/seed/` (deterministic) |
+| `make eval` / `make demo-reset` | stubs until M10 / M13 |
 
 Layout: `apps/api` (FastAPI + worker, pure decision logic in `src/intake/core/`),
 `apps/web` (Next.js), `data/`, `eval/`, `docs/` (ADRs in `docs/decisions/`).
