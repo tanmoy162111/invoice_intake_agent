@@ -1,0 +1,54 @@
+{
+  "id": "inv-113",
+  "file": "Coastal-CP-2026-0261.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 113,
+  "readable": true,
+  "supplier_key": "coastal",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Coastal Packaging Ltd.",
+    "supplier_tax_id": null,
+    "supplier_address": "893 Mill Lane, Tampa, FL",
+    "supplier_bank_account": "ABA 376578283 / Acct 4502596013",
+    "invoice_number": "CP-2026-0261",
+    "invoice_date": "2026-05-26",
+    "due_date": "2026-07-10",
+    "po_number": "PO-10106",
+    "currency": "USD",
+    "subtotal_minor": 77800,
+    "tax_total_minor": 5446,
+    "total_minor": 83246,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Bubble wrap, 50m roll",
+      "sku": null,
+      "quantity": 20,
+      "unit_price_minor": 2150,
+      "amount_minor": 43000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Wooden pallet, standard",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 1450,
+      "amount_minor": 34800,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

@@ -1,0 +1,54 @@
+{
+  "id": "inv-080",
+  "file": "scan0080.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "B",
+  "received_order": 80,
+  "readable": true,
+  "supplier_key": "coastal",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Coastal Packaging Ltd.",
+    "supplier_tax_id": null,
+    "supplier_address": "893 Mill Lane, Tampa, FL",
+    "supplier_bank_account": "ABA 376578283 / Acct 4502596013",
+    "invoice_number": "CP-2026-0228",
+    "invoice_date": "2026-06-28",
+    "due_date": "2026-08-27",
+    "po_number": "PO-10056",
+    "currency": "USD",
+    "subtotal_minor": 8870,
+    "tax_total_minor": 621,
+    "total_minor": 9491,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Packing tape 48mm, roll",
+      "sku": null,
+      "quantity": 20,
+      "unit_price_minor": 349,
+      "amount_minor": 6980,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Shipping labels, box of 500",
+      "sku": null,
+      "quantity": 1,
+      "unit_price_minor": 1890,
+      "amount_minor": 1890,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

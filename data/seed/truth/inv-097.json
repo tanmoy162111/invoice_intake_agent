@@ -1,0 +1,70 @@
+{
+  "id": "inv-097",
+  "file": "scan0097.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 97,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0879",
+    "invoice_date": "2026-04-17",
+    "due_date": "2026-05-17",
+    "po_number": "PO-10034",
+    "currency": "USD",
+    "subtotal_minor": 315820,
+    "tax_total_minor": 18949,
+    "total_minor": 334769,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ball valve 1 inch",
+      "sku": "MIP-VLV-BL",
+      "quantity": 12,
+      "unit_price_minor": 5490,
+      "amount_minor": 65880,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Electric motor 1HP",
+      "sku": "MIP-MTR-1HP",
+      "quantity": 5,
+      "unit_price_minor": 48500,
+      "amount_minor": 242500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Ball bearing 6204",
+      "sku": "MIP-BRG-6204",
+      "quantity": 6,
+      "unit_price_minor": 1240,
+      "amount_minor": 7440,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "RECEIPT_MISSING"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "RECEIPT_MISSING",
+      "detail": "nothing received for PO-10034"
+    }
+  ]
+}

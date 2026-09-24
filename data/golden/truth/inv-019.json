@@ -1,0 +1,79 @@
+{
+  "id": "inv-019",
+  "file": "scan0019.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 19,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0872",
+    "invoice_date": "2026-03-13",
+    "due_date": "2026-04-27",
+    "po_number": "PO-10015",
+    "currency": "USD",
+    "subtotal_minor": 427800,
+    "tax_total_minor": 28234,
+    "total_minor": 456034,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Industrial lubricant, 5L",
+      "sku": "MIP-LUB-5L",
+      "quantity": 5,
+      "unit_price_minor": 6320,
+      "amount_minor": 31600,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Hydraulic hose, 2m",
+      "sku": "MIP-HYD-HS",
+      "quantity": 24,
+      "unit_price_minor": 7800,
+      "amount_minor": 187200,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Oil filter, heavy duty",
+      "sku": "MIP-FIL-OIL",
+      "quantity": 50,
+      "unit_price_minor": 2360,
+      "amount_minor": 118000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Gasket set, universal",
+      "sku": "MIP-GSK-SET",
+      "quantity": 20,
+      "unit_price_minor": 4550,
+      "amount_minor": 91000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "TAX_MISMATCH"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "TAX_MISMATCH",
+      "detail": "tax 25668 -> 28234"
+    }
+  ]
+}

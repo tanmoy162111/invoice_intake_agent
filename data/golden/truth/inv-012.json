@@ -1,0 +1,45 @@
+{
+  "id": "inv-012",
+  "file": "Coastal-CP-2026-0238.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 12,
+  "readable": true,
+  "supplier_key": "coastal",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Coastal Packaging Ltd.",
+    "supplier_tax_id": null,
+    "supplier_address": "893 Mill Lane, Tampa, FL",
+    "supplier_bank_account": "ABA 376578283 / Acct 4502596013",
+    "invoice_number": "CP-2026-0238",
+    "invoice_date": "2026-03-15",
+    "due_date": "2026-04-29",
+    "po_number": "PO-10061",
+    "currency": "USD",
+    "subtotal_minor": 4300,
+    "tax_total_minor": 301,
+    "total_minor": 4601,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Bubble wrap, 50m roll",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 2150,
+      "amount_minor": 4300,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

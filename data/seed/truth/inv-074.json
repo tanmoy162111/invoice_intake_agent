@@ -1,0 +1,54 @@
+{
+  "id": "inv-074",
+  "file": "Caledonian-CCS-2026-0799.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "D",
+  "received_order": 74,
+  "readable": true,
+  "supplier_key": "caledonian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Caledonian Catering Supplies Ltd",
+    "supplier_tax_id": "GB111320267",
+    "supplier_address": "35 Market St, Glasgow",
+    "supplier_bank_account": "GB58 4610 4921 9185 8543 2895",
+    "invoice_number": "CCS-2026-0799",
+    "invoice_date": "2026-05-26",
+    "due_date": "2026-06-25",
+    "po_number": "PO-10098",
+    "currency": "GBP",
+    "subtotal_minor": 58800,
+    "tax_total_minor": 2940,
+    "total_minor": 61740,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ground coffee 1kg",
+      "sku": "CCS-COF-1KG",
+      "quantity": 24,
+      "unit_price_minor": 1890,
+      "amount_minor": 45360,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 2,
+      "description": "Bottled water, case of 24",
+      "sku": "CCS-WAT-24",
+      "quantity": 12,
+      "unit_price_minor": 1120,
+      "amount_minor": 13440,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

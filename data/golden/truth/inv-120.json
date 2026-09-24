@@ -1,0 +1,70 @@
+{
+  "id": "inv-120",
+  "file": "Brightline-BL-2026-0516.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 120,
+  "readable": true,
+  "supplier_key": "brightline",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Brightline Office Supplies Inc.",
+    "supplier_tax_id": "69-9397618",
+    "supplier_address": "347 Harbour Rd, Portland, OR",
+    "supplier_bank_account": "ABA 533367701 / Acct 1472427652",
+    "invoice_number": "BL-2026-0516",
+    "invoice_date": "2026-03-22",
+    "due_date": "2026-04-21",
+    "po_number": "PO-10032",
+    "currency": "USD",
+    "subtotal_minor": 83850,
+    "tax_total_minor": 6708,
+    "total_minor": 90558,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Heavy-duty stapler",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 2490,
+      "amount_minor": 24900,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 1290,
+      "amount_minor": 6450,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 28,
+      "unit_price_minor": 1875,
+      "amount_minor": 52500,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "QTY_VARIANCE"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "QTY_VARIANCE",
+      "detail": "line 3: PO qty 24, invoiced 28"
+    }
+  ]
+}

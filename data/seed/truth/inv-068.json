@@ -1,0 +1,63 @@
+{
+  "id": "inv-068",
+  "file": "IMG_4476.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "C",
+  "received_order": 68,
+  "readable": true,
+  "supplier_key": "olivar",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Olivar Suministros S.L.",
+    "supplier_tax_id": "DE768792579",
+    "supplier_address": "454 Harbour Rd, Lyon",
+    "supplier_bank_account": "DE31 2219 1206 2657 7287 8504",
+    "invoice_number": "OS-2026-0509",
+    "invoice_date": "2026-06-13",
+    "due_date": "2026-07-28",
+    "po_number": "PO-94281",
+    "currency": "EUR",
+    "subtotal_minor": 127920,
+    "tax_total_minor": 26863,
+    "total_minor": 154783,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Snack box assortment",
+      "sku": "OS-SNK-BX",
+      "quantity": 24,
+      "unit_price_minor": 3890,
+      "amount_minor": 93360,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "UHT milk, case of 12",
+      "sku": "OS-MLK-12",
+      "quantity": 24,
+      "unit_price_minor": 1440,
+      "amount_minor": 34560,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "PO_NOT_FOUND"
+    ],
+    "may_raise": [
+      "NO_PO"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "PO_NOT_FOUND",
+      "detail": "PO-94281 does not exist"
+    }
+  ]
+}

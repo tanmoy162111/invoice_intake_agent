@@ -1,0 +1,54 @@
+{
+  "id": "inv-043",
+  "file": "scan0043.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "B",
+  "received_order": 43,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0651",
+    "invoice_date": "2026-04-14",
+    "due_date": "2026-05-14",
+    "po_number": "PO-10094",
+    "currency": "USD",
+    "subtotal_minor": 541250,
+    "tax_total_minor": 43300,
+    "total_minor": 584550,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Toner cartridge, black",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 8950,
+      "amount_minor": 447500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 1875,
+      "amount_minor": 93750,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

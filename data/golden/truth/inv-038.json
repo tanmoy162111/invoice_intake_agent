@@ -1,0 +1,44 @@
+{
+  "id": "inv-038",
+  "file": "IMG_4266.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "A",
+  "received_order": 38,
+  "readable": false,
+  "supplier_key": "redwood",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": null,
+    "supplier_tax_id": null,
+    "supplier_address": null,
+    "supplier_bank_account": null,
+    "invoice_number": null,
+    "invoice_date": null,
+    "due_date": null,
+    "po_number": null,
+    "currency": null,
+    "subtotal_minor": null,
+    "tax_total_minor": null,
+    "total_minor": null,
+    "payment_terms": null
+  },
+  "lines": [],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "UNREADABLE_DOCUMENT"
+    ],
+    "may_raise": [
+      "*"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "UNREADABLE_DOCUMENT",
+      "detail": "document is illegible"
+    }
+  ]
+}

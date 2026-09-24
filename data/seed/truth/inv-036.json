@@ -1,0 +1,79 @@
+{
+  "id": "inv-036",
+  "file": "IMG_4252.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "A",
+  "received_order": 36,
+  "readable": true,
+  "supplier_key": "redwood",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Redwood Facility Maintenance",
+    "supplier_tax_id": "17-8600401",
+    "supplier_address": "54 Harbour Rd, Tampa, FL",
+    "supplier_bank_account": "ABA 129719713 / Acct 6857911042",
+    "invoice_number": "RFM-2026-0518",
+    "invoice_date": "2026-08-18",
+    "due_date": "2026-09-17",
+    "po_number": null,
+    "currency": "USD",
+    "subtotal_minor": 360550,
+    "tax_total_minor": 25239,
+    "total_minor": 385789,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Sanitiser refill kit",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 3250,
+      "amount_minor": 16250,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Monthly cleaning service, floor 1",
+      "sku": null,
+      "quantity": 6,
+      "unit_price_minor": 42000,
+      "amount_minor": 252000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "HVAC service call",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 27500,
+      "amount_minor": 82500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Pest control treatment",
+      "sku": null,
+      "quantity": 1,
+      "unit_price_minor": 9800,
+      "amount_minor": 9800,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "NO_PO"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "NO_PO",
+      "detail": "invoice has no PO number and no PO matches"
+    }
+  ]
+}

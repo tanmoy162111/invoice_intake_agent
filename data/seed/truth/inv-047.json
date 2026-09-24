@@ -1,0 +1,79 @@
+{
+  "id": "inv-047",
+  "file": "scan0047.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 47,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0886",
+    "invoice_date": "2026-04-19",
+    "due_date": "2026-05-19",
+    "po_number": "PO-10039",
+    "currency": "USD",
+    "subtotal_minor": 205780,
+    "tax_total_minor": 12347,
+    "total_minor": 218127,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ball valve 1 inch",
+      "sku": "MIP-VLV-BL",
+      "quantity": 2,
+      "unit_price_minor": 5490,
+      "amount_minor": 10980,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Gasket set, universal",
+      "sku": "MIP-GSK-SET",
+      "quantity": 24,
+      "unit_price_minor": 4550,
+      "amount_minor": 109200,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Oil filter, heavy duty",
+      "sku": "MIP-FIL-OIL",
+      "quantity": 10,
+      "unit_price_minor": 2360,
+      "amount_minor": 23600,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Ball bearing 6204",
+      "sku": "MIP-BRG-6204",
+      "quantity": 50,
+      "unit_price_minor": 1240,
+      "amount_minor": 62000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "QTY_NOT_RECEIVED"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "QTY_NOT_RECEIVED",
+      "detail": "line 2: billed 24, received 17"
+    }
+  ]
+}

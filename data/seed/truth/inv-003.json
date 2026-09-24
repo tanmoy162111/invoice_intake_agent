@@ -1,0 +1,61 @@
+{
+  "id": "inv-003",
+  "file": "Harborview-HV-2026-0151.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "D",
+  "received_order": 3,
+  "readable": true,
+  "supplier_key": "harborview",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Harborview Cleaning Services",
+    "supplier_tax_id": "19-1665819",
+    "supplier_address": "107 Industrial Way, Tampa, FL",
+    "supplier_bank_account": "ABA 088321796 / Acct 1367917152",
+    "invoice_number": "HV-2026-0151",
+    "invoice_date": "2026-04-23",
+    "due_date": "2026-06-07",
+    "po_number": null,
+    "currency": "USD",
+    "subtotal_minor": 235200,
+    "tax_total_minor": 11760,
+    "total_minor": 246960,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Light fitting replacement",
+      "sku": "HV-LGT-RPL",
+      "quantity": 3,
+      "unit_price_minor": 4400,
+      "amount_minor": 13200,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 2,
+      "description": "Window cleaning, per visit",
+      "sku": "HV-WIN-QTR",
+      "quantity": 12,
+      "unit_price_minor": 18500,
+      "amount_minor": 222000,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "NO_PO"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "NO_PO",
+      "detail": "invoice has no PO number and no PO matches"
+    }
+  ]
+}

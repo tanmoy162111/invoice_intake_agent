@@ -1,0 +1,63 @@
+{
+  "id": "inv-089",
+  "file": "Meridian-MIP-2026-0904.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "C",
+  "received_order": 89,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0904",
+    "invoice_date": "2026-07-26",
+    "due_date": "2026-08-25",
+    "po_number": "PO-10051",
+    "currency": "USD",
+    "subtotal_minor": 132390,
+    "tax_total_minor": 7943,
+    "total_minor": 140333,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Gasket set, universal",
+      "sku": "MIP-GSK-SET",
+      "quantity": 5,
+      "unit_price_minor": 4550,
+      "amount_minor": 22750,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Electric motor 1HP",
+      "sku": "MIP-MTR-1HP",
+      "quantity": 2,
+      "unit_price_minor": 48500,
+      "amount_minor": 97000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Industrial lubricant, 5L",
+      "sku": "MIP-LUB-5L",
+      "quantity": 2,
+      "unit_price_minor": 6320,
+      "amount_minor": 12640,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

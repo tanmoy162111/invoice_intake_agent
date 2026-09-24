@@ -1,0 +1,61 @@
+{
+  "id": "inv-066",
+  "file": "scan0066.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "D",
+  "received_order": 66,
+  "readable": true,
+  "supplier_key": "harborview",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Harborview Cleaning Services",
+    "supplier_tax_id": "19-1665819",
+    "supplier_address": "107 Industrial Way, Tampa, FL",
+    "supplier_bank_account": "ABA 088321796 / Acct 1367917152",
+    "invoice_number": "HV-2026-0141",
+    "invoice_date": "2026-08-15",
+    "due_date": "2026-09-14",
+    "po_number": "PO-10046",
+    "currency": "USD",
+    "subtotal_minor": 1980000,
+    "tax_total_minor": 99000,
+    "total_minor": 2079000,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Waste collection, per pickup",
+      "sku": "HV-WST-PK",
+      "quantity": 240,
+      "unit_price_minor": 6500,
+      "amount_minor": 1560000,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 2,
+      "description": "Monthly cleaning service, floor 1",
+      "sku": "HV-CLN-MNT",
+      "quantity": 10,
+      "unit_price_minor": 42000,
+      "amount_minor": 420000,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "ABOVE_APPROVAL_LIMIT"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "ABOVE_APPROVAL_LIMIT",
+      "detail": "total 2079000 above limit 1000000"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "inv-053",
+  "file": "scan0053.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "E",
+  "received_order": 53,
+  "readable": true,
+  "supplier_key": "summit",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Summit IT Hardware Corp.",
+    "supplier_tax_id": null,
+    "supplier_address": "727 Mill Lane, Tampa, FL",
+    "supplier_bank_account": null,
+    "invoice_number": "SIT-2026-0425",
+    "invoice_date": "2026-06-24",
+    "due_date": "2026-08-08",
+    "po_number": "PO-10088",
+    "currency": "USD",
+    "subtotal_minor": 672000,
+    "tax_total_minor": 67200,
+    "total_minor": 739200,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Laptop 14 inch, 16GB",
+      "sku": null,
+      "quantity": 6,
+      "unit_price_minor": 112000,
+      "amount_minor": 672000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

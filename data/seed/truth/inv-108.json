@@ -1,0 +1,82 @@
+{
+  "id": "inv-108",
+  "file": "scan0108.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "E",
+  "received_order": 108,
+  "readable": true,
+  "supplier_key": null,
+  "supplier_on_file": false,
+  "header": {
+    "supplier_name": "Coastal Packing Ltd.",
+    "supplier_tax_id": null,
+    "supplier_address": "57 Mill Lane, Tampa, FL",
+    "supplier_bank_account": null,
+    "invoice_number": "CO-2026-0405",
+    "invoice_date": "2026-04-20",
+    "due_date": "2026-05-20",
+    "po_number": null,
+    "currency": "USD",
+    "subtotal_minor": 41312,
+    "tax_total_minor": 3305,
+    "total_minor": 44617,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Wooden pallet, standard",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 1450,
+      "amount_minor": 17400,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Packing tape 48mm, roll",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 349,
+      "amount_minor": 1047,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Corrugated box, medium",
+      "sku": null,
+      "quantity": 1,
+      "unit_price_minor": 185,
+      "amount_minor": 185,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Shipping labels, box of 500",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 1890,
+      "amount_minor": 22680,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "UNKNOWN_SUPPLIER"
+    ],
+    "may_raise": [
+      "NO_PO",
+      "PO_NOT_FOUND"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "UNKNOWN_SUPPLIER",
+      "detail": "'Coastal Packing Ltd.' is not in the supplier master"
+    }
+  ]
+}

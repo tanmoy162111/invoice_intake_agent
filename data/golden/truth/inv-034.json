@@ -1,0 +1,70 @@
+{
+  "id": "inv-034",
+  "file": "Thames-TVS-2026-0668.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 34,
+  "readable": true,
+  "supplier_key": "thames",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Thames Valley Stationers Ltd",
+    "supplier_tax_id": null,
+    "supplier_address": "475 Station Rd, Glasgow",
+    "supplier_bank_account": "GB25 2818 3812 7197 4930 3341",
+    "invoice_number": "TVS-2026-0668",
+    "invoice_date": "2026-05-27",
+    "due_date": "2026-05-15",
+    "po_number": "PO-10020",
+    "currency": "GBP",
+    "subtotal_minor": 68830,
+    "tax_total_minor": 13766,
+    "total_minor": 82596,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Label roll, 1000 labels",
+      "sku": null,
+      "quantity": 1,
+      "unit_price_minor": 1150,
+      "amount_minor": 1150,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ergonomic desk chair",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 18900,
+      "amount_minor": 37800,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Heavy-duty stapler",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 2490,
+      "amount_minor": 29880,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "INVALID_DATE"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "INVALID_DATE",
+      "detail": "due date 2026-05-15 is before the invoice date"
+    }
+  ]
+}

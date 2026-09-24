@@ -1,0 +1,54 @@
+{
+  "id": "inv-067",
+  "file": "Pennine-PES-2026-0372.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "E",
+  "received_order": 67,
+  "readable": true,
+  "supplier_key": "pennine",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Pennine Engineering Supplies Ltd",
+    "supplier_tax_id": null,
+    "supplier_address": "892 Station Rd, Bristol",
+    "supplier_bank_account": null,
+    "invoice_number": "PES-2026-0372",
+    "invoice_date": "2026-06-15",
+    "due_date": "2026-07-15",
+    "po_number": "PO-10066",
+    "currency": "GBP",
+    "subtotal_minor": 59120,
+    "tax_total_minor": 11824,
+    "total_minor": 70944,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Oil filter, heavy duty",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 2360,
+      "amount_minor": 56640,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ball bearing 6204",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 1240,
+      "amount_minor": 2480,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

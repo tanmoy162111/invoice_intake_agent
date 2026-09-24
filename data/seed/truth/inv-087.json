@@ -1,0 +1,70 @@
+{
+  "id": "inv-087",
+  "file": "Brightline-BL-2026-0503.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 87,
+  "readable": true,
+  "supplier_key": "brightline",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Brightline Office Supplies Inc.",
+    "supplier_tax_id": "69-9397618",
+    "supplier_address": "347 Harbour Rd, Portland, OR",
+    "supplier_bank_account": "ABA 533367701 / Acct 1472427652",
+    "invoice_number": "BL-2026-0503",
+    "invoice_date": "2026-05-22",
+    "due_date": "2026-06-21",
+    "po_number": "PO-10012",
+    "currency": "USD",
+    "subtotal_minor": 29975,
+    "tax_total_minor": 2398,
+    "total_minor": 23373,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 1875,
+      "amount_minor": 5625,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 1290,
+      "amount_minor": 6450,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Toner cartridge, black",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 8950,
+      "amount_minor": 17900,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "TOTAL_MISMATCH"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "TOTAL_MISMATCH",
+      "detail": "total 32373 -> 23373"
+    }
+  ]
+}

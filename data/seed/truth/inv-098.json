@@ -1,0 +1,54 @@
+{
+  "id": "inv-098",
+  "file": "Lumière-LF-2026-0250.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 98,
+  "readable": true,
+  "supplier_key": "lumiere",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Lumière Fournitures SARL",
+    "supplier_tax_id": "DE670684662",
+    "supplier_address": "857 Harbour Rd, Utrecht",
+    "supplier_bank_account": "DE59 3052 9564 0005 6879 7490",
+    "invoice_number": "LF-2026-0250",
+    "invoice_date": "2026-03-28",
+    "due_date": "2026-04-27",
+    "po_number": "PO-10065",
+    "currency": "EUR",
+    "subtotal_minor": 11280,
+    "tax_total_minor": 2256,
+    "total_minor": 13536,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Bubble wrap, 50m roll",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 2150,
+      "amount_minor": 10750,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Corrugated box, large",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 265,
+      "amount_minor": 530,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

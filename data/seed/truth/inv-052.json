@@ -1,0 +1,45 @@
+{
+  "id": "inv-052",
+  "file": "IMG_4364.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "D",
+  "received_order": 52,
+  "readable": true,
+  "supplier_key": "caledonian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Caledonian Catering Supplies Ltd",
+    "supplier_tax_id": "GB111320267",
+    "supplier_address": "35 Market St, Glasgow",
+    "supplier_bank_account": "GB58 4610 4921 9185 8543 2895",
+    "invoice_number": "CCS-2026-0793",
+    "invoice_date": "2026-07-28",
+    "due_date": "2026-09-11",
+    "po_number": "PO-10086",
+    "currency": "GBP",
+    "subtotal_minor": 4320,
+    "tax_total_minor": 216,
+    "total_minor": 4536,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "UHT milk, case of 12",
+      "sku": "CCS-MLK-12",
+      "quantity": 3,
+      "unit_price_minor": 1440,
+      "amount_minor": 4320,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

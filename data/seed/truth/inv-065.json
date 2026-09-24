@@ -1,0 +1,52 @@
+{
+  "id": "inv-065",
+  "file": "IMG_4455.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "D",
+  "received_order": 65,
+  "readable": true,
+  "supplier_key": "harborview",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Harborview Cleaning Services",
+    "supplier_tax_id": "19-1665819",
+    "supplier_address": "107 Industrial Way, Tampa, FL",
+    "supplier_bank_account": "ABA 088321796 / Acct 1367917152",
+    "invoice_number": "HV-2026-0123",
+    "invoice_date": "2026-03-18",
+    "due_date": "2026-05-17",
+    "po_number": "PO-10016",
+    "currency": "USD",
+    "subtotal_minor": 65000,
+    "tax_total_minor": 3750,
+    "total_minor": 68750,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Sanitiser refill kit",
+      "sku": "HV-SNT-KIT",
+      "quantity": 20,
+      "unit_price_minor": 3250,
+      "amount_minor": 65000,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "TAX_MISMATCH"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "TAX_MISMATCH",
+      "detail": "tax 3250 -> 3750"
+    }
+  ]
+}

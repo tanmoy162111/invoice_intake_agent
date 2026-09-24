@@ -1,0 +1,52 @@
+{
+  "id": "inv-049",
+  "file": "Harborview-HV-2026-0137.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "D",
+  "received_order": 49,
+  "readable": true,
+  "supplier_key": "harborview",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Harborview Cleaning Services",
+    "supplier_tax_id": "19-1665819",
+    "supplier_address": "107 Industrial Way, Tampa, FL",
+    "supplier_bank_account": "ABA 088321796 / Acct 1367917152",
+    "invoice_number": "HV-2026-0137",
+    "invoice_date": "2026-07-28",
+    "due_date": "2026-08-27",
+    "po_number": "PO-10035",
+    "currency": "USD",
+    "subtotal_minor": 29400,
+    "tax_total_minor": 1470,
+    "total_minor": 30870,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Pest control treatment",
+      "sku": "HV-PST-CTL",
+      "quantity": 3,
+      "unit_price_minor": 9800,
+      "amount_minor": 29400,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "RECEIPT_MISSING"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "RECEIPT_MISSING",
+      "detail": "nothing received for PO-10035"
+    }
+  ]
+}

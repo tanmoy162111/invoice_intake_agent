@@ -1,0 +1,54 @@
+{
+  "id": "inv-017",
+  "file": "scan0017.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "D",
+  "received_order": 17,
+  "readable": true,
+  "supplier_key": "rheinwerk",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Rheinwerk Bürobedarf GmbH",
+    "supplier_tax_id": "DE325333087",
+    "supplier_address": "697 Industrial Way, Köln",
+    "supplier_bank_account": "DE20 3554 6670 1194 6383 4401",
+    "invoice_number": "RW-2026-0598",
+    "invoice_date": "2026-03-23",
+    "due_date": "2026-05-07",
+    "po_number": "PO-10072",
+    "currency": "EUR",
+    "subtotal_minor": 52380,
+    "tax_total_minor": 9952,
+    "total_minor": 62332,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Heavy-duty stapler",
+      "sku": "RW-STP-HD",
+      "quantity": 12,
+      "unit_price_minor": 2490,
+      "amount_minor": 29880,
+      "tax_rate_bp": 1900
+    },
+    {
+      "line_no": 2,
+      "description": "Manila folders, pack of 100",
+      "sku": "RW-FLD-100",
+      "quantity": 12,
+      "unit_price_minor": 1875,
+      "amount_minor": 22500,
+      "tax_rate_bp": 1900
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

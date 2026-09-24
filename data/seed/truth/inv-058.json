@@ -1,0 +1,54 @@
+{
+  "id": "inv-058",
+  "file": "scan0058.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 58,
+  "readable": true,
+  "supplier_key": "olivar",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Olivar Suministros S.L.",
+    "supplier_tax_id": "DE768792579",
+    "supplier_address": "454 Harbour Rd, Lyon",
+    "supplier_bank_account": "DE31 2219 1206 2657 7287 8504",
+    "invoice_number": "OS-2026-0514",
+    "invoice_date": "2026-05-19",
+    "due_date": "2026-07-18",
+    "po_number": "PO-10101",
+    "currency": "EUR",
+    "subtotal_minor": 33440,
+    "tax_total_minor": 7022,
+    "total_minor": 40462,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "UHT milk, case of 12",
+      "sku": "OS-MLK-12",
+      "quantity": 1,
+      "unit_price_minor": 1440,
+      "amount_minor": 1440,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Tea bags, box of 100",
+      "sku": "OS-TEA-100",
+      "quantity": 50,
+      "unit_price_minor": 640,
+      "amount_minor": 32000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

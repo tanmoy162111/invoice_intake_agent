@@ -1,0 +1,45 @@
+{
+  "id": "inv-111",
+  "file": "IMG_4777.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "B",
+  "received_order": 111,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0648",
+    "invoice_date": "2026-08-27",
+    "due_date": "2026-09-26",
+    "po_number": "PO-10068",
+    "currency": "USD",
+    "subtotal_minor": 11200,
+    "tax_total_minor": 896,
+    "total_minor": 12096,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Notebooks, pack of 12",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 2240,
+      "amount_minor": 11200,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

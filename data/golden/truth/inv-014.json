@@ -1,0 +1,61 @@
+{
+  "id": "inv-014",
+  "file": "IMG_4098.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "B",
+  "received_order": 14,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0621",
+    "invoice_date": "2031-06-22",
+    "due_date": "2031-07-22",
+    "po_number": "PO-10019",
+    "currency": "USD",
+    "subtotal_minor": 41625,
+    "tax_total_minor": 3330,
+    "total_minor": 44955,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 645,
+      "amount_minor": 32250,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 1875,
+      "amount_minor": 9375,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "INVALID_DATE"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "INVALID_DATE",
+      "detail": "invoice date in the future (2031-06-22)"
+    }
+  ]
+}

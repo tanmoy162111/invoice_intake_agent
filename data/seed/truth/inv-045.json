@@ -1,0 +1,70 @@
+{
+  "id": "inv-045",
+  "file": "Pioneer-PLE-2026-0737.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "C",
+  "received_order": 45,
+  "readable": true,
+  "supplier_key": "pioneer",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Pioneer Lab Equipment Inc.",
+    "supplier_tax_id": "24-9050066",
+    "supplier_address": "274 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 483347900 / Acct 8531047253",
+    "invoice_number": "PLE-2026-0737",
+    "invoice_date": "2026-04-28",
+    "due_date": "2026-05-28",
+    "po_number": "PO-10014",
+    "currency": "USD",
+    "subtotal_minor": 68690,
+    "tax_total_minor": 6182,
+    "total_minor": 47872,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Safety goggles",
+      "sku": "PLE-SAF-GOG",
+      "quantity": 3,
+      "unit_price_minor": 1180,
+      "amount_minor": 3540,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ethanol 99%, 2.5L",
+      "sku": "PLE-REA-ETH",
+      "quantity": 10,
+      "unit_price_minor": 3890,
+      "amount_minor": 38900,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Centrifuge tubes, pack of 500",
+      "sku": "PLE-CEN-TUB",
+      "quantity": 5,
+      "unit_price_minor": 5250,
+      "amount_minor": 26250,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "TOTAL_MISMATCH"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "TOTAL_MISMATCH",
+      "detail": "total 74872 -> 47872"
+    }
+  ]
+}

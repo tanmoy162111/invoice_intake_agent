@@ -1,0 +1,45 @@
+{
+  "id": "inv-006",
+  "file": "Meridian-MIP-2026-0893.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "C",
+  "received_order": 6,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0893",
+    "invoice_date": "2026-06-19",
+    "due_date": "2026-07-19",
+    "po_number": "PO-10042",
+    "currency": "USD",
+    "subtotal_minor": 75840,
+    "tax_total_minor": 4550,
+    "total_minor": 80390,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Industrial lubricant, 5L",
+      "sku": "MIP-LUB-5L",
+      "quantity": 12,
+      "unit_price_minor": 6320,
+      "amount_minor": 75840,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

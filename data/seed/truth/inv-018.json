@@ -1,0 +1,61 @@
+{
+  "id": "inv-018",
+  "file": "scan0018.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 18,
+  "readable": true,
+  "supplier_key": "pioneer",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Pioneer Lab Equipment Inc.",
+    "supplier_tax_id": "24-9050066",
+    "supplier_address": "274 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 483347900 / Acct 8531047253",
+    "invoice_number": "PLE-2026-0748",
+    "invoice_date": "2026-03-28",
+    "due_date": "2026-05-12",
+    "po_number": "PO-10047",
+    "currency": "USD",
+    "subtotal_minor": 2202800,
+    "tax_total_minor": 198252,
+    "total_minor": 2401052,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ethanol 99%, 2.5L",
+      "sku": "PLE-REA-ETH",
+      "quantity": 20,
+      "unit_price_minor": 3890,
+      "amount_minor": 77800,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Digital balance 0.01g",
+      "sku": "PLE-BAL-DIG",
+      "quantity": 50,
+      "unit_price_minor": 42500,
+      "amount_minor": 2125000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "ABOVE_APPROVAL_LIMIT"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "ABOVE_APPROVAL_LIMIT",
+      "detail": "total 2401052 above limit 1000000"
+    }
+  ]
+}

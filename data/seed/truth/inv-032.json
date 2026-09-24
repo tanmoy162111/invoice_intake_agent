@@ -1,0 +1,61 @@
+{
+  "id": "inv-032",
+  "file": "IMG_4224.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "B",
+  "received_order": 32,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0631",
+    "invoice_date": "2026-03-19",
+    "due_date": "2026-05-18",
+    "po_number": "PO-10033",
+    "currency": "USD",
+    "subtotal_minor": 82620,
+    "tax_total_minor": 6610,
+    "total_minor": 89230,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Heavy-duty stapler",
+      "sku": null,
+      "quantity": 28,
+      "unit_price_minor": 2490,
+      "amount_minor": 69720,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": null,
+      "quantity": 20,
+      "unit_price_minor": 645,
+      "amount_minor": 12900,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "QTY_VARIANCE"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "QTY_VARIANCE",
+      "detail": "line 1: PO qty 24, invoiced 28"
+    }
+  ]
+}

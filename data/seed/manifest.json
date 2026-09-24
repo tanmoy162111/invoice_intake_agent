@@ -1,0 +1,1613 @@
+[
+  {
+    "id": "inv-001",
+    "file": "scan0001.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Olivar Suministros S.L.",
+    "invoice_number": "OS-2026-0524",
+    "total": "425,92 EUR",
+    "must_raise": [
+      "NO_PO"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-002",
+    "file": "Brightline-BL-2026-0540.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0540",
+    "total": "$1,105.92",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-003",
+    "file": "Harborview-HV-2026-0151.pdf",
+    "layout": "D",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Harborview Cleaning Services",
+    "invoice_number": "HV-2026-0151",
+    "total": "$2,469.60",
+    "must_raise": [
+      "NO_PO"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-004",
+    "file": "Apex-AFS-2026-0749.pdf",
+    "layout": "E",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Apex Fastener Supply Co.",
+    "invoice_number": "AFS-2026-0749",
+    "total": "$585.88",
+    "must_raise": [
+      "LINE_MATH_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-005",
+    "file": "Brightline-BL-2026-0531.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0531",
+    "total": "397,65 EUR",
+    "must_raise": [
+      "CURRENCY_MISMATCH"
+    ],
+    "may_raise": [
+      "PRICE_VARIANCE",
+      "PO_OVERBILLED"
+    ]
+  },
+  {
+    "id": "inv-006",
+    "file": "Meridian-MIP-2026-0893.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0893",
+    "total": "$803.90",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-007",
+    "file": "Caledonian-CCS-2026-0786.pdf",
+    "layout": "D",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Caledonian Catering Supplies Ltd",
+    "invoice_number": "CCS-2026-0786",
+    "total": "£451.50",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-008",
+    "file": "scan0008.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0859",
+    "total": "$7,035.43",
+    "must_raise": [
+      "LOW_CONFIDENCE_FIELD"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-009",
+    "file": "scan0009.pdf",
+    "layout": "D",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Caledonian Catering Supplies Ltd",
+    "invoice_number": "CCS-2026-0781",
+    "total": "£1,048.53",
+    "must_raise": [
+      "LOW_CONFIDENCE_FIELD"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-010",
+    "file": "Pioneer-PLE-2026-0750.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0750",
+    "total": "$257.24",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-011",
+    "file": "scan0011.pdf",
+    "layout": "B",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0639",
+    "total": "$1,432.94",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-012",
+    "file": "Coastal-CP-2026-0238.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0238",
+    "total": "$46.01",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-013",
+    "file": "Coastal-CP-2026-0259.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0259",
+    "total": "$365.94",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-014",
+    "file": "IMG_4098.jpg",
+    "layout": "B",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0621",
+    "total": "$449.55",
+    "must_raise": [
+      "INVALID_DATE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-015",
+    "file": "Rheinwerk-RW-2026-0592.pdf",
+    "layout": "D",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Rheinwerk Bürobedarf GmbH",
+    "invoice_number": "RW-2026-0592",
+    "total": "7.620,05 EUR",
+    "must_raise": [
+      "QTY_NOT_RECEIVED"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-016",
+    "file": "IMG_4112.jpg",
+    "layout": "C",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0915",
+    "total": "$39.43",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-017",
+    "file": "scan0017.pdf",
+    "layout": "D",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Rheinwerk Bürobedarf GmbH",
+    "invoice_number": "RW-2026-0598",
+    "total": "623,32 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-018",
+    "file": "scan0018.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0748",
+    "total": "$24,010.52",
+    "must_raise": [
+      "ABOVE_APPROVAL_LIMIT"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-019",
+    "file": "scan0019.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0872",
+    "total": "$4,560.34",
+    "must_raise": [
+      "TAX_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-020",
+    "file": "IMG_4140.jpg",
+    "layout": "C",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0746",
+    "total": "$1,006.51",
+    "must_raise": [
+      "QTY_VARIANCE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-021",
+    "file": "IMG_4147.jpg",
+    "layout": "C",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0910",
+    "total": "$2,007.43",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-022",
+    "file": "scan0022.pdf",
+    "layout": "E",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Apex Fastener Supply Co.",
+    "invoice_number": "AFS-2026-0758",
+    "total": "$566.96",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-023",
+    "file": "Redwood-RFM-2026-0504.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Redwood Facility Maintenance",
+    "invoice_number": "RFM-2026-0504",
+    "total": "$6,880.10",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-024",
+    "file": "scan0024.pdf",
+    "layout": "E",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Apex Fastener Supply Co.",
+    "invoice_number": "AFS-2026-0763",
+    "total": "$2,606.88",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-025",
+    "file": "scan0025.pdf",
+    "layout": "A",
+    "doc_quality": "unknown",
+    "split": "dev",
+    "supplier": "Lumière Fournitures SARL",
+    "invoice_number": "LF-2026-0244",
+    "total": "435,00 EUR",
+    "must_raise": [
+      "UNREADABLE_DOCUMENT"
+    ],
+    "may_raise": [
+      "*"
+    ]
+  },
+  {
+    "id": "inv-026",
+    "file": "Meridian-MIP-2026-0923.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0923",
+    "total": "$2,909.70",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-027",
+    "file": "scan0027.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0911",
+    "total": "$1,163.88",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-028",
+    "file": "Coastal-CP-2026-0246.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0246",
+    "total": "$1,179.89",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-029",
+    "file": "scan0029.pdf",
+    "layout": "A",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0511",
+    "total": "$515.81",
+    "must_raise": [
+      "QTY_VARIANCE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-030",
+    "file": "Thames-TVS-2026-0675.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Thames Valley Stationers Ltd",
+    "invoice_number": "TVS-2026-0675",
+    "total": "£2,645.64",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-031",
+    "file": "Keystone-KP-2026-0632.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0632",
+    "total": "$1,020.60",
+    "must_raise": [
+      "RECEIPT_MISSING"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-032",
+    "file": "IMG_4224.jpg",
+    "layout": "B",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0631",
+    "total": "$892.30",
+    "must_raise": [
+      "QTY_VARIANCE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-033",
+    "file": "IMG_4231.jpg",
+    "layout": "B",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0613",
+    "total": "$2,656.31",
+    "must_raise": [
+      "LOW_CONFIDENCE_FIELD"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-034",
+    "file": "Thames-TVS-2026-0668.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Thames Valley Stationers Ltd",
+    "invoice_number": "TVS-2026-0668",
+    "total": "£825.96",
+    "must_raise": [
+      "INVALID_DATE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-035",
+    "file": "Apex-AFS-2026-0775.pdf",
+    "layout": "E",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Apex Fastener Supply Co.",
+    "invoice_number": "AFS-2026-0775",
+    "total": "$5,240.41",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-036",
+    "file": "IMG_4252.jpg",
+    "layout": "A",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Redwood Facility Maintenance",
+    "invoice_number": "RFM-2026-0518",
+    "total": "$3,857.89",
+    "must_raise": [
+      "NO_PO"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-037",
+    "file": "scan0037.pdf",
+    "layout": "A",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Redwood Facility Maintenance",
+    "invoice_number": "RFM-2026-0498",
+    "total": "$7,253.53",
+    "must_raise": [
+      "RECEIPT_MISSING"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-038",
+    "file": "IMG_4266.jpg",
+    "layout": "A",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Redwood Facility Maintenance",
+    "invoice_number": "RFM-2026-0497",
+    "total": "$5,614.29",
+    "must_raise": [
+      "UNREADABLE_DOCUMENT"
+    ],
+    "may_raise": [
+      "*"
+    ]
+  },
+  {
+    "id": "inv-039",
+    "file": "Brightline-BL-2026-0523.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0523",
+    "total": "$631.10",
+    "must_raise": [
+      "QTY_NOT_RECEIVED"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-040",
+    "file": "scan0040.pdf",
+    "layout": "D",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Harborview Cleaning Services",
+    "invoice_number": "HV-2026-0131",
+    "total": "$551.00",
+    "must_raise": [
+      "TAX_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-041",
+    "file": "IMG_4287.jpg",
+    "layout": "A",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0506",
+    "total": "$2,622.82",
+    "must_raise": [
+      "PRICE_VARIANCE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-042",
+    "file": "IMG_4294.jpg",
+    "layout": "D",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Harborview Cleaning Services",
+    "invoice_number": "HV-2026-0149",
+    "total": "$342.83",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-043",
+    "file": "scan0043.pdf",
+    "layout": "B",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0651",
+    "total": "$5,845.50",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-044",
+    "file": "Brightline-BL-2026-0534.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0534",
+    "total": "$887.65",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-045",
+    "file": "Pioneer-PLE-2026-0737.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0737",
+    "total": "$478.72",
+    "must_raise": [
+      "TOTAL_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-046",
+    "file": "Keystone-KP-2026-0650.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0650",
+    "total": "$1,925.53",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-047",
+    "file": "scan0047.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0886",
+    "total": "$2,181.27",
+    "must_raise": [
+      "QTY_NOT_RECEIVED"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-048",
+    "file": "Meridian-MIP-2026-0930.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0930",
+    "total": "$65.72",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-049",
+    "file": "Harborview-HV-2026-0137.pdf",
+    "layout": "D",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Harborview Cleaning Services",
+    "invoice_number": "HV-2026-0137",
+    "total": "$308.70",
+    "must_raise": [
+      "RECEIPT_MISSING"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-050",
+    "file": "Apex-AFS-2026-0758.pdf",
+    "layout": "E",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Apex Fastener Supply Co.",
+    "invoice_number": "AFS-2026-0758",
+    "total": "$566.96",
+    "must_raise": [
+      "POSSIBLE_DUPLICATE"
+    ],
+    "may_raise": [
+      "PO_OVERBILLED",
+      "QTY_NOT_RECEIVED",
+      "QTY_VARIANCE"
+    ]
+  },
+  {
+    "id": "inv-051",
+    "file": "Meridian-MIP-2026-0864.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0864",
+    "total": "$371.82",
+    "must_raise": [
+      "TOTAL_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-052",
+    "file": "IMG_4364.jpg",
+    "layout": "D",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Caledonian Catering Supplies Ltd",
+    "invoice_number": "CCS-2026-0793",
+    "total": "£45.36",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-053",
+    "file": "scan0053.pdf",
+    "layout": "E",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Summit IT Hardware Corp.",
+    "invoice_number": "SIT-2026-0425",
+    "total": "$7,392.00",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-054",
+    "file": "Redwood-RFM-2026-0506.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Redwood Facility Maintenance",
+    "invoice_number": "RFM-2026-0506",
+    "total": "$695.50",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-055",
+    "file": "Coastal-CP-2026-0251.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0251",
+    "total": "$970.77",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-056",
+    "file": "Rheinwerk-RW-2026-0610.pdf",
+    "layout": "D",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Rheinwerk Bürobedarf GmbH",
+    "invoice_number": "RW-2026-0610",
+    "total": "3.338,66 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-057",
+    "file": "Keystone-KP-2026-0642.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0642",
+    "total": "$2,180.52",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-058",
+    "file": "scan0058.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Olivar Suministros S.L.",
+    "invoice_number": "OS-2026-0514",
+    "total": "404,62 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-059",
+    "file": "scan0059.pdf",
+    "layout": "E",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Summit IT Hardware Corp.",
+    "invoice_number": "SIT-2026-0425",
+    "total": "$7,392.00",
+    "must_raise": [
+      "POSSIBLE_DUPLICATE"
+    ],
+    "may_raise": [
+      "PO_OVERBILLED",
+      "QTY_NOT_RECEIVED",
+      "QTY_VARIANCE"
+    ]
+  },
+  {
+    "id": "inv-060",
+    "file": "Pioneer-PLE-2026-0745.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0745",
+    "total": "$1,158.18",
+    "must_raise": [
+      "PRICE_VARIANCE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-061",
+    "file": "scan0061.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0938",
+    "total": "$132.71",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-062",
+    "file": "Redwood-RFM-2026-0511.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Redwood Facility Maintenance",
+    "invoice_number": "RFM-2026-0511",
+    "total": "$2,516.64",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-063",
+    "file": "scan0063.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0945",
+    "total": "$296.27",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-064",
+    "file": "IMG_4448.jpg",
+    "layout": "A",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Lumière Fournitures SARL",
+    "invoice_number": "LF-2026-0248",
+    "total": "6.811,20 EUR",
+    "must_raise": [
+      "LINE_MATH_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-065",
+    "file": "IMG_4455.jpg",
+    "layout": "D",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Harborview Cleaning Services",
+    "invoice_number": "HV-2026-0123",
+    "total": "$687.50",
+    "must_raise": [
+      "TAX_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-066",
+    "file": "scan0066.pdf",
+    "layout": "D",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Harborview Cleaning Services",
+    "invoice_number": "HV-2026-0141",
+    "total": "$20,790.00",
+    "must_raise": [
+      "ABOVE_APPROVAL_LIMIT"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-067",
+    "file": "Pennine-PES-2026-0372.pdf",
+    "layout": "E",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Pennine Engineering Supplies Ltd",
+    "invoice_number": "PES-2026-0372",
+    "total": "£709.44",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-068",
+    "file": "IMG_4476.jpg",
+    "layout": "C",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Olivar Suministros S.L.",
+    "invoice_number": "OS-2026-0509",
+    "total": "1.547,83 EUR",
+    "must_raise": [
+      "PO_NOT_FOUND"
+    ],
+    "may_raise": [
+      "NO_PO"
+    ]
+  },
+  {
+    "id": "inv-069",
+    "file": "IMG_4483.jpg",
+    "layout": "D",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Rheinwerk Bürobedarf GmbH",
+    "invoice_number": "RW-2026-0587",
+    "total": "68,66 EUR",
+    "must_raise": [
+      "LOW_CONFIDENCE_FIELD"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-070",
+    "file": "scan0070.pdf",
+    "layout": "E",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Summit IT Hardware Corp.",
+    "invoice_number": "SIT-2026-0421",
+    "total": "$365.40",
+    "must_raise": [
+      "PRICE_VARIANCE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-071",
+    "file": "IMG_4497.jpg",
+    "layout": "D",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Caledonian Catering Supplies Ltd",
+    "invoice_number": "CCS-2026-0783",
+    "total": "£1,609.74",
+    "must_raise": [
+      "TOTAL_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-072",
+    "file": "scan0072.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0878",
+    "total": "$1,028.20",
+    "must_raise": [
+      "INVALID_DATE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-073",
+    "file": "Caledonian-CCS-2026-0795.pdf",
+    "layout": "D",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Caledonian Catering Supplies Ltd",
+    "invoice_number": "CCS-2026-0795",
+    "total": "£753.90",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-074",
+    "file": "Caledonian-CCS-2026-0799.pdf",
+    "layout": "D",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Caledonian Catering Supplies Ltd",
+    "invoice_number": "CCS-2026-0799",
+    "total": "£617.40",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-075",
+    "file": "scan0075.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Olivar Suministros S.L.",
+    "invoice_number": "OS-2026-0501",
+    "total": "862,13 EUR",
+    "must_raise": [
+      "LINE_MATH_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-076",
+    "file": "IMG_4532.jpg",
+    "layout": "C",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0942",
+    "total": "$715.08",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-077",
+    "file": "scan0077.pdf",
+    "layout": "B",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0216",
+    "total": "$879.54",
+    "must_raise": [
+      "LINE_MATH_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-078",
+    "file": "Pioneer-PLE-2026-0753.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0753",
+    "total": "$9.70",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-079",
+    "file": "IMG_4553.jpg",
+    "layout": "D",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Caledonian Catering Supplies Ltd",
+    "invoice_number": "CCS-2026-0789",
+    "total": "£23.52",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-080",
+    "file": "scan0080.pdf",
+    "layout": "B",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0228",
+    "total": "$94.91",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-081",
+    "file": "Apex-AFS-2026-0768.pdf",
+    "layout": "E",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Apex Fastener Supply Co.",
+    "invoice_number": "AFS-2026-0768",
+    "total": "$222.10",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-082",
+    "file": "Rheinwerk-RW-2026-0613.pdf",
+    "layout": "D",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Rheinwerk Bürobedarf GmbH",
+    "invoice_number": "RW-2026-0613",
+    "total": "136,85 EUR",
+    "must_raise": [
+      "NO_PO"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-083",
+    "file": "Thames-TVS20260675.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Thames Valley Stationers Ltd",
+    "invoice_number": "TVS20260675",
+    "total": "£2,645.64",
+    "must_raise": [
+      "POSSIBLE_DUPLICATE"
+    ],
+    "may_raise": [
+      "PO_OVERBILLED",
+      "QTY_NOT_RECEIVED",
+      "QTY_VARIANCE"
+    ]
+  },
+  {
+    "id": "inv-084",
+    "file": "Coastal-CP-2026-0223.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0223",
+    "total": "$13,642.50",
+    "must_raise": [
+      "ABOVE_APPROVAL_LIMIT"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-085",
+    "file": "IMG_4595.jpg",
+    "layout": "E",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Zenith Novelty Traders",
+    "invoice_number": "ZE-2026-0412",
+    "total": "$666.04",
+    "must_raise": [
+      "UNKNOWN_SUPPLIER"
+    ],
+    "may_raise": [
+      "NO_PO",
+      "PO_NOT_FOUND"
+    ]
+  },
+  {
+    "id": "inv-086",
+    "file": "Thames-TVS-2026-0682.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Thames Valley Stationers Ltd",
+    "invoice_number": "TVS-2026-0682",
+    "total": "£2,536.80",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-087",
+    "file": "Brightline-BL-2026-0503.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0503",
+    "total": "$233.73",
+    "must_raise": [
+      "TOTAL_MISMATCH"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-088",
+    "file": "Apex-AFS-2026-0755.pdf",
+    "layout": "E",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Apex Fastener Supply Co.",
+    "invoice_number": "AFS-2026-0755",
+    "total": "$4,611.75",
+    "must_raise": [
+      "PRICE_VARIANCE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-089",
+    "file": "Meridian-MIP-2026-0904.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0904",
+    "total": "$1,403.33",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-090",
+    "file": "Redwood-rfm-2026-0504.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Redwood Facility Maintenance",
+    "invoice_number": "rfm-2026-0504",
+    "total": "$6,880.10",
+    "must_raise": [
+      "POSSIBLE_DUPLICATE"
+    ],
+    "may_raise": [
+      "PO_OVERBILLED",
+      "QTY_NOT_RECEIVED",
+      "QTY_VARIANCE"
+    ]
+  },
+  {
+    "id": "inv-091",
+    "file": "IMG_4637.jpg",
+    "layout": "D",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Rheinwerk Bürobedarf GmbH",
+    "invoice_number": "RW-2026-0603",
+    "total": "1.371,18 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-092",
+    "file": "Olivar-OS-2026-0512.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Olivar Suministros S.L.",
+    "invoice_number": "OS-2026-0512",
+    "total": "$432.47",
+    "must_raise": [
+      "CURRENCY_MISMATCH"
+    ],
+    "may_raise": [
+      "PRICE_VARIANCE",
+      "PO_OVERBILLED"
+    ]
+  },
+  {
+    "id": "inv-093",
+    "file": "scan0093.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0762",
+    "total": "$6.98",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-094",
+    "file": "scan0094.pdf",
+    "layout": "B",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0635",
+    "total": "$385.34",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-095",
+    "file": "IMG_4665.jpg",
+    "layout": "C",
+    "doc_quality": "photo",
+    "split": "golden",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0899",
+    "total": "$803.90",
+    "must_raise": [
+      "PO_OVERBILLED"
+    ],
+    "may_raise": [
+      "QTY_VARIANCE",
+      "QTY_NOT_RECEIVED"
+    ]
+  },
+  {
+    "id": "inv-096",
+    "file": "IMG_4672.jpg",
+    "layout": "C",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Olivar Suministros S.L.",
+    "invoice_number": "OS-2026-0513",
+    "total": "1.460,47 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-097",
+    "file": "scan0097.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0879",
+    "total": "$3,347.69",
+    "must_raise": [
+      "RECEIPT_MISSING"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-098",
+    "file": "Lumière-LF-2026-0250.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Lumière Fournitures SARL",
+    "invoice_number": "LF-2026-0250",
+    "total": "135,36 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-099",
+    "file": "Pioneer-PLE-2026-0744.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0744",
+    "total": "$418.89",
+    "must_raise": [
+      "BANK_DETAILS_CHANGED"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-100",
+    "file": "Lumière-LF-2026-0257.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Lumière Fournitures SARL",
+    "invoice_number": "LF-2026-0257",
+    "total": "258,00 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-101",
+    "file": "Pennine-PES-2026-0363.pdf",
+    "layout": "E",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Pennine Engineering Supplies Ltd",
+    "invoice_number": "PES-2026-0363",
+    "total": "£3,485.28",
+    "must_raise": [
+      "QTY_NOT_RECEIVED"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-102",
+    "file": "Meridian-MIP-2026-0935.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0935",
+    "total": "$381.60",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-103",
+    "file": "Thames-TVS-2026-0687.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Thames Valley Stationers Ltd",
+    "invoice_number": "TVS-2026-0687",
+    "total": "£3,188.16",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-104",
+    "file": "scan0104.pdf",
+    "layout": "E",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Brightline Offices Supplies Ltd",
+    "invoice_number": "BR-2026-0401",
+    "total": "$581.63",
+    "must_raise": [
+      "UNKNOWN_SUPPLIER"
+    ],
+    "may_raise": [
+      "NO_PO",
+      "PO_NOT_FOUND"
+    ]
+  },
+  {
+    "id": "inv-105",
+    "file": "scan0105.pdf",
+    "layout": "B",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0655",
+    "total": "$1,104.84",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-106",
+    "file": "Pioneer-PLE-2026-0759.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Pioneer Lab Equipment Inc.",
+    "invoice_number": "PLE-2026-0759",
+    "total": "$5,950.53",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-107",
+    "file": "scan0107.pdf",
+    "layout": "E",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Pennine Engineering Supplies Ltd",
+    "invoice_number": "PES-2026-0367",
+    "total": "£2,889.36",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-108",
+    "file": "scan0108.pdf",
+    "layout": "E",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Coastal Packing Ltd.",
+    "invoice_number": "CO-2026-0405",
+    "total": "$446.17",
+    "must_raise": [
+      "UNKNOWN_SUPPLIER"
+    ],
+    "may_raise": [
+      "NO_PO",
+      "PO_NOT_FOUND"
+    ]
+  },
+  {
+    "id": "inv-109",
+    "file": "Coastal-CP-2026-0234.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0234",
+    "total": "$214.75",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-110",
+    "file": "Olivar-OS-2026-0516.pdf",
+    "layout": "C",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Olivar Suministros S.L.",
+    "invoice_number": "OS-2026-0516",
+    "total": "106,24 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-111",
+    "file": "IMG_4777.jpg",
+    "layout": "B",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0648",
+    "total": "$120.96",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-112",
+    "file": "scan0112.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0913",
+    "total": "$2,023.75",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-113",
+    "file": "Coastal-CP-2026-0261.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Coastal Packaging Ltd.",
+    "invoice_number": "CP-2026-0261",
+    "total": "$832.46",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-114",
+    "file": "Keystone-KP-2026-0624.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0624",
+    "total": "$3,388.82",
+    "must_raise": [
+      "PO_NOT_FOUND"
+    ],
+    "may_raise": [
+      "NO_PO"
+    ]
+  },
+  {
+    "id": "inv-115",
+    "file": "scan0115.pdf",
+    "layout": "A",
+    "doc_quality": "scanned",
+    "split": "dev",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0509",
+    "total": "$1,379.05",
+    "must_raise": [
+      "PRICE_VARIANCE"
+    ],
+    "may_raise": []
+  },
+  {
+    "id": "inv-116",
+    "file": "IMG_4812.jpg",
+    "layout": "E",
+    "doc_quality": "photo",
+    "split": "dev",
+    "supplier": "Summit IT Hardware Corp.",
+    "invoice_number": "SIT-2026-0413",
+    "total": "$8,048.70",
+    "must_raise": [
+      "PO_NOT_FOUND"
+    ],
+    "may_raise": [
+      "NO_PO"
+    ]
+  },
+  {
+    "id": "inv-117",
+    "file": "scan0117.pdf",
+    "layout": "C",
+    "doc_quality": "scanned",
+    "split": "golden",
+    "supplier": "Meridian Industrial Parts LLC",
+    "invoice_number": "MIP-2026-0902",
+    "total": "£2,517.38",
+    "must_raise": [
+      "CURRENCY_MISMATCH"
+    ],
+    "may_raise": [
+      "PRICE_VARIANCE",
+      "PO_OVERBILLED"
+    ]
+  },
+  {
+    "id": "inv-118",
+    "file": "Lumière-LF-2026-0252.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "dev",
+    "supplier": "Lumière Fournitures SARL",
+    "invoice_number": "LF-2026-0252",
+    "total": "105,30 EUR",
+    "must_raise": [],
+    "may_raise": []
+  },
+  {
+    "id": "inv-119",
+    "file": "Keystone-KP-2026-0636.pdf",
+    "layout": "B",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Keystone Printing Co.",
+    "invoice_number": "KP-2026-0636",
+    "total": "$385.34",
+    "must_raise": [
+      "POSSIBLE_DUPLICATE"
+    ],
+    "may_raise": [
+      "PO_OVERBILLED",
+      "QTY_NOT_RECEIVED",
+      "QTY_VARIANCE"
+    ]
+  },
+  {
+    "id": "inv-120",
+    "file": "Brightline-BL-2026-0516.pdf",
+    "layout": "A",
+    "doc_quality": "clean",
+    "split": "golden",
+    "supplier": "Brightline Office Supplies Inc.",
+    "invoice_number": "BL-2026-0516",
+    "total": "$905.58",
+    "must_raise": [
+      "QTY_VARIANCE"
+    ],
+    "may_raise": []
+  }
+]

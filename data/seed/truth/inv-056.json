@@ -1,0 +1,54 @@
+{
+  "id": "inv-056",
+  "file": "Rheinwerk-RW-2026-0610.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "D",
+  "received_order": 56,
+  "readable": true,
+  "supplier_key": "rheinwerk",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Rheinwerk Bürobedarf GmbH",
+    "supplier_tax_id": "DE325333087",
+    "supplier_address": "697 Industrial Way, Köln",
+    "supplier_bank_account": "DE20 3554 6670 1194 6383 4401",
+    "invoice_number": "RW-2026-0610",
+    "invoice_date": "2026-06-27",
+    "due_date": "2026-08-11",
+    "po_number": "PO-10102",
+    "currency": "EUR",
+    "subtotal_minor": 280560,
+    "tax_total_minor": 53306,
+    "total_minor": 333866,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ergonomic desk chair",
+      "sku": "RW-CHR-ERG",
+      "quantity": 12,
+      "unit_price_minor": 18900,
+      "amount_minor": 226800,
+      "tax_rate_bp": 1900
+    },
+    {
+      "line_no": 2,
+      "description": "Notebooks, pack of 12",
+      "sku": "RW-NOT-12",
+      "quantity": 24,
+      "unit_price_minor": 2240,
+      "amount_minor": 53760,
+      "tax_rate_bp": 1900
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

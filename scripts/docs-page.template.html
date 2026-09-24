@@ -1,0 +1,320 @@
+<title>Invoice Intake Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f8f9;
+    --surface: #ffffff;
+    --surface-2: #edf2f4;
+    --ink: #14212b;
+    --muted: #55677a;
+    --line: #d8e1e6;
+    --accent: #0b6b6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #dcf0ee;
+    --plain: #17754f;
+    --plain-soft: #e0f3ea;
+    --how: #245fa6;
+    --how-soft: #e0ebf8;
+    --hood: #62508f;
+    --hood-soft: #ebe6f6;
+    --focus: #0b6b6b;
+    --code-bg: #eaf0f3;
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e161b;
+      --surface: #151f26;
+      --surface-2: #1c2932;
+      --ink: #e5edf1;
+      --muted: #94a7b4;
+      --line: #263640;
+      --accent: #56c4bc;
+      --accent-ink: #072423;
+      --accent-soft: #143430;
+      --plain: #5fcf9d;
+      --plain-soft: #14302a;
+      --how: #7fb2ee;
+      --how-soft: #182b42;
+      --hood: #b3a3e6;
+      --hood-soft: #262040;
+      --focus: #56c4bc;
+      --code-bg: #1c2932;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e161b;
+    --surface: #151f26;
+    --surface-2: #1c2932;
+    --ink: #e5edf1;
+    --muted: #94a7b4;
+    --line: #263640;
+    --accent: #56c4bc;
+    --accent-ink: #072423;
+    --accent-soft: #143430;
+    --plain: #5fcf9d;
+    --plain-soft: #14302a;
+    --how: #7fb2ee;
+    --how-soft: #182b42;
+    --hood: #b3a3e6;
+    --hood-soft: #262040;
+    --focus: #56c4bc;
+    --code-bg: #1c2932;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 16px/1.65 var(--font-body);
+    padding-inline: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
+
+  /* ---- header ---- */
+  .top {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    margin-inline: -16px;
+    padding: 10px 16px;
+    display: grid;
+    gap: 10px;
+  }
+  .top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+  .brand { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; margin-right: auto; }
+  .brand small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); letter-spacing: 0; }
+  .tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 3px; border-radius: 8px; }
+  .tab {
+    font: 500 14px var(--font-body); color: var(--muted); background: transparent; border: 0;
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+  .layers { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; color: var(--muted); }
+  .layers .lbl { margin-right: 2px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; font: 500 12.5px var(--font-body);
+    padding: 4px 10px; border-radius: 999px; cursor: pointer; border: 1px solid var(--line);
+    background: var(--surface); color: var(--muted);
+  }
+  .chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); opacity: 0.35; }
+  .chip[aria-pressed="true"] { color: var(--ink); border-color: var(--c); }
+  .chip[aria-pressed="true"]::before { opacity: 1; }
+  .chip[data-layer="plain"] { --c: var(--plain); }
+  .chip[data-layer="how"] { --c: var(--how); }
+  .chip[data-layer="hood"] { --c: var(--hood); }
+
+  /* ---- layout ---- */
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; max-width: 1120px; margin-inline: auto; padding-block: 24px 64px; }
+  @media (min-width: 960px) { .wrap { grid-template-columns: 250px minmax(0, 1fr); gap: 48px; } }
+  .toc { font-size: 14px; }
+  .toc-desktop { display: none; }
+  @media (min-width: 960px) {
+    .toc-desktop { display: block; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 110px); align-self: start; max-height: calc(100vh - 140px); overflow-y: auto; padding-right: 8px; }
+    .toc-mobile { display: none; }
+  }
+  .toc-mobile summary { cursor: pointer; font-weight: 500; padding: 8px 0; }
+  .toc h4 { margin: 0 0 8px; font: 500 11.5px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .toc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .toc li.h3 { padding-left: 14px; }
+  .toc a { display: block; padding: 3px 0; color: var(--muted); text-decoration: none; line-height: 1.4; }
+  .toc a:hover, .toc a.on { color: var(--accent); }
+  .toc li.h2 > a { color: var(--ink); font-weight: 500; margin-top: 6px; }
+
+  /* ---- prose ---- */
+  article { min-width: 0; }
+  article > :first-child { margin-top: 0; }
+  h1 { font-size: clamp(26px, 4.2vw, 36px); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+  h2 { font-size: 23px; line-height: 1.25; letter-spacing: -0.01em; margin: 48px 0 12px; padding-top: 20px; border-top: 1px solid var(--line); text-wrap: balance; scroll-margin-top: 120px; }
+  h3 { font-size: 19px; line-height: 1.3; margin: 36px 0 8px; text-wrap: balance; scroll-margin-top: 120px; }
+  h4 { font-size: 16px; margin: 24px 0 6px; }
+  p, li { max-width: 72ch; }
+  p { margin: 0 0 14px; }
+  ul, ol { padding-left: 22px; margin: 0 0 14px; }
+  li { margin-bottom: 4px; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 32px 0; }
+  code { font: 400 0.88em var(--font-mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 0 0 16px; }
+  pre code { background: none; padding: 0; font-size: 13px; line-height: 1.55; white-space: pre; }
+  blockquote { margin: 0 0 20px; padding: 10px 14px; background: var(--accent-soft); border-radius: 8px; color: var(--ink); font-size: 14.5px; }
+  blockquote p { margin: 0 0 6px; max-width: none; }
+  blockquote p:last-child { margin: 0; }
+  .tablewrap { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th { font: 500 12px var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td:first-child { min-width: 7.5em; }
+  td { min-width: 9em; }
+  td code { white-space: nowrap; }
+  .tabular td { font-variant-numeric: tabular-nums; }
+
+  /* ---- the three layers ---- */
+  .layer { border-left: 3px solid var(--lc); background: var(--ls); border-radius: 0 8px 8px 0; padding: 10px 16px 2px; margin: 0 0 18px; }
+  .layer > :last-child { margin-bottom: 10px; }
+  .layer[data-layer="plain"] { --lc: var(--plain); --ls: var(--plain-soft); }
+  .layer[data-layer="how"] { --lc: var(--how); --ls: var(--how-soft); }
+  .layer[data-layer="hood"] { --lc: var(--hood); --ls: var(--hood-soft); }
+  .layer .tablewrap { background: var(--surface); }
+  .layer > p:first-child > strong:first-child {
+    font: 500 11.5px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--lc); margin-right: 4px;
+  }
+  .layer[hidden] { display: none !important; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0 0 20px; }
+  @media (prefers-reduced-motion: no-preference) { .tab, .chip { transition: background-color 0.15s, border-color 0.15s, color 0.15s; } }
+</style>
+
+<header class="top">
+  <div class="top-row">
+    <div class="brand">Invoice Intake Handbook<small id="brand-sub">Project report and manual</small></div>
+    <div class="tabs" role="tablist" aria-label="Document">
+      <button class="tab" role="tab" id="tab-report" aria-selected="true" data-doc="report">Report</button>
+      <button class="tab" role="tab" id="tab-manual" aria-selected="false" data-doc="manual">Manual</button>
+    </div>
+  </div>
+  <div class="layers" role="group" aria-label="Reading layers">
+    <span class="lbl">Show:</span>
+    <button class="chip" data-layer="plain" aria-pressed="true" type="button">In plain words</button>
+    <button class="chip" data-layer="how" aria-pressed="true" type="button">How it works</button>
+    <button class="chip" data-layer="hood" aria-pressed="true" type="button">Under the hood</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="toc toc-desktop" aria-label="Contents" id="toc-desktop"></nav>
+  <details class="toc toc-mobile" id="toc-mobile-wrap"><summary>Contents</summary><nav aria-label="Contents" id="toc-mobile"></nav></details>
+  <article id="doc" aria-live="polite"></article>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+  const DOCS = { report: __REPORT_MD__, manual: __MANUAL_MD__ };
+  const SUBTITLE = { report: "Project report: what was built, why, and what was proved", manual: "Manual: how to run and use it" };
+  const LAYER_OF = {
+    "in plain words": "plain",
+    "how it works": "how",
+    "steps": "how",
+    "under the hood": "hood",
+    "technical notes": "hood"
+  };
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  function store(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+  function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+  function slug(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
+  // Wrap the paragraphs and blocks that follow a layer label in a coloured layer block.
+  function groupLayers(root) {
+    const kids = Array.from(root.children);
+    let current = null;
+    for (const el of kids) {
+      const tag = el.tagName;
+      if (/^H[1-6]$/.test(tag) || tag === "HR") { current = null; continue; }
+      let label = null;
+      if (tag === "P") {
+        const s = el.firstElementChild;
+        if (s && s.tagName === "STRONG" && el.firstChild === s) {
+          label = s.textContent.trim().replace(/\.$/, "").toLowerCase();
+        }
+      }
+      if (label && LAYER_OF[label]) {
+        current = document.createElement("div");
+        current.className = "layer";
+        current.dataset.layer = LAYER_OF[label];
+        root.insertBefore(current, el);
+        current.appendChild(el);
+        continue;
+      }
+      if (label) { current = null; continue; }  // another bold label ends the layer
+      if (current) current.appendChild(el);
+    }
+  }
+
+  function render(name) {
+    const doc = $("#doc");
+    doc.innerHTML = marked.parse(DOCS[name], { gfm: true });
+    $$("table", doc).forEach((t) => {
+      const w = document.createElement("div");
+      w.className = "tablewrap";
+      t.parentNode.insertBefore(w, t);
+      w.appendChild(t);
+    });
+    const used = new Set();
+    $$("h2, h3", doc).forEach((h) => {
+      let id = slug(h.textContent) || "section";
+      while (used.has(id)) id += "-2";
+      used.add(id);
+      h.id = id;
+    });
+    groupLayers(doc);
+    // A short hint under the title explains the layers.
+    const h1 = $("h1", doc);
+    if (h1 && $(".layer", doc)) {
+      const p = document.createElement("p");
+      p.className = "hint";
+      p.textContent = "Each chapter is written in layers. Use the Show buttons above to hide the technical ones.";
+      h1.insertAdjacentElement("afterend", p);
+    }
+    buildToc(doc);
+    applyLayers();
+    $("#brand-sub").textContent = SUBTITLE[name];
+    document.title = "Invoice Intake Handbook";
+    $$(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.doc === name)));
+  }
+
+  function buildToc(doc) {
+    const items = $$("h2, h3", doc);
+    const html = "<h4>Contents</h4><ul>" + items.map((h) =>
+      `<li class="${h.tagName.toLowerCase()}"><a href="#${h.id}" data-target="${h.id}">${h.textContent}</a></li>`
+    ).join("") + "</ul>";
+    $("#toc-desktop").innerHTML = html;
+    $("#toc-mobile").innerHTML = html;
+    $$("[data-target]").forEach((a) => a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const t = document.getElementById(a.dataset.target);
+      if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+      $("#toc-mobile-wrap").open = false;
+    }));
+  }
+
+  function applyLayers() {
+    const on = {};
+    $$(".chip").forEach((c) => (on[c.dataset.layer] = c.getAttribute("aria-pressed") === "true"));
+    $$(".layer").forEach((l) => (l.hidden = !on[l.dataset.layer]));
+  }
+
+  $$(".chip").forEach((c) => c.addEventListener("click", () => {
+    const next = c.getAttribute("aria-pressed") !== "true";
+    c.setAttribute("aria-pressed", String(next));
+    store("layer-" + c.dataset.layer, next ? "1" : "0");
+    applyLayers();
+  }));
+  $$(".chip").forEach((c) => { if (load("layer-" + c.dataset.layer) === "0") c.setAttribute("aria-pressed", "false"); });
+
+  function show(name) {
+    if (!DOCS[name]) name = "report";
+    render(name);
+    store("doc", name);
+    window.scrollTo(0, 0);
+  }
+  $$(".tab").forEach((b) => b.addEventListener("click", () => {
+    try { history.replaceState(null, "", "#" + b.dataset.doc); } catch (e) {}
+    show(b.dataset.doc);
+  }));
+
+  const fromHash = (location.hash || "").replace("#", "");
+  show(DOCS[fromHash] ? fromHash : (load("doc") || "report"));
+</script>

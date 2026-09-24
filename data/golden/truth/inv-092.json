@@ -1,0 +1,82 @@
+{
+  "id": "inv-092",
+  "file": "Olivar-OS-2026-0512.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "C",
+  "received_order": 92,
+  "readable": true,
+  "supplier_key": "olivar",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Olivar Suministros S.L.",
+    "supplier_tax_id": "DE768792579",
+    "supplier_address": "454 Harbour Rd, Lyon",
+    "supplier_bank_account": "DE31 2219 1206 2657 7287 8504",
+    "invoice_number": "OS-2026-0512",
+    "invoice_date": "2026-06-18",
+    "due_date": "2026-08-02",
+    "po_number": "PO-10045",
+    "currency": "USD",
+    "subtotal_minor": 35741,
+    "tax_total_minor": 7506,
+    "total_minor": 43247,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Sugar 5kg",
+      "sku": "OS-SUG-5K",
+      "quantity": 20,
+      "unit_price_minor": 937,
+      "amount_minor": 18740,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ground coffee 1kg",
+      "sku": "OS-COF-1KG",
+      "quantity": 3,
+      "unit_price_minor": 2060,
+      "amount_minor": 6180,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Bottled water, case of 24",
+      "sku": "OS-WAT-24",
+      "quantity": 3,
+      "unit_price_minor": 1220,
+      "amount_minor": 3660,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Paper napkins, pack of 2000",
+      "sku": "OS-NAP-2K",
+      "quantity": 3,
+      "unit_price_minor": 2387,
+      "amount_minor": 7161,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "CURRENCY_MISMATCH"
+    ],
+    "may_raise": [
+      "PRICE_VARIANCE",
+      "PO_OVERBILLED"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "CURRENCY_MISMATCH",
+      "detail": "invoice in USD, PO in EUR"
+    }
+  ]
+}

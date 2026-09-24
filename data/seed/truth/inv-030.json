@@ -1,0 +1,63 @@
+{
+  "id": "inv-030",
+  "file": "Thames-TVS-2026-0675.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 30,
+  "readable": true,
+  "supplier_key": "thames",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Thames Valley Stationers Ltd",
+    "supplier_tax_id": null,
+    "supplier_address": "475 Station Rd, Glasgow",
+    "supplier_bank_account": "GB25 2818 3812 7197 4930 3341",
+    "invoice_number": "TVS-2026-0675",
+    "invoice_date": "2026-03-22",
+    "due_date": "2026-05-21",
+    "po_number": "PO-10077",
+    "currency": "GBP",
+    "subtotal_minor": 220470,
+    "tax_total_minor": 44094,
+    "total_minor": 264564,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Label roll, 1000 labels",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 1150,
+      "amount_minor": 27600,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 1290,
+      "amount_minor": 3870,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Ergonomic desk chair",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 18900,
+      "amount_minor": 189000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}
