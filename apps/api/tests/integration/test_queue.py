@@ -3,7 +3,7 @@ import uuid
 from datetime import timedelta
 
 import pytest
-from sqlalchemy import Engine, func, text, update
+from sqlalchemy import Engine, func, select, text, update
 from sqlalchemy.orm import Session
 
 from intake.core.statuses import ActorType, InvoiceStatus, JobStatus
@@ -225,3 +225,46 @@ def test_stats_can_be_scoped_to_a_tenant(session: Session, tenant_id: uuid.UUID)
     assert queue.stats(session, timeout_s=300, tenant_id=tenant_id).counts["queued"] == 1
     assert queue.stats(session, timeout_s=300, tenant_id=other.id).counts["queued"] == 1
     session.rollback()
+
+
+def test_defer_requeues_for_later_without_using_an_attempt(
+    session: Session, tenant_id: uuid.UUID
+) -> None:
+    add_job(session, tenant_id)
+    job = queue.claim(session)
+    assert job is not None
+    session.commit()
+    assert job.attempts == 1
+    later = session.execute(select(func.now() + timedelta(hours=2))).scalar_one()
+    assert queue.defer(session, job, until=later, reason="SPEND_CAP_REACHED", attempt=1)
+    session.commit()
+    session.refresh(job)
+    assert (job.status, job.attempts, job.last_error) == ("queued", 0, "SPEND_CAP_REACHED")
+    assert job.locked_at is None
+    assert queue.claim(session) is None  # not runnable until `until`
+
+
+def test_defer_is_ignored_when_the_worker_lost_its_lock(
+    session: Session, tenant_id: uuid.UUID
+) -> None:
+    add_job(session, tenant_id)
+    job = queue.claim(session)
+    assert job is not None
+    session.commit()
+    session.execute(update(Job).where(Job.id == job.id).values(status="queued", attempts=0))
+    session.commit()
+    later = session.execute(select(func.now() + timedelta(hours=2))).scalar_one()
+    assert not queue.defer(session, job, until=later, reason="X", attempt=1)
+
+
+def test_stats_counts_deferred_jobs_as_paused(session: Session, tenant_id: uuid.UUID) -> None:
+    add_job(session, tenant_id)
+    job = queue.claim(session)
+    assert job is not None
+    session.commit()
+    later = session.execute(select(func.now() + timedelta(hours=2))).scalar_one()
+    queue.defer(session, job, until=later, reason="SPEND_CAP_REACHED", attempt=1)
+    session.commit()
+    st = queue.stats(session, timeout_s=300, tenant_id=tenant_id)
+    assert st.paused == 1
+    assert st.oldest_queued_age_s is None  # deferred jobs are not "waiting too long"
