@@ -12,6 +12,17 @@ _SYMBOLS = "$€£¥  "
 _NUMBER = re.compile(r"^-?\d+(?:[.,]\d+)*$")
 
 
+def _strip_currency_code(raw: str, currency: str) -> str:
+    """Drop a printed code that matches `currency` ('7,00 EUR'); a different code is an error."""
+    m = re.match(r"^(?:([A-Za-z]{3})\s*)?(.*?)(?:\s*([A-Za-z]{3}))?$", raw.strip(), re.DOTALL)
+    if m is None:  # pragma: no cover - the pattern matches any string
+        return raw
+    for code in (m[1], m[3]):
+        if code and code.upper() != currency:
+            raise ValueError(f"amount is in {code.upper()}, expected {currency}: {raw!r}")
+    return m[2]
+
+
 def exponent(currency: str) -> int:
     try:
         return CURRENCY_EXPONENT[currency]
@@ -52,6 +63,7 @@ def parse_money(text: str, currency: str) -> Money:
     negative = raw.startswith("(") and raw.endswith(")")
     if negative:
         raw = raw[1:-1]
+    raw = _strip_currency_code(raw, currency)
     raw = "".join(ch for ch in raw if ch not in _SYMBOLS)
     if not raw or not _NUMBER.match(raw):
         raise ValueError(f"not an amount: {text!r}")

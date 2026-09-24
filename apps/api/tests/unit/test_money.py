@@ -97,3 +97,13 @@ def test_parse_single_dot_with_three_digits_is_rejected_not_guessed() -> None:
 
 def test_parse_currency_symbol_after_amount() -> None:
     assert parse_money("1.234,56 €", "EUR") == Money(123456, "EUR")
+
+
+@pytest.mark.parametrize("text", ["7.620,05 EUR", "EUR 7.620,05", "7.620,05 eur", "€ 7.620,05 EUR"])
+def test_parse_accepts_the_matching_currency_code(text: str) -> None:
+    assert parse_money(text, "EUR") == Money(762005, "EUR")
+
+
+def test_parse_rejects_a_different_currency_code() -> None:
+    with pytest.raises(ValueError):
+        parse_money("7,620.05 USD", "EUR")

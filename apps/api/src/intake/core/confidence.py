@@ -150,6 +150,35 @@ def text_in_text(value: str, text: str) -> bool:
     return f" {needle} " in f" {_squash(text)} "
 
 
+_SYMBOLS = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
+
+
+def currency_in_text(code: str, text: str) -> bool:
+    """Is the currency printed as its code or its symbol?"""
+    if re.search(rf"(?<![A-Za-z]){re.escape(code)}(?![A-Za-z])", text, re.IGNORECASE):
+        return True
+    symbol = _SYMBOLS.get(code)
+    return symbol is not None and symbol in text
+
+
+def _decimal_pattern(value: Decimal) -> str:
+    """Regex for a number in either decimal-separator style, ignoring trailing zeros."""
+    whole, _, frac = format(value.normalize(), "f").partition(".")
+    if not frac:
+        return rf"{re.escape(whole)}(?:[.,]0+)?"
+    return rf"{re.escape(whole)}[.,]{re.escape(frac)}0*"
+
+
+def number_in_text(value: Decimal, text: str) -> bool:
+    """Does the (small) number appear as its own token, e.g. a quantity like 12 or 2,5?"""
+    return re.search(rf"(?<![\d.,])(?:{_decimal_pattern(value)})(?![.,]?\d)", text) is not None
+
+
+def percent_in_text(rate: Decimal, text: str) -> bool:
+    """Does the tax rate appear as a percentage, e.g. '19%' or '7,5 %'?"""
+    return re.search(rf"(?<![\d.,])(?:{_decimal_pattern(rate)})\s*%", text) is not None
+
+
 # ---- rule support -------------------------------------------------------------------------
 
 

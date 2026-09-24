@@ -8,8 +8,11 @@ from intake.core.confidence import (
     SelfConfidence,
     Signals,
     amount_in_text,
+    currency_in_text,
     date_in_text,
     fields_below_threshold,
+    number_in_text,
+    percent_in_text,
     score_field,
     sum_supports,
     text_in_text,
@@ -175,3 +178,47 @@ def test_sum_supports_false_when_off() -> None:
 def test_sum_supports_none_when_nothing_to_check() -> None:
     assert sum_supports(1000, []) is None
     assert sum_supports(None, [1000]) is None
+
+
+@pytest.mark.parametrize(
+    ("code", "text"),
+    [("EUR", "Total 7.620,05 EUR"), ("USD", "Total $1,105.92"), ("GBP", "Amount £12.00"),
+     ("JPY", "合計 ¥1,500"), ("USD", "amounts in usd")],
+)  # fmt: skip
+def test_currency_in_text_matches_code_or_symbol(code: str, text: str) -> None:
+    assert currency_in_text(code, text)
+
+
+@pytest.mark.parametrize(("code", "text"), [("EUR", "Total $10.00"), ("USD", "Total 10,00 EUR")])
+def test_currency_in_text_absent(code: str, text: str) -> None:
+    assert not currency_in_text(code, text)
+
+
+@pytest.mark.parametrize("text", ["Tax (19%)", "TAX 19 %", "19% VAT", "19,0%", "19.00%"])
+def test_percent_in_text(text: str) -> None:
+    assert percent_in_text(D("19"), text)
+
+
+@pytest.mark.parametrize("text", ["Tax (119%)", "Tax 9%", "19 items", ""])
+def test_percent_in_text_absent(text: str) -> None:
+    assert not percent_in_text(D("19"), text)
+
+
+def test_percent_in_text_fractional() -> None:
+    assert percent_in_text(D("7.5"), "VAT 7,5%")
+    assert not percent_in_text(D("7.5"), "VAT 75%")
+
+
+@pytest.mark.parametrize("text", ["Qty 12", "12 x Widget", "Widget 12,00 pcs", "12.0"])
+def test_number_in_text(text: str) -> None:
+    assert number_in_text(D("12"), text)
+
+
+@pytest.mark.parametrize("text", ["Qty 112", "Qty 12.5", "1,2", ""])
+def test_number_in_text_absent(text: str) -> None:
+    assert not number_in_text(D("12"), text)
+
+
+def test_number_in_text_fraction() -> None:
+    assert number_in_text(D("2.5"), "Qty 2,5")
+    assert number_in_text(D("2.5"), "Qty 2.50")
