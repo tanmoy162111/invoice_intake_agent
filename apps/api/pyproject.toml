@@ -58,6 +58,10 @@ plugins = ["pydantic.mypy"]
 files = ["src/intake"]
 
 [[tool.mypy.overrides]]
+module = ["pypdfium2", "pdfplumber"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = "intake.core.*"
 strict = true
 

@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 15 * 1024 * 1024
     max_pages: int = 10
     render_dpi: int = 200
-    max_image_pixels: int = 60_000_000
+    max_image_pixels: int = 25_000_000
 
     # Job queue
     job_max_attempts: int = 3

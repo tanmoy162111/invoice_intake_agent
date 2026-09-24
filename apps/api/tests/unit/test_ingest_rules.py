@@ -100,3 +100,72 @@ def test_classify_doc_quality(mime: str, chars: int, blank: bool, expected: DocQ
 def test_is_blank_uses_tone_range() -> None:
     assert is_blank(tone_range=3)
     assert not is_blank(tone_range=60)
+
+
+@pytest.mark.parametrize(
+    ("raw", "safe"),
+    [
+        ("invoice.pdf", "invoice.pdf"),
+        ("../../etc/passwd", "passwd"),
+        ("C:\\Users\\me\\scan 1.pdf", "scan 1.pdf"),
+        ("a\x00b\nc.pdf", "abc.pdf"),
+        ("<script>.pdf", "script.pdf"),
+        ("", "upload"),
+        ("...", "upload"),
+        ("x" * 500 + ".pdf", "x" * 200),
+    ],
+)
+def test_sanitize_filename(raw: str, safe: str) -> None:
+    from intake.core.ingest import sanitize_filename
+
+    assert sanitize_filename(raw) == safe
+
+
+@pytest.mark.parametrize(
+    ("chars", "expected"),
+    [(19, DocQuality.SCANNED), (20, DocQuality.CLEAN), (21, DocQuality.CLEAN)],
+)
+def test_text_layer_threshold_is_exactly_twenty_characters(
+    chars: int, expected: DocQuality
+) -> None:
+    assert classify_doc_quality("application/pdf", text_chars=chars, blank=False) is expected
+
+
+def test_blank_threshold_is_exactly_fifteen() -> None:
+    assert is_blank(tone_range=14.99)
+    assert not is_blank(tone_range=15)
+
+
+def test_classifier_edge_combinations() -> None:
+    assert classify_doc_quality("application/pdf", text_chars=5, blank=True) is DocQuality.UNKNOWN
+    assert classify_doc_quality("image/png", text_chars=900, blank=False) is DocQuality.PHOTO
+
+
+def test_text_layer_chars_ignores_whitespace() -> None:
+    from intake.core.ingest import text_layer_chars
+
+    assert text_layer_chars([]) == 0
+    assert text_layer_chars(["  \n ", "\t"]) == 0
+    assert text_layer_chars([" ab ", "c\n"]) == 3
+
+
+def test_size_and_page_edge_cases() -> None:
+    _, rej = check_size_and_type(-1, PDF, max_bytes=100)
+    assert rej is not None and rej.code is IngestErrorCode.EMPTY_FILE
+    assert check_pages(1, max_pages=10) is None
+    assert check_pages(-3, max_pages=10) is not None
+
+
+def test_rejection_formats_fractional_limits_and_requires_limits() -> None:
+    assert "1.5 MB" in rejection(IngestErrorCode.FILE_TOO_LARGE, max_bytes=1536 * 1024).message
+    with pytest.raises(ValueError):
+        rejection(IngestErrorCode.FILE_TOO_LARGE)
+    with pytest.raises(ValueError):
+        rejection(IngestErrorCode.TOO_MANY_PAGES, pages=3)
+
+
+def test_sanitize_filename_edge_cases() -> None:
+    from intake.core.ingest import sanitize_filename
+
+    assert sanitize_filename("\x00\x01\x02") == "upload"
+    assert sanitize_filename("é" * 300) == "é" * 200

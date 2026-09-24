@@ -6,7 +6,7 @@ def backoff_seconds(attempts: int, *, base: int, cap: int) -> int:
     of attempts already made (>= 1)."""
     if attempts < 1:
         raise ValueError("attempts must be >= 1")
-    return min(cap, base * (1 << (attempts - 1)))
+    return min(cap, base * (1 << min(attempts - 1, 30)))
 
 
 def should_retry(*, attempts: int, max_attempts: int) -> bool:

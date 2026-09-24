@@ -62,3 +62,27 @@ def test_should_retry() -> None:
     assert should_retry(attempts=1, max_attempts=3)
     assert should_retry(attempts=2, max_attempts=3)
     assert not should_retry(attempts=3, max_attempts=3)
+
+
+def test_transition_table_is_exactly_the_playbook_diagram() -> None:
+    from intake.core.workflow import TRANSITIONS
+
+    edges = {(a, b) for a, targets in TRANSITIONS.items() for b in targets}
+    assert edges == {
+        (S.RECEIVED, S.EXTRACTING),
+        (S.EXTRACTING, S.EXTRACTED),
+        (S.EXTRACTING, S.FAILED),
+        (S.FAILED, S.EXTRACTING),
+        (S.EXTRACTED, S.CHECKING),
+        (S.CHECKING, S.CLEARED),
+        (S.CHECKING, S.NEEDS_REVIEW),
+        (S.CLEARED, S.APPROVED),
+        (S.NEEDS_REVIEW, S.APPROVED),
+        (S.NEEDS_REVIEW, S.REJECTED),
+        (S.APPROVED, S.EXPORTED),
+    }
+
+
+def test_backoff_survives_huge_attempt_counts() -> None:
+    assert backoff_seconds(10_000, base=10, cap=600) == 600
+    assert backoff_seconds(3, base=100, cap=50) == 50  # cap below base still caps

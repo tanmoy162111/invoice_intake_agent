@@ -167,3 +167,61 @@ def test_set_invoice_status_checks_transition_and_audits(
     ).scalars().all()  # fmt: skip
     assert events == [{"from": "received", "to": "extracting"}]
     session.rollback()
+
+
+def test_reaper_writes_audit_events(session: Session, tenant_id: uuid.UUID) -> None:
+    add_job(session, tenant_id)
+    session.execute(
+        update(Job).values(status="running", attempts=1, locked_at=func.now() - timedelta(hours=1))
+    )
+    session.commit()
+    queue.reap_stale(session, timeout_s=300, max_attempts=3)
+    session.execute(
+        update(Job).values(status="running", attempts=3, locked_at=func.now() - timedelta(hours=1))
+    )
+    session.commit()
+    queue.reap_stale(session, timeout_s=300, max_attempts=3)
+    session.commit()
+    types = session.execute(
+        text(
+            "select event_type from audit_events where tenant_id=:t "
+            "and actor_id='reaper' order by id"
+        ),
+        {"t": tenant_id},
+    ).scalars().all()  # fmt: skip
+    assert types == ["job_requeued_after_lost_worker", "job_failed"]
+    assert session.scalar(text("select last_error from jobs")) == "WorkerLost"
+
+
+def test_a_worker_that_lost_its_lock_cannot_record_a_result(
+    session: Session, tenant_id: uuid.UUID
+) -> None:
+    add_job(session, tenant_id)
+    job = queue.claim(session)
+    assert job is not None
+    attempt = job.attempts
+    session.commit()
+    # the reaper re-queues it and a second worker claims it (attempt 2)
+    session.execute(update(Job).values(locked_at=func.now() - timedelta(hours=1)))
+    session.commit()
+    queue.reap_stale(session, timeout_s=300, max_attempts=3)
+    session.commit()
+    second = queue.claim(session)
+    assert second is not None and second.attempts == 2
+    session.commit()
+    # the slow first worker now tries to finish: it must be told it no longer owns the job
+    assert queue.complete(session, job, attempt=attempt) is False
+    assert queue.fail(session, job, "late", attempt=attempt, **KW) is None
+    session.rollback()
+    assert session.scalar(text("select status from jobs")) == "running"
+
+
+def test_stats_can_be_scoped_to_a_tenant(session: Session, tenant_id: uuid.UUID) -> None:
+    other = Tenant(name="other")
+    session.add(other)
+    session.flush()
+    queue.enqueue(session, tenant_id=other.id, type="t", payload={})
+    add_job(session, tenant_id, key="mine")
+    assert queue.stats(session, timeout_s=300, tenant_id=tenant_id).counts["queued"] == 1
+    assert queue.stats(session, timeout_s=300, tenant_id=other.id).counts["queued"] == 1
+    session.rollback()

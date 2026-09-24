@@ -8,7 +8,7 @@ TRANSITIONS: dict[S, frozenset[S]] = {
     S.FAILED: frozenset({S.EXTRACTING}),
     S.EXTRACTED: frozenset({S.CHECKING}),
     S.CHECKING: frozenset({S.CLEARED, S.NEEDS_REVIEW}),
-    S.CLEARED: frozenset({S.APPROVED, S.NEEDS_REVIEW}),
+    S.CLEARED: frozenset({S.APPROVED}),
     S.NEEDS_REVIEW: frozenset({S.APPROVED, S.REJECTED}),
     S.APPROVED: frozenset({S.EXPORTED}),
     S.REJECTED: frozenset(),

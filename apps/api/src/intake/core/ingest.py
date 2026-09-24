@@ -4,6 +4,7 @@ These are upload rejections, separate from the invoice exception taxonomy: a rej
 becomes an invoice. Detection uses file content, never the filename or the client's MIME type.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -56,6 +57,10 @@ class UploadRejection:
 def rejection(
     code: IngestErrorCode, *, max_bytes: int = 0, max_pages: int = 0, pages: int = 0
 ) -> UploadRejection:
+    if code is IngestErrorCode.FILE_TOO_LARGE and max_bytes <= 0:
+        raise ValueError("max_bytes is required for FILE_TOO_LARGE")
+    if code is IngestErrorCode.TOO_MANY_PAGES and max_pages <= 0:
+        raise ValueError("max_pages is required for TOO_MANY_PAGES")
     message, fix = _TEMPLATES[code]
     params = {"max_mb": f"{max_bytes / (1024 * 1024):g}", "max_pages": max_pages, "pages": pages}
     return UploadRejection(code, message.format(**params), fix.format(**params))
@@ -97,13 +102,19 @@ def check_pages(pages: int, *, max_pages: int) -> UploadRejection | None:
     return None
 
 
+def text_layer_chars(page_texts: Sequence[str]) -> int:
+    """Characters of real text across pages; whitespace does not count."""
+    return sum(len(t.strip()) for t in page_texts)
+
+
 def is_blank(*, tone_range: float) -> bool:
     return tone_range < BLANK_TONE_RANGE
 
 
 def classify_doc_quality(mime: str, *, text_chars: int, blank: bool) -> DocQuality:
     """Heuristic from the playbook: text layer -> clean, image-only PDF -> scanned,
-    image upload -> photo. A blank page is unknown. A real text layer wins over blankness."""
+    image upload -> photo. A blank page is unknown. A real text layer wins over blankness.
+    Any non-PDF type is an image here: `detect_mime` only lets allowed types through."""
     if mime == "application/pdf" and text_chars >= MIN_TEXT_CHARS:
         return DocQuality.CLEAN
     if blank:
@@ -111,3 +122,10 @@ def classify_doc_quality(mime: str, *, text_chars: int, blank: bool) -> DocQuali
     if mime == "application/pdf":
         return DocQuality.SCANNED
     return DocQuality.PHOTO
+
+
+def sanitize_filename(name: str, *, max_len: int = 200) -> str:
+    """Keep only a safe display name: no directories, no control characters."""
+    base = name.replace("\\", "/").rsplit("/", 1)[-1]
+    cleaned = "".join(ch for ch in base if ch.isprintable() and ch not in '<>:"|?*').strip(" .")
+    return cleaned[:max_len] or "upload"

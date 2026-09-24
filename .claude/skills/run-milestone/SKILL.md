@@ -7,7 +7,7 @@ argument-hint: <milestone, e.g. M3>
 
 # Run milestone $ARGUMENTS
 
-Follow `demo-a-developer-playbook.md` §9 (milestone), §11.1 and §11.2, plus `CLAUDE.md`. One milestone at a time; stay inside its scope.
+Follow `docs/playbook.md` §9 (milestone), §11.1 and §11.2, plus `CLAUDE.md`. One milestone at a time; stay inside its scope.
 
 ## 1. Understand
 - Read the section for `$ARGUMENTS` in playbook §9 (goal, tasks, acceptance criteria) and every section it references (data model §5, pipeline §6, taxonomy §7, eval §8, security §10).
