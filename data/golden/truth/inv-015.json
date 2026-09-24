@@ -1,0 +1,70 @@
+{
+  "id": "inv-015",
+  "file": "Rheinwerk-RW-2026-0592.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "D",
+  "received_order": 15,
+  "readable": true,
+  "supplier_key": "rheinwerk",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Rheinwerk Bürobedarf GmbH",
+    "supplier_tax_id": "DE325333087",
+    "supplier_address": "697 Industrial Way, Köln",
+    "supplier_bank_account": "DE20 3554 6670 1194 6383 4401",
+    "invoice_number": "RW-2026-0592",
+    "invoice_date": "2026-03-13",
+    "due_date": "2026-04-12",
+    "po_number": "PO-10040",
+    "currency": "EUR",
+    "subtotal_minor": 640340,
+    "tax_total_minor": 121665,
+    "total_minor": 762005,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": "RW-A4-500",
+      "quantity": 12,
+      "unit_price_minor": 645,
+      "amount_minor": 7740,
+      "tax_rate_bp": 1900
+    },
+    {
+      "line_no": 2,
+      "description": "Toner cartridge, black",
+      "sku": "RW-TON-BK",
+      "quantity": 20,
+      "unit_price_minor": 8950,
+      "amount_minor": 179000,
+      "tax_rate_bp": 1900
+    },
+    {
+      "line_no": 3,
+      "description": "Ergonomic desk chair",
+      "sku": "RW-CHR-ERG",
+      "quantity": 24,
+      "unit_price_minor": 18900,
+      "amount_minor": 453600,
+      "tax_rate_bp": 1900
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "QTY_NOT_RECEIVED"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "QTY_NOT_RECEIVED",
+      "detail": "line 3: billed 24, received 17"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "inv-048",
+  "file": "Meridian-MIP-2026-0930.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "C",
+  "received_order": 48,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0930",
+    "invoice_date": "2026-06-21",
+    "due_date": "2026-08-20",
+    "po_number": "PO-10084",
+    "currency": "USD",
+    "subtotal_minor": 6200,
+    "tax_total_minor": 372,
+    "total_minor": 6572,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ball bearing 6204",
+      "sku": "MIP-BRG-6204",
+      "quantity": 5,
+      "unit_price_minor": 1240,
+      "amount_minor": 6200,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

@@ -1,0 +1,5281 @@
+{
+  "tenant": {
+    "id": "00000000-0000-4000-8000-00000000d3a0",
+    "name": "Demo Tenant",
+    "settings": {
+      "approval_amount_limit_minor": 1000000,
+      "price_tolerance_pct": 2.0,
+      "qty_tolerance_pct": 0.0,
+      "auto_approve_cleared": false
+    }
+  },
+  "suppliers": [
+    {
+      "id": "ac3b418e-3c7f-538e-99aa-ddded16cccb6",
+      "key": "brightline",
+      "name": "Brightline Office Supplies Inc.",
+      "aliases": [
+        "Brightline Office"
+      ],
+      "tax_id": "69-9397618",
+      "bank_account": "ABA 533367701 / Acct 1472427652",
+      "default_currency": "USD"
+    },
+    {
+      "id": "fd79de6b-6b3b-5d47-86e8-c126b13fd2d9",
+      "key": "coastal",
+      "name": "Coastal Packaging Ltd.",
+      "aliases": [
+        "Coastal Pack"
+      ],
+      "tax_id": "85-7880089",
+      "bank_account": "ABA 376578283 / Acct 4502596013",
+      "default_currency": "USD"
+    },
+    {
+      "id": "ec66fe3b-1800-55cc-a2ef-9f29ab7e302f",
+      "key": "meridian",
+      "name": "Meridian Industrial Parts LLC",
+      "aliases": [
+        "Meridian Parts"
+      ],
+      "tax_id": "38-2698816",
+      "bank_account": "ABA 332171150 / Acct 9655427721",
+      "default_currency": "USD"
+    },
+    {
+      "id": "450f709f-5cf0-58f6-a421-79072c58be4c",
+      "key": "harborview",
+      "name": "Harborview Cleaning Services",
+      "aliases": [
+        "Harborview"
+      ],
+      "tax_id": "19-1665819",
+      "bank_account": "ABA 088321796 / Acct 1367917152",
+      "default_currency": "USD"
+    },
+    {
+      "id": "d7d9c1af-8ee1-575a-a2eb-93468adcc3ab",
+      "key": "summit",
+      "name": "Summit IT Hardware Corp.",
+      "aliases": [
+        "Summit IT"
+      ],
+      "tax_id": "15-6860743",
+      "bank_account": "ABA 398324802 / Acct 7971455092",
+      "default_currency": "USD"
+    },
+    {
+      "id": "6f1daa33-01f5-562c-ab6f-54133dbda6c1",
+      "key": "keystone",
+      "name": "Keystone Printing Co.",
+      "aliases": [
+        "Keystone Print"
+      ],
+      "tax_id": "09-3142001",
+      "bank_account": "ABA 371059502 / Acct 1506018295",
+      "default_currency": "USD"
+    },
+    {
+      "id": "92be99a2-04b3-5e50-b557-ef03194c0ba1",
+      "key": "redwood",
+      "name": "Redwood Facility Maintenance",
+      "aliases": [
+        "Redwood FM"
+      ],
+      "tax_id": "17-8600401",
+      "bank_account": "ABA 129719713 / Acct 6857911042",
+      "default_currency": "USD"
+    },
+    {
+      "id": "382acd5d-9f4e-5c86-8b81-fe5f12b334d5",
+      "key": "pioneer",
+      "name": "Pioneer Lab Equipment Inc.",
+      "aliases": [
+        "Pioneer Lab"
+      ],
+      "tax_id": "24-9050066",
+      "bank_account": "ABA 483347900 / Acct 8531047253",
+      "default_currency": "USD"
+    },
+    {
+      "id": "e311ea42-c98c-507d-90e2-b6a2527b7eec",
+      "key": "apex",
+      "name": "Apex Fastener Supply Co.",
+      "aliases": [
+        "Apex Fasteners"
+      ],
+      "tax_id": "48-5823372",
+      "bank_account": "ABA 642612284 / Acct 0500735315",
+      "default_currency": "USD"
+    },
+    {
+      "id": "2c04142d-6ca5-5a73-9ffc-82c85186b7b7",
+      "key": "rheinwerk",
+      "name": "Rheinwerk Bürobedarf GmbH",
+      "aliases": [
+        "Rheinwerk"
+      ],
+      "tax_id": "DE325333087",
+      "bank_account": "DE20 3554 6670 1194 6383 4401",
+      "default_currency": "EUR"
+    },
+    {
+      "id": "69179108-5335-5329-84e4-ef168cabe4ef",
+      "key": "lumiere",
+      "name": "Lumière Fournitures SARL",
+      "aliases": [
+        "Lumiere Fournitures"
+      ],
+      "tax_id": "DE670684662",
+      "bank_account": "DE59 3052 9564 0005 6879 7490",
+      "default_currency": "EUR"
+    },
+    {
+      "id": "c1167252-9b03-5cf5-bbb7-6b93cf9c520f",
+      "key": "olivar",
+      "name": "Olivar Suministros S.L.",
+      "aliases": [
+        "Olivar"
+      ],
+      "tax_id": "DE768792579",
+      "bank_account": "DE31 2219 1206 2657 7287 8504",
+      "default_currency": "EUR"
+    },
+    {
+      "id": "50827050-3f61-57da-a3b9-45b797b15f18",
+      "key": "thames",
+      "name": "Thames Valley Stationers Ltd",
+      "aliases": [
+        "Thames Valley"
+      ],
+      "tax_id": "GB211715718",
+      "bank_account": "GB25 2818 3812 7197 4930 3341",
+      "default_currency": "GBP"
+    },
+    {
+      "id": "2812a755-7223-5016-916c-5067682bb5ba",
+      "key": "pennine",
+      "name": "Pennine Engineering Supplies Ltd",
+      "aliases": [
+        "Pennine Eng"
+      ],
+      "tax_id": "GB843343369",
+      "bank_account": "GB37 6223 7163 4145 9815 6996",
+      "default_currency": "GBP"
+    },
+    {
+      "id": "cab88da8-15b9-5964-b97a-097dc623bae3",
+      "key": "caledonian",
+      "name": "Caledonian Catering Supplies Ltd",
+      "aliases": [
+        "Caledonian"
+      ],
+      "tax_id": "GB111320267",
+      "bank_account": "GB58 4610 4921 9185 8543 2895",
+      "default_currency": "GBP"
+    }
+  ],
+  "purchase_orders": [
+    {
+      "id": "469e11d5-8e91-5914-bc0d-4a3558cdb34d",
+      "po_number": "PO-10001",
+      "supplier_key": "caledonian",
+      "currency": "GBP",
+      "total_minor": 99860,
+      "lines": [
+        {
+          "id": "651643aa-e2f6-5085-93ef-55b3457849ba",
+          "line_no": 1,
+          "sku": "CCS-WAT-24",
+          "description": "Bottled water, case of 24",
+          "qty": 50,
+          "unit_price_minor": 1120
+        },
+        {
+          "id": "aa835d4f-2eca-5f50-8e9e-41fefe0653d8",
+          "line_no": 2,
+          "sku": "CCS-TEA-100",
+          "description": "Tea bags, box of 100",
+          "qty": 1,
+          "unit_price_minor": 640
+        },
+        {
+          "id": "0ecb1ce7-076b-513e-aa81-9e947dfd743d",
+          "line_no": 3,
+          "sku": "CCS-SNK-BX",
+          "description": "Snack box assortment",
+          "qty": 10,
+          "unit_price_minor": 3890
+        },
+        {
+          "id": "460b830d-cfa5-540c-84b8-c7f6628f67e8",
+          "line_no": 4,
+          "sku": "CCS-MLK-12",
+          "description": "UHT milk, case of 12",
+          "qty": 3,
+          "unit_price_minor": 1440
+        }
+      ],
+      "receipts": [
+        {
+          "id": "74e933e4-417a-57f2-ac7c-774169709bc1",
+          "received_at": "2026-07-01",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 10
+            },
+            {
+              "line_no": 4,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "baa07227-671b-5052-aec9-7fbf9d726e81",
+      "po_number": "PO-10002",
+      "supplier_key": "rheinwerk",
+      "currency": "EUR",
+      "total_minor": 5770,
+      "lines": [
+        {
+          "id": "e176783c-569a-5e49-84e6-beae415f58cc",
+          "line_no": 1,
+          "sku": "RW-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 2,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "123917cb-9b0d-5d12-9771-5a9fdcdfab0a",
+          "line_no": 2,
+          "sku": "RW-NOT-12",
+          "description": "Notebooks, pack of 12",
+          "qty": 2,
+          "unit_price_minor": 2240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "d0d47c2f-f1f3-5363-b7f7-31ded70fe960",
+          "received_at": "2026-06-23",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "597665a6-4e72-512c-b839-8efbb794af87",
+      "po_number": "PO-10003",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 663720,
+      "lines": [
+        {
+          "id": "31ecf764-8ce7-5f7b-ace5-5612e055e43b",
+          "line_no": 1,
+          "sku": "MIP-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 12,
+          "unit_price_minor": 48500
+        },
+        {
+          "id": "c9168e7e-9529-5862-849f-22c18c1e4424",
+          "line_no": 2,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 3,
+          "unit_price_minor": 1240
+        },
+        {
+          "id": "55307edd-f947-5ddb-aaeb-f9db2224816d",
+          "line_no": 3,
+          "sku": "MIP-HYD-HS",
+          "description": "Hydraulic hose, 2m",
+          "qty": 10,
+          "unit_price_minor": 7800
+        }
+      ],
+      "receipts": [
+        {
+          "id": "c1d38e92-0066-5e72-a91d-1aac0718852f",
+          "received_at": "2026-03-06",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            },
+            {
+              "line_no": 3,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03cc282b-c92b-5179-a908-4454fb1f0a83",
+      "po_number": "PO-10004",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 245955,
+      "lines": [
+        {
+          "id": "aa75c3f1-1df8-5184-9be6-1eea26e9cae4",
+          "line_no": 1,
+          "sku": "KP-LBL-RL",
+          "description": "Label roll, 1000 labels",
+          "qty": 12,
+          "unit_price_minor": 1150
+        },
+        {
+          "id": "f7a90dd0-36f5-5a3b-b58a-50baf97db968",
+          "line_no": 2,
+          "sku": "KP-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 12,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "c67ddd19-1867-5030-bf6d-5069e5f822ae",
+          "line_no": 3,
+          "sku": "KP-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 24,
+          "unit_price_minor": 8950
+        },
+        {
+          "id": "071bf363-7b7f-52a9-be96-34811514d6e9",
+          "line_no": 4,
+          "sku": "KP-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 1,
+          "unit_price_minor": 1875
+        }
+      ],
+      "receipts": [
+        {
+          "id": "ddf0b924-2a60-544f-8bdf-84b5e2df44ec",
+          "received_at": "2026-02-28",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            },
+            {
+              "line_no": 3,
+              "qty_received": 24
+            },
+            {
+              "line_no": 4,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "103e78a3-3020-5b88-a441-4e8aa5a924ee",
+      "po_number": "PO-10005",
+      "supplier_key": "redwood",
+      "currency": "USD",
+      "total_minor": 524700,
+      "lines": [
+        {
+          "id": "b599dec3-ff92-51d4-9f53-05e6a707be14",
+          "line_no": 1,
+          "sku": "RFM-CLN-MNT",
+          "description": "Monthly cleaning service, floor 1",
+          "qty": 12,
+          "unit_price_minor": 42000
+        },
+        {
+          "id": "3a3742af-854b-508c-88a9-b2315ca4b87b",
+          "line_no": 2,
+          "sku": "RFM-PST-CTL",
+          "description": "Pest control treatment",
+          "qty": 1,
+          "unit_price_minor": 9800
+        },
+        {
+          "id": "5557dc26-668e-5d04-a07b-3f31dbd20ebd",
+          "line_no": 3,
+          "sku": "RFM-LGT-RPL",
+          "description": "Light fitting replacement",
+          "qty": 1,
+          "unit_price_minor": 4400
+        },
+        {
+          "id": "d4c329bf-29a3-59f7-b9f7-76f2fcdcb517",
+          "line_no": 4,
+          "sku": "RFM-WST-PK",
+          "description": "Waste collection, per pickup",
+          "qty": 1,
+          "unit_price_minor": 6500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "27164817-8e16-5ea1-9b5e-7b9d91d6603a",
+          "received_at": "2026-06-16",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 1
+            },
+            {
+              "line_no": 4,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "19f9e80e-6f55-59e0-8e30-c64eab2237e4",
+      "po_number": "PO-10006",
+      "supplier_key": "lumiere",
+      "currency": "EUR",
+      "total_minor": 36250,
+      "lines": [
+        {
+          "id": "65796e05-648f-58c2-beb5-8c89de9e744b",
+          "line_no": 1,
+          "sku": "LF-STR-WR",
+          "description": "Stretch wrap, 500mm roll",
+          "qty": 20,
+          "unit_price_minor": 1275
+        },
+        {
+          "id": "2ef3ab75-1de3-5995-91cc-14f379688c63",
+          "line_no": 2,
+          "sku": "LF-BUB-50",
+          "description": "Bubble wrap, 50m roll",
+          "qty": 5,
+          "unit_price_minor": 2150
+        }
+      ],
+      "receipts": [
+        {
+          "id": "71944b74-0d94-5185-a5ac-ba3df830b12a",
+          "received_at": "2026-07-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 20
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "620a1a3f-ca54-556c-80ec-5a6f3187f68c",
+      "po_number": "PO-10007",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 75900,
+      "lines": [
+        {
+          "id": "4caa1e28-0090-52a3-99dd-c300e2be46a9",
+          "line_no": 1,
+          "sku": "CP-PAL-STD",
+          "description": "Wooden pallet, standard",
+          "qty": 2,
+          "unit_price_minor": 1450
+        },
+        {
+          "id": "97267e20-0254-509e-9be0-367869351e4a",
+          "line_no": 2,
+          "sku": "CP-STR-WR",
+          "description": "Stretch wrap, 500mm roll",
+          "qty": 50,
+          "unit_price_minor": 1275
+        },
+        {
+          "id": "2331a999-24a3-58ed-a726-ace34df13f32",
+          "line_no": 3,
+          "sku": "CP-BOX-M",
+          "description": "Corrugated box, medium",
+          "qty": 50,
+          "unit_price_minor": 185
+        }
+      ],
+      "receipts": [
+        {
+          "id": "a703b114-03d9-5c9c-adea-221289f202f0",
+          "received_at": "2026-06-08",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 50
+            },
+            {
+              "line_no": 3,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a80ace84-26a1-5edf-b1d7-d54aa97c1797",
+      "po_number": "PO-10008",
+      "supplier_key": "olivar",
+      "currency": "EUR",
+      "total_minor": 63150,
+      "lines": [
+        {
+          "id": "7c660d59-f99c-5b4d-a5f2-1efe29b541fe",
+          "line_no": 1,
+          "sku": "OS-CUP-1K",
+          "description": "Paper cups, sleeve of 1000",
+          "qty": 12,
+          "unit_price_minor": 4350
+        },
+        {
+          "id": "c17da4b5-b23d-5765-a5e3-6b9bdcc30101",
+          "line_no": 2,
+          "sku": "OS-NAP-2K",
+          "description": "Paper napkins, pack of 2000",
+          "qty": 5,
+          "unit_price_minor": 2190
+        }
+      ],
+      "receipts": [
+        {
+          "id": "a46c0b96-7629-5976-9ea5-9151c1e5cf8b",
+          "received_at": "2026-08-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 6
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            }
+          ]
+        },
+        {
+          "id": "1529043e-7e6b-5ae4-9bf7-d94c1366de68",
+          "received_at": "2026-08-09",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 6
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8602b73b-bf09-546c-860a-a761d40b6d19",
+      "po_number": "PO-10009",
+      "supplier_key": "apex",
+      "currency": "USD",
+      "total_minor": 45500,
+      "lines": [
+        {
+          "id": "b6509383-0542-5145-bf9e-ba6bd521b11c",
+          "line_no": 1,
+          "sku": "AFS-GSK-SET",
+          "description": "Gasket set, universal",
+          "qty": 10,
+          "unit_price_minor": 4550
+        }
+      ],
+      "receipts": [
+        {
+          "id": "24dd71c5-93ad-5051-931b-e2264e7e3b92",
+          "received_at": "2026-03-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d647a064-c7d5-5705-9e79-55e05df960b7",
+      "po_number": "PO-10010",
+      "supplier_key": "lumiere",
+      "currency": "EUR",
+      "total_minor": 207600,
+      "lines": [
+        {
+          "id": "95fdaab3-d6f0-51fe-864b-276f3d0c746d",
+          "line_no": 1,
+          "sku": "LF-MAIL-B",
+          "description": "Padded mailers, pack of 100",
+          "qty": 50,
+          "unit_price_minor": 3120
+        },
+        {
+          "id": "520f073c-9120-5981-a8d7-f1c78de164b5",
+          "line_no": 2,
+          "sku": "LF-BUB-50",
+          "description": "Bubble wrap, 50m roll",
+          "qty": 24,
+          "unit_price_minor": 2150
+        }
+      ],
+      "receipts": [
+        {
+          "id": "dc9566d9-24b8-58ec-81a6-ebba1f50067d",
+          "received_at": "2026-06-17",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            },
+            {
+              "line_no": 2,
+              "qty_received": 24
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8a76ec7d-a729-524a-977d-35e0761c46d6",
+      "po_number": "PO-10011",
+      "supplier_key": "caledonian",
+      "currency": "GBP",
+      "total_minor": 101880,
+      "lines": [
+        {
+          "id": "f461e948-6ecc-5351-b3fb-50e58a282525",
+          "line_no": 1,
+          "sku": "CCS-CUP-1K",
+          "description": "Paper cups, sleeve of 1000",
+          "qty": 12,
+          "unit_price_minor": 4350
+        },
+        {
+          "id": "006ab22c-5989-53e1-ac5e-831048387d42",
+          "line_no": 2,
+          "sku": "CCS-MLK-12",
+          "description": "UHT milk, case of 12",
+          "qty": 3,
+          "unit_price_minor": 1440
+        },
+        {
+          "id": "1a42ac53-2927-5724-a02f-5902231956c1",
+          "line_no": 3,
+          "sku": "CCS-COF-1KG",
+          "description": "Ground coffee 1kg",
+          "qty": 24,
+          "unit_price_minor": 1890
+        }
+      ],
+      "receipts": [
+        {
+          "id": "f75fa995-2aa2-5d0a-b168-63b872e04943",
+          "received_at": "2026-07-25",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            },
+            {
+              "line_no": 3,
+              "qty_received": 24
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10313089-f496-5abf-a5f2-c5d7abc1aa5b",
+      "po_number": "PO-10012",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 29975,
+      "lines": [
+        {
+          "id": "40b82df6-9dfc-5d9c-81b4-cc8978b81474",
+          "line_no": 1,
+          "sku": "BL-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 3,
+          "unit_price_minor": 1875
+        },
+        {
+          "id": "8b2ed51d-496e-50a6-87d2-78ffdbeaeca1",
+          "line_no": 2,
+          "sku": "BL-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 5,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "8da3e4d1-1ad4-52aa-8457-390bd5376dd1",
+          "line_no": 3,
+          "sku": "BL-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 2,
+          "unit_price_minor": 8950
+        }
+      ],
+      "receipts": [
+        {
+          "id": "b3fcb30c-a12a-5e8d-9181-b83b48c5e0a8",
+          "received_at": "2026-05-11",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            },
+            {
+              "line_no": 3,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2162d04c-fc83-5021-b039-f885a561df40",
+      "po_number": "PO-10013",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 69040,
+      "lines": [
+        {
+          "id": "9d80ba4f-c113-52a4-8bb3-23ce7b13ac9d",
+          "line_no": 1,
+          "sku": "MIP-FIL-OIL",
+          "description": "Oil filter, heavy duty",
+          "qty": 24,
+          "unit_price_minor": 2360
+        },
+        {
+          "id": "88abe647-3386-59c9-a058-076ab824bd17",
+          "line_no": 2,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 10,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "11d67189-aa3f-54be-92f6-44cbb690a8fe",
+          "received_at": "2026-05-01",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            }
+          ]
+        },
+        {
+          "id": "3d603159-7b6d-5c15-9ce9-ae482c509b5d",
+          "received_at": "2026-05-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2c12c57d-b8db-5197-8a2c-a73c7a67f42e",
+      "po_number": "PO-10014",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 68690,
+      "lines": [
+        {
+          "id": "436de317-0358-5ef9-9b80-874e28ffb062",
+          "line_no": 1,
+          "sku": "PLE-SAF-GOG",
+          "description": "Safety goggles",
+          "qty": 3,
+          "unit_price_minor": 1180
+        },
+        {
+          "id": "ecf4243e-2d5f-5038-8e24-6149a6079960",
+          "line_no": 2,
+          "sku": "PLE-REA-ETH",
+          "description": "Ethanol 99%, 2.5L",
+          "qty": 10,
+          "unit_price_minor": 3890
+        },
+        {
+          "id": "56a9a370-b09c-5147-b1c1-e40b6567c0c8",
+          "line_no": 3,
+          "sku": "PLE-CEN-TUB",
+          "description": "Centrifuge tubes, pack of 500",
+          "qty": 5,
+          "unit_price_minor": 5250
+        }
+      ],
+      "receipts": [
+        {
+          "id": "d810998a-aca8-585e-9af7-c963bc6f4439",
+          "received_at": "2026-04-10",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            },
+            {
+              "line_no": 2,
+              "qty_received": 10
+            },
+            {
+              "line_no": 3,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "0e3cebbb-9f9a-5852-9996-bd2136016d39",
+      "po_number": "PO-10015",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 427800,
+      "lines": [
+        {
+          "id": "f7c4ef76-caa6-58da-b1d4-876fa042c26b",
+          "line_no": 1,
+          "sku": "MIP-LUB-5L",
+          "description": "Industrial lubricant, 5L",
+          "qty": 5,
+          "unit_price_minor": 6320
+        },
+        {
+          "id": "e71cff54-9f54-5838-96ae-268e4eaf95f8",
+          "line_no": 2,
+          "sku": "MIP-HYD-HS",
+          "description": "Hydraulic hose, 2m",
+          "qty": 24,
+          "unit_price_minor": 7800
+        },
+        {
+          "id": "2054609e-7fca-5352-9e30-4bba66672e35",
+          "line_no": 3,
+          "sku": "MIP-FIL-OIL",
+          "description": "Oil filter, heavy duty",
+          "qty": 50,
+          "unit_price_minor": 2360
+        },
+        {
+          "id": "41ccfff0-9929-50b9-98d3-6507885b357f",
+          "line_no": 4,
+          "sku": "MIP-GSK-SET",
+          "description": "Gasket set, universal",
+          "qty": 20,
+          "unit_price_minor": 4550
+        }
+      ],
+      "receipts": [
+        {
+          "id": "054cc4f8-3138-5450-b593-2f2cd4ac7f62",
+          "received_at": "2026-02-23",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            },
+            {
+              "line_no": 3,
+              "qty_received": 25
+            },
+            {
+              "line_no": 4,
+              "qty_received": 10
+            }
+          ]
+        },
+        {
+          "id": "f247f94e-7b31-5497-b149-9d4d294fdda9",
+          "received_at": "2026-02-27",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            },
+            {
+              "line_no": 3,
+              "qty_received": 25
+            },
+            {
+              "line_no": 4,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "0a9cc0a7-3d06-55a5-8b41-dd519f60fbf3",
+      "po_number": "PO-10016",
+      "supplier_key": "harborview",
+      "currency": "USD",
+      "total_minor": 65000,
+      "lines": [
+        {
+          "id": "bf3c374c-633c-5b82-b01a-b128491bf3e8",
+          "line_no": 1,
+          "sku": "HV-SNT-KIT",
+          "description": "Sanitiser refill kit",
+          "qty": 20,
+          "unit_price_minor": 3250
+        }
+      ],
+      "receipts": [
+        {
+          "id": "7cddb5d7-64f7-5f63-9790-335584cd38d4",
+          "received_at": "2026-02-25",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            }
+          ]
+        },
+        {
+          "id": "72dd854f-7d82-5351-8771-90bc8f6cdc1d",
+          "received_at": "2026-03-01",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02ff034d-140a-50c9-aa61-ee1d8ad856b8",
+      "po_number": "PO-10017",
+      "supplier_key": "harborview",
+      "currency": "USD",
+      "total_minor": 52000,
+      "lines": [
+        {
+          "id": "7ea21a33-865f-5246-aec8-81102ff548b7",
+          "line_no": 1,
+          "sku": "HV-SNT-KIT",
+          "description": "Sanitiser refill kit",
+          "qty": 12,
+          "unit_price_minor": 3250
+        },
+        {
+          "id": "cfcb4d06-51df-5fff-9ae3-8e5d9751f756",
+          "line_no": 2,
+          "sku": "HV-WST-PK",
+          "description": "Waste collection, per pickup",
+          "qty": 2,
+          "unit_price_minor": 6500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "3c384e42-fa6e-526b-94af-26f2f1b9a49c",
+          "received_at": "2026-06-01",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5827aa96-2b3b-5b18-a9d4-72ade0533c52",
+      "po_number": "PO-10018",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 97000,
+      "lines": [
+        {
+          "id": "b504e0bc-8246-5393-9828-26ce223202f2",
+          "line_no": 1,
+          "sku": "MIP-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 2,
+          "unit_price_minor": 48500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "aa78ced0-3888-5aeb-ba3c-57aa4ff54f1f",
+          "received_at": "2026-04-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "24ad3d6b-bac3-5ed5-ba0e-cf27e11361f6",
+      "po_number": "PO-10019",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 41625,
+      "lines": [
+        {
+          "id": "6fe9b693-5ce9-5d95-b838-6b2ab53802de",
+          "line_no": 1,
+          "sku": "KP-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 50,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "4f65b9a5-53b1-5365-8411-f5583314a56c",
+          "line_no": 2,
+          "sku": "KP-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 5,
+          "unit_price_minor": 1875
+        }
+      ],
+      "receipts": [
+        {
+          "id": "4e9b4f08-35a1-5f33-beca-ffe0e697849d",
+          "received_at": "2026-05-13",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 25
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            }
+          ]
+        },
+        {
+          "id": "a9dc5b3e-dd47-5009-b9dc-392f418c1c84",
+          "received_at": "2026-05-17",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 25
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a76f78e9-88c4-5f9f-9439-ff715bb71201",
+      "po_number": "PO-10020",
+      "supplier_key": "thames",
+      "currency": "GBP",
+      "total_minor": 68830,
+      "lines": [
+        {
+          "id": "182c602e-fe50-5481-b2bb-49fd9a9cc843",
+          "line_no": 1,
+          "sku": "TVS-LBL-RL",
+          "description": "Label roll, 1000 labels",
+          "qty": 1,
+          "unit_price_minor": 1150
+        },
+        {
+          "id": "c8b18d59-f13a-505d-b98e-63fa500310b2",
+          "line_no": 2,
+          "sku": "TVS-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 2,
+          "unit_price_minor": 18900
+        },
+        {
+          "id": "8160f06d-7cbc-5d28-bb48-b015c6dab72d",
+          "line_no": 3,
+          "sku": "TVS-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 12,
+          "unit_price_minor": 2490
+        }
+      ],
+      "receipts": [
+        {
+          "id": "520861f4-4776-529d-a1ef-86ebc5a95f0c",
+          "received_at": "2026-05-20",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            },
+            {
+              "line_no": 3,
+              "qty_received": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "af1fcefa-77b5-50bf-b825-8a6605e3ae89",
+      "po_number": "PO-10021",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 38430,
+      "lines": [
+        {
+          "id": "d124a8ec-db49-53a8-b2d8-3c9571a3b8ac",
+          "line_no": 1,
+          "sku": "PLE-PIP-TIP",
+          "description": "Pipette tips, rack of 96",
+          "qty": 3,
+          "unit_price_minor": 890
+        },
+        {
+          "id": "d71c6889-0dc0-5eda-9c58-cb6403d77ead",
+          "line_no": 2,
+          "sku": "PLE-MIC-SLD",
+          "description": "Microscope slides, box of 72",
+          "qty": 24,
+          "unit_price_minor": 1490
+        }
+      ],
+      "receipts": [
+        {
+          "id": "ca6994f9-0a9c-5151-9457-0d554c78b0ff",
+          "received_at": "2026-03-28",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            }
+          ]
+        },
+        {
+          "id": "27e84c27-67f7-53d4-9e4d-6808243ba102",
+          "received_at": "2026-04-01",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2fb5fdfa-1919-5a2a-a515-c9ce051a8cf9",
+      "po_number": "PO-10025",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 242918,
+      "lines": [
+        {
+          "id": "a8617d23-aa97-5886-9d7d-845db110a7fa",
+          "line_no": 1,
+          "sku": "BL-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 6,
+          "unit_price_minor": 1875
+        },
+        {
+          "id": "1e780dc2-4e25-5954-93f0-62c86aab6e0a",
+          "line_no": 2,
+          "sku": "BL-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 1,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "058d77b2-3870-59e5-81a0-3df17f32c57f",
+          "line_no": 3,
+          "sku": "BL-LBL-RL",
+          "description": "Label roll, 1000 labels",
+          "qty": 3,
+          "unit_price_minor": 1150
+        },
+        {
+          "id": "13a6602b-9bfc-599d-be49-572ad587fa5f",
+          "line_no": 4,
+          "sku": "BL-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 12,
+          "unit_price_minor": 18900
+        },
+        {
+          "id": "725c711a-6231-5bfb-aee0-bd00802eeb38",
+          "line_no": 5,
+          "sku": "PO-10025-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 128
+        }
+      ],
+      "receipts": [
+        {
+          "id": "ec2aab94-2cdf-5e1f-9cf0-eea92036e287",
+          "received_at": "2026-05-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 6
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 3
+            },
+            {
+              "line_no": 4,
+              "qty_received": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "09ec81f1-f886-5be8-a49a-c9b7ce972d97",
+      "po_number": "PO-10026",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 128140,
+      "lines": [
+        {
+          "id": "920588ab-dee1-597a-be46-8493c25ce1ce",
+          "line_no": 1,
+          "sku": "BL-LBL-RL",
+          "description": "Label roll, 1000 labels",
+          "qty": 1,
+          "unit_price_minor": 1150
+        },
+        {
+          "id": "bb6fbd2e-c8c3-5879-af4a-fa93e1bf07b6",
+          "line_no": 2,
+          "sku": "BL-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 12,
+          "unit_price_minor": 8950
+        },
+        {
+          "id": "69894518-049c-534f-87b4-f9c7dafe2515",
+          "line_no": 3,
+          "sku": "BL-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 6,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "e4dd7276-2b56-5b9d-a456-b33c7e08841b",
+          "line_no": 4,
+          "sku": "BL-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 2,
+          "unit_price_minor": 1875
+        },
+        {
+          "id": "718bc64c-b14b-553c-a514-55a7a0a0544f",
+          "line_no": 5,
+          "sku": "PO-10026-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 900
+        }
+      ],
+      "receipts": [
+        {
+          "id": "47ab4980-95db-5bca-b699-cb6252b038c0",
+          "received_at": "2026-04-17",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            },
+            {
+              "line_no": 3,
+              "qty_received": 6
+            },
+            {
+              "line_no": 4,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b127cfd4-8a8b-58c8-b280-d9e21b1a9507",
+      "po_number": "PO-10027",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 107420,
+      "lines": [
+        {
+          "id": "f80fe272-0991-56f9-a037-5538938cd932",
+          "line_no": 1,
+          "sku": "PLE-BAL-DIG",
+          "description": "Digital balance 0.01g",
+          "qty": 2,
+          "unit_price_minor": 42500
+        },
+        {
+          "id": "25bb696c-9b62-5fed-9562-e26525c2dd74",
+          "line_no": 2,
+          "sku": "PLE-BEA-250",
+          "description": "Glass beaker 250ml",
+          "qty": 1,
+          "unit_price_minor": 640
+        },
+        {
+          "id": "9c098fbc-76ed-5e98-a8eb-31aa236017a5",
+          "line_no": 3,
+          "sku": "PLE-REA-ETH",
+          "description": "Ethanol 99%, 2.5L",
+          "qty": 5,
+          "unit_price_minor": 3890
+        },
+        {
+          "id": "bceb51c1-6afa-515b-ac25-884c74dc6472",
+          "line_no": 4,
+          "sku": "PO-10027-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 2330
+        }
+      ],
+      "receipts": [
+        {
+          "id": "f45bdbe5-002e-5729-ab65-a0559e485e8a",
+          "received_at": "2026-06-11",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e39c5414-4f5b-5ae8-b0ef-070c9781b53b",
+      "po_number": "PO-10028",
+      "supplier_key": "summit",
+      "currency": "USD",
+      "total_minor": 33886,
+      "lines": [
+        {
+          "id": "e7340085-8977-58fb-bc0e-f84dfc4b67a4",
+          "line_no": 1,
+          "sku": "SIT-MS-WL",
+          "description": "Wireless mouse",
+          "qty": 2,
+          "unit_price_minor": 2790
+        },
+        {
+          "id": "05f61161-191d-5f33-8bc7-9ad661724eb6",
+          "line_no": 2,
+          "sku": "SIT-SSD-1T",
+          "description": "SSD 1TB",
+          "qty": 3,
+          "unit_price_minor": 8990
+        },
+        {
+          "id": "dc463730-ce64-5a15-9f07-e5aea2f527b2",
+          "line_no": 3,
+          "sku": "PO-10028-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 1336
+        }
+      ],
+      "receipts": [
+        {
+          "id": "f74c58c0-b4e2-5ff6-be74-e7d0d56ac2d5",
+          "received_at": "2026-04-10",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f4b775fe-f598-52d1-957b-0ffee7215638",
+      "po_number": "PO-10029",
+      "supplier_key": "apex",
+      "currency": "USD",
+      "total_minor": 468000,
+      "lines": [
+        {
+          "id": "96a10efa-77e9-5e14-ae10-ac20921164a7",
+          "line_no": 1,
+          "sku": "AFS-HYD-HS",
+          "description": "Hydraulic hose, 2m",
+          "qty": 50,
+          "unit_price_minor": 7800
+        },
+        {
+          "id": "0d1f5e21-ecc3-5d1b-86f8-336c6e722bf2",
+          "line_no": 2,
+          "sku": "PO-10029-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 78000
+        }
+      ],
+      "receipts": [
+        {
+          "id": "5cdd9e3a-2fc9-5469-b853-79b986a91d07",
+          "received_at": "2026-08-13",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f83a1621-8588-5081-a522-d1f909a5c46c",
+      "po_number": "PO-10030",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 101280,
+      "lines": [
+        {
+          "id": "1d1cc935-cf93-517a-abfd-8558f59637b1",
+          "line_no": 1,
+          "sku": "PLE-MIC-SLD",
+          "description": "Microscope slides, box of 72",
+          "qty": 30,
+          "unit_price_minor": 1490
+        },
+        {
+          "id": "df3a0655-2b16-5f99-bf88-b678193e3fd9",
+          "line_no": 2,
+          "sku": "PLE-GLV-NIT",
+          "description": "Nitrile gloves, box of 100",
+          "qty": 30,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "dc685e83-1934-5bf1-b3f5-a2b604dfb899",
+          "line_no": 3,
+          "sku": "PO-10030-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 17880
+        }
+      ],
+      "receipts": [
+        {
+          "id": "86b1b861-c205-5a5c-988e-b2494edf87fb",
+          "received_at": "2026-07-10",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 36
+            },
+            {
+              "line_no": 2,
+              "qty_received": 30
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2af8f91e-c9ef-5a6f-83d4-96ca4a26b67f",
+      "po_number": "PO-10031",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 52740,
+      "lines": [
+        {
+          "id": "5680983a-120b-59d1-a2fd-5af712163898",
+          "line_no": 1,
+          "sku": "BL-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 20,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "ffdccf65-beb1-55b8-b313-7e26a5f360ed",
+          "line_no": 2,
+          "sku": "BL-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 12,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "fb4d90bb-d726-5b36-82bc-238d72f0539b",
+          "line_no": 3,
+          "sku": "PO-10031-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 9960
+        }
+      ],
+      "receipts": [
+        {
+          "id": "fa290772-0acb-5543-b080-caa0aeef95f3",
+          "received_at": "2026-06-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 6
+            }
+          ]
+        },
+        {
+          "id": "1a158465-3dad-53d0-b81e-5ed8106f5e1d",
+          "received_at": "2026-06-08",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "69ec4b36-a6c7-5979-942e-8216626a1366",
+      "po_number": "PO-10032",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 91350,
+      "lines": [
+        {
+          "id": "0187cdec-3d3b-5890-b7c3-64012ba9ef12",
+          "line_no": 1,
+          "sku": "BL-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 10,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "c5e905f2-a6dc-54b9-bd98-3365d80cdf62",
+          "line_no": 2,
+          "sku": "BL-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 5,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "f02c1728-8cd0-599c-9994-2be3889a79ed",
+          "line_no": 3,
+          "sku": "BL-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 24,
+          "unit_price_minor": 1875
+        },
+        {
+          "id": "f4060456-ef12-5440-bbe8-5bc5d621e74a",
+          "line_no": 4,
+          "sku": "PO-10032-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 15000
+        }
+      ],
+      "receipts": [
+        {
+          "id": "abe1fb53-acbf-5a46-a15e-38605f10743a",
+          "received_at": "2026-03-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            },
+            {
+              "line_no": 3,
+              "qty_received": 12
+            }
+          ]
+        },
+        {
+          "id": "373efb36-c91f-51a0-b7c7-a40a9271b9f5",
+          "received_at": "2026-03-18",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            },
+            {
+              "line_no": 3,
+              "qty_received": 16
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a174412b-c1fa-511c-b322-19dd072d9a1c",
+      "po_number": "PO-10033",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 92580,
+      "lines": [
+        {
+          "id": "1b1c5af0-cf08-5571-bcab-0e138bf2e94b",
+          "line_no": 1,
+          "sku": "KP-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 24,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "8077e663-136e-59cb-9cf1-034c5681ff19",
+          "line_no": 2,
+          "sku": "KP-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 20,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "15e8e5da-0b10-5a78-986b-8140a1568329",
+          "line_no": 3,
+          "sku": "PO-10033-ADD",
+          "description": "Additional item (not yet delivered)",
+          "qty": 1,
+          "unit_price_minor": 19920
+        }
+      ],
+      "receipts": [
+        {
+          "id": "fa49c741-23f4-5e2c-a32e-a547570ab096",
+          "received_at": "2026-03-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 28
+            },
+            {
+              "line_no": 2,
+              "qty_received": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e9817578-0c40-580a-af35-028c74bcc1d8",
+      "po_number": "PO-10034",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 315820,
+      "lines": [
+        {
+          "id": "a7f372a3-7fe3-59d9-8e06-9df1402c20b3",
+          "line_no": 1,
+          "sku": "MIP-VLV-BL",
+          "description": "Ball valve 1 inch",
+          "qty": 12,
+          "unit_price_minor": 5490
+        },
+        {
+          "id": "a307332c-0f55-52da-9222-67d8af825da6",
+          "line_no": 2,
+          "sku": "MIP-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 5,
+          "unit_price_minor": 48500
+        },
+        {
+          "id": "5a46b4a6-0503-5117-ae38-12e3526db485",
+          "line_no": 3,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 6,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "afecf296-c9fa-5713-8df6-1a7f73a146da",
+      "po_number": "PO-10035",
+      "supplier_key": "harborview",
+      "currency": "USD",
+      "total_minor": 29400,
+      "lines": [
+        {
+          "id": "67404c78-ef06-5c35-b775-07c4bf322ad2",
+          "line_no": 1,
+          "sku": "HV-PST-CTL",
+          "description": "Pest control treatment",
+          "qty": 3,
+          "unit_price_minor": 9800
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "2a2cc89f-46b1-5f30-9d4f-b169fe94c597",
+      "po_number": "PO-10036",
+      "supplier_key": "redwood",
+      "currency": "USD",
+      "total_minor": 677900,
+      "lines": [
+        {
+          "id": "e7dfcc51-6b9c-581c-b0ab-17312503924a",
+          "line_no": 1,
+          "sku": "RFM-HVAC-SV",
+          "description": "HVAC service call",
+          "qty": 6,
+          "unit_price_minor": 27500
+        },
+        {
+          "id": "05cf06af-1469-52ad-99a5-d67347ab1c6b",
+          "line_no": 2,
+          "sku": "RFM-CLN-MNT",
+          "description": "Monthly cleaning service, floor 1",
+          "qty": 12,
+          "unit_price_minor": 42000
+        },
+        {
+          "id": "6cecea32-9111-50cf-9116-3821f43c632e",
+          "line_no": 3,
+          "sku": "RFM-CRP-CLN",
+          "description": "Carpet cleaning, per room",
+          "qty": 1,
+          "unit_price_minor": 8900
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "c68282f4-dc57-58d4-b8f0-5a86737f5074",
+      "po_number": "PO-10037",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 94500,
+      "lines": [
+        {
+          "id": "93cdca45-6ccf-533d-98a7-4a1fa1c0ffa8",
+          "line_no": 1,
+          "sku": "KP-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 5,
+          "unit_price_minor": 18900
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "9fb8af0a-2c39-5a06-beea-24f796f81a3c",
+      "po_number": "PO-10038",
+      "supplier_key": "pennine",
+      "currency": "GBP",
+      "total_minor": 290440,
+      "lines": [
+        {
+          "id": "41cac88c-03d1-5ba5-88b5-837524d36dc6",
+          "line_no": 1,
+          "sku": "PES-GSK-SET",
+          "description": "Gasket set, universal",
+          "qty": 10,
+          "unit_price_minor": 4550
+        },
+        {
+          "id": "9537cde5-82c6-55cf-a6f2-2d86063062cc",
+          "line_no": 2,
+          "sku": "PES-FIL-OIL",
+          "description": "Oil filter, heavy duty",
+          "qty": 10,
+          "unit_price_minor": 2360
+        },
+        {
+          "id": "5e6dca80-75d7-5135-8754-88644f88a6eb",
+          "line_no": 3,
+          "sku": "PES-LUB-5L",
+          "description": "Industrial lubricant, 5L",
+          "qty": 12,
+          "unit_price_minor": 6320
+        },
+        {
+          "id": "13a799dd-53e8-5b52-814b-b3186ec7cab9",
+          "line_no": 4,
+          "sku": "PES-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 3,
+          "unit_price_minor": 48500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "dd8d6802-b98d-5f4c-a651-2179574ef1fd",
+          "received_at": "2026-05-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 10
+            },
+            {
+              "line_no": 3,
+              "qty_received": 12
+            },
+            {
+              "line_no": 4,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a2f3d7c8-906d-5d2a-9fd5-95a3c4d64d17",
+      "po_number": "PO-10039",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 205780,
+      "lines": [
+        {
+          "id": "93d8c28c-5e02-5704-84c3-d1fd626804b5",
+          "line_no": 1,
+          "sku": "MIP-VLV-BL",
+          "description": "Ball valve 1 inch",
+          "qty": 2,
+          "unit_price_minor": 5490
+        },
+        {
+          "id": "54d096b6-39ff-512a-96d5-ba4cf879323f",
+          "line_no": 2,
+          "sku": "MIP-GSK-SET",
+          "description": "Gasket set, universal",
+          "qty": 24,
+          "unit_price_minor": 4550
+        },
+        {
+          "id": "aa75eecf-0b0a-5ab2-8a7d-226bce1ca1b4",
+          "line_no": 3,
+          "sku": "MIP-FIL-OIL",
+          "description": "Oil filter, heavy duty",
+          "qty": 10,
+          "unit_price_minor": 2360
+        },
+        {
+          "id": "9ad60184-3ad7-5f64-9876-7e519b405146",
+          "line_no": 4,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 50,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "1fdb23e4-5c91-554e-88fb-13d2b5fd9eb4",
+          "received_at": "2026-04-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 17
+            },
+            {
+              "line_no": 3,
+              "qty_received": 10
+            },
+            {
+              "line_no": 4,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c247eb6f-137f-5691-8601-263ff0794ae9",
+      "po_number": "PO-10040",
+      "supplier_key": "rheinwerk",
+      "currency": "EUR",
+      "total_minor": 640340,
+      "lines": [
+        {
+          "id": "0ce92db1-d049-5f73-b8ee-9fc5856ed273",
+          "line_no": 1,
+          "sku": "RW-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 12,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "d2dd03ec-039f-544b-9b30-bf35c7053ce3",
+          "line_no": 2,
+          "sku": "RW-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 20,
+          "unit_price_minor": 8950
+        },
+        {
+          "id": "c3905ab3-b921-519c-ae5f-1ffd2813fb1f",
+          "line_no": 3,
+          "sku": "RW-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 24,
+          "unit_price_minor": 18900
+        }
+      ],
+      "receipts": [
+        {
+          "id": "228ac573-402c-508e-a6c8-1e64fd30ced8",
+          "received_at": "2026-03-07",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 20
+            },
+            {
+              "line_no": 3,
+              "qty_received": 17
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1d5893fb-b57b-5daf-9c8f-712e13d591b5",
+      "po_number": "PO-10041",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 58435,
+      "lines": [
+        {
+          "id": "c3bc272d-52f9-5ad7-8fd0-0a127897262f",
+          "line_no": 1,
+          "sku": "BL-LBL-RL",
+          "description": "Label roll, 1000 labels",
+          "qty": 10,
+          "unit_price_minor": 1150
+        },
+        {
+          "id": "4805a828-7bc7-5fe1-bea5-890a70a6e02c",
+          "line_no": 2,
+          "sku": "BL-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 24,
+          "unit_price_minor": 1875
+        },
+        {
+          "id": "fef807e2-25b5-5c3e-b845-ce5e591694e4",
+          "line_no": 3,
+          "sku": "BL-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 3,
+          "unit_price_minor": 645
+        }
+      ],
+      "receipts": [
+        {
+          "id": "1f5e0389-d19b-5739-ac08-e7cea20f67f6",
+          "received_at": "2026-06-06",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 17
+            },
+            {
+              "line_no": 3,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "86528be8-b2a9-5b68-8395-b4ad53dbdeb4",
+      "po_number": "PO-10042",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 126400,
+      "lines": [
+        {
+          "id": "a82bcbd1-9cc5-596c-8e79-6a1c14bf5de7",
+          "line_no": 1,
+          "sku": "MIP-LUB-5L",
+          "description": "Industrial lubricant, 5L",
+          "qty": 20,
+          "unit_price_minor": 6320
+        }
+      ],
+      "receipts": [
+        {
+          "id": "10cea2fa-c5dc-5290-9352-95b7eb331477",
+          "received_at": "2026-06-11",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7ef02c87-bad5-5de6-85f8-aa59d8ed4347",
+      "po_number": "PO-10043",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 40025,
+      "lines": [
+        {
+          "id": "db002860-f28a-555a-a504-95d395be8fdf",
+          "line_no": 1,
+          "sku": "BL-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 1,
+          "unit_price_minor": 1875
+        },
+        {
+          "id": "b614a9ef-1c27-5f17-ad5d-b30c37730d3b",
+          "line_no": 2,
+          "sku": "BL-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 2,
+          "unit_price_minor": 8950
+        },
+        {
+          "id": "a75da20a-b3a3-57c9-b1cd-14aa35f1819e",
+          "line_no": 3,
+          "sku": "BL-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 5,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "19c21bce-2d65-59ff-8453-ae2fbefe2533",
+          "line_no": 4,
+          "sku": "BL-LBL-RL",
+          "description": "Label roll, 1000 labels",
+          "qty": 12,
+          "unit_price_minor": 1150
+        }
+      ],
+      "receipts": [
+        {
+          "id": "cbb2a115-817b-50fe-b6ad-26eaf00db772",
+          "received_at": "2026-07-25",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            },
+            {
+              "line_no": 3,
+              "qty_received": 5
+            },
+            {
+              "line_no": 4,
+              "qty_received": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "381ea370-2319-525d-aba1-ff892f8066f6",
+      "po_number": "PO-10044",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 300620,
+      "lines": [
+        {
+          "id": "e523f5f3-fa0d-514a-adf4-52a597d17559",
+          "line_no": 1,
+          "sku": "MIP-VLV-BL",
+          "description": "Ball valve 1 inch",
+          "qty": 1,
+          "unit_price_minor": 5490
+        },
+        {
+          "id": "3e01a5dc-2d19-574b-b656-793b29d1b73b",
+          "line_no": 2,
+          "sku": "MIP-BLT-M8",
+          "description": "Hex bolt M8x40, box of 200",
+          "qty": 1,
+          "unit_price_minor": 2890
+        },
+        {
+          "id": "2e0ed6a2-e712-5cc0-9fe4-b00645f9b846",
+          "line_no": 3,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 1,
+          "unit_price_minor": 1240
+        },
+        {
+          "id": "eaca5ebe-0e66-511b-aad8-0ab8b973da7d",
+          "line_no": 4,
+          "sku": "MIP-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 6,
+          "unit_price_minor": 48500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "7a6aac26-0a99-56a6-b063-04ccec14d6f3",
+          "received_at": "2026-06-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 1
+            },
+            {
+              "line_no": 4,
+              "qty_received": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "08fd92dc-35fa-570a-b176-7de1a216af3e",
+      "po_number": "PO-10045",
+      "supplier_key": "olivar",
+      "currency": "EUR",
+      "total_minor": 32800,
+      "lines": [
+        {
+          "id": "438cb0d6-0273-55d4-9c5f-0d53f831553d",
+          "line_no": 1,
+          "sku": "OS-SUG-5K",
+          "description": "Sugar 5kg",
+          "qty": 20,
+          "unit_price_minor": 860
+        },
+        {
+          "id": "a216a8d2-2b0e-551e-b871-cc3999125670",
+          "line_no": 2,
+          "sku": "OS-COF-1KG",
+          "description": "Ground coffee 1kg",
+          "qty": 3,
+          "unit_price_minor": 1890
+        },
+        {
+          "id": "d8c42d58-8e78-5e33-90b7-520dd8448c00",
+          "line_no": 3,
+          "sku": "OS-WAT-24",
+          "description": "Bottled water, case of 24",
+          "qty": 3,
+          "unit_price_minor": 1120
+        },
+        {
+          "id": "9650d9f7-e8aa-53f9-aaa9-073c43a57642",
+          "line_no": 4,
+          "sku": "OS-NAP-2K",
+          "description": "Paper napkins, pack of 2000",
+          "qty": 3,
+          "unit_price_minor": 2190
+        }
+      ],
+      "receipts": [
+        {
+          "id": "5b309d32-6f3d-5ad9-9e54-bed56f980ad3",
+          "received_at": "2026-05-30",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 20
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            },
+            {
+              "line_no": 3,
+              "qty_received": 3
+            },
+            {
+              "line_no": 4,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "781aeb07-47c5-58b5-a928-411a4c6ff867",
+      "po_number": "PO-10046",
+      "supplier_key": "harborview",
+      "currency": "USD",
+      "total_minor": 1980000,
+      "lines": [
+        {
+          "id": "cfcdcf96-b0c6-5c21-9c75-561bc11eaead",
+          "line_no": 1,
+          "sku": "HV-WST-PK",
+          "description": "Waste collection, per pickup",
+          "qty": 240,
+          "unit_price_minor": 6500
+        },
+        {
+          "id": "03a8181b-0abb-5323-87b2-7cc297d3e70e",
+          "line_no": 2,
+          "sku": "HV-CLN-MNT",
+          "description": "Monthly cleaning service, floor 1",
+          "qty": 10,
+          "unit_price_minor": 42000
+        }
+      ],
+      "receipts": [
+        {
+          "id": "ebc1dbe0-66ca-51d9-b682-42db6d2589be",
+          "received_at": "2026-07-30",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 240
+            },
+            {
+              "line_no": 2,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "656811f3-dbfb-56b7-ba0a-4d11f0b9600e",
+      "po_number": "PO-10047",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 2202800,
+      "lines": [
+        {
+          "id": "d5bb81e7-fbc8-55c6-b063-3849841c8d71",
+          "line_no": 1,
+          "sku": "PLE-REA-ETH",
+          "description": "Ethanol 99%, 2.5L",
+          "qty": 20,
+          "unit_price_minor": 3890
+        },
+        {
+          "id": "43513453-6009-5ea6-948c-8fa46007db13",
+          "line_no": 2,
+          "sku": "PLE-BAL-DIG",
+          "description": "Digital balance 0.01g",
+          "qty": 50,
+          "unit_price_minor": 42500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "1f7f1281-2d01-59b6-b9b5-1e7db9ed27cb",
+          "received_at": "2026-03-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 25
+            }
+          ]
+        },
+        {
+          "id": "1dcd49a0-9f1e-57bc-9a37-a33fe9cf67e2",
+          "received_at": "2026-03-08",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 25
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b4f9dad7-b7d2-5ecc-acbd-5e4f1dbc03d4",
+      "po_number": "PO-10048",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 1275000,
+      "lines": [
+        {
+          "id": "98cb1c09-0219-59b8-8136-f65d598c0204",
+          "line_no": 1,
+          "sku": "CP-STR-WR",
+          "description": "Stretch wrap, 500mm roll",
+          "qty": 100,
+          "unit_price_minor": 1275
+        },
+        {
+          "id": "d2c4ea5c-76b3-58c2-85e5-ba57c75b91ac",
+          "line_no": 2,
+          "sku": "CP-PAL-STD",
+          "description": "Wooden pallet, standard",
+          "qty": 50,
+          "unit_price_minor": 1450
+        },
+        {
+          "id": "6cde9900-7d36-525b-a0ca-65f3d7b538ee",
+          "line_no": 3,
+          "sku": "CP-BUB-50",
+          "description": "Bubble wrap, 50m roll",
+          "qty": 500,
+          "unit_price_minor": 2150
+        }
+      ],
+      "receipts": [
+        {
+          "id": "50bd751f-6ee3-5ecb-854b-91e354ba84f6",
+          "received_at": "2026-03-10",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            },
+            {
+              "line_no": 2,
+              "qty_received": 25
+            },
+            {
+              "line_no": 3,
+              "qty_received": 250
+            }
+          ]
+        },
+        {
+          "id": "c10c5e21-e102-5636-88af-4005c3ace9aa",
+          "received_at": "2026-03-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            },
+            {
+              "line_no": 2,
+              "qty_received": 25
+            },
+            {
+              "line_no": 3,
+              "qty_received": 250
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "971b86a6-deda-5c37-90be-491bca1e5ab8",
+      "po_number": "PO-10049",
+      "supplier_key": "apex",
+      "currency": "USD",
+      "total_minor": 52740,
+      "lines": [
+        {
+          "id": "2e21cd0f-d36b-5eda-91a7-199cf3020220",
+          "line_no": 1,
+          "sku": "AFS-FIL-OIL",
+          "description": "Oil filter, heavy duty",
+          "qty": 3,
+          "unit_price_minor": 2360
+        },
+        {
+          "id": "6f5c14fc-48ad-5528-a8cc-edfe866575b4",
+          "line_no": 2,
+          "sku": "AFS-BLT-M8",
+          "description": "Hex bolt M8x40, box of 200",
+          "qty": 12,
+          "unit_price_minor": 2890
+        },
+        {
+          "id": "5e683e63-c758-5d1b-aa90-a5a1f3fc45f4",
+          "line_no": 3,
+          "sku": "AFS-VLV-BL",
+          "description": "Ball valve 1 inch",
+          "qty": 2,
+          "unit_price_minor": 5490
+        }
+      ],
+      "receipts": [
+        {
+          "id": "fbac6227-c92d-5d18-99d0-fd32d045b73c",
+          "received_at": "2026-03-24",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 6
+            },
+            {
+              "line_no": 3,
+              "qty_received": 1
+            }
+          ]
+        },
+        {
+          "id": "86edddec-ebe2-56be-be01-3091289c575f",
+          "received_at": "2026-03-28",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 6
+            },
+            {
+              "line_no": 3,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5d2baf66-8622-578c-b07e-598bda22817a",
+      "po_number": "PO-10050",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 23600,
+      "lines": [
+        {
+          "id": "a771d053-7f55-5e8a-8c5d-2165f11218fa",
+          "line_no": 1,
+          "sku": "PLE-SAF-GOG",
+          "description": "Safety goggles",
+          "qty": 20,
+          "unit_price_minor": 1180
+        }
+      ],
+      "receipts": [
+        {
+          "id": "e8349475-1b33-537e-a80b-fa0171f76757",
+          "received_at": "2026-03-09",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f5c82ca1-0cd2-5c1c-ad1c-1ed499485132",
+      "po_number": "PO-10051",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 132390,
+      "lines": [
+        {
+          "id": "dd2331c0-212f-5a7c-8986-2a346820cc5b",
+          "line_no": 1,
+          "sku": "MIP-GSK-SET",
+          "description": "Gasket set, universal",
+          "qty": 5,
+          "unit_price_minor": 4550
+        },
+        {
+          "id": "426d4e58-dd91-5eaa-bc75-97f0ed8d58fc",
+          "line_no": 2,
+          "sku": "MIP-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 2,
+          "unit_price_minor": 48500
+        },
+        {
+          "id": "241bbcd3-3311-53ac-9519-1f662608475a",
+          "line_no": 3,
+          "sku": "MIP-LUB-5L",
+          "description": "Industrial lubricant, 5L",
+          "qty": 2,
+          "unit_price_minor": 6320
+        }
+      ],
+      "receipts": [
+        {
+          "id": "8fc8338e-44e2-560e-bd04-be6dfd197d1b",
+          "received_at": "2026-07-18",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 1
+            }
+          ]
+        },
+        {
+          "id": "0920a32b-1f8d-5e93-be1e-e90192ea79ae",
+          "received_at": "2026-07-22",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "53d9b621-7363-5682-ac8a-45b03e1ecd8e",
+      "po_number": "PO-10052",
+      "supplier_key": "harborview",
+      "currency": "USD",
+      "total_minor": 32650,
+      "lines": [
+        {
+          "id": "d94d6e8f-72c2-5123-ae7b-1a12c338e0eb",
+          "line_no": 1,
+          "sku": "HV-SNT-KIT",
+          "description": "Sanitiser refill kit",
+          "qty": 1,
+          "unit_price_minor": 3250
+        },
+        {
+          "id": "7a0e64b6-23bc-50af-81d5-65d9355aa07c",
+          "line_no": 2,
+          "sku": "HV-PST-CTL",
+          "description": "Pest control treatment",
+          "qty": 3,
+          "unit_price_minor": 9800
+        }
+      ],
+      "receipts": [
+        {
+          "id": "f33690f6-2abd-505a-b9e4-543804545045",
+          "received_at": "2026-08-20",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "256e7d75-4b18-5712-a569-3f9897c204b1",
+      "po_number": "PO-10053",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 35680,
+      "lines": [
+        {
+          "id": "5102505f-9b32-56cc-b3ef-4ae344b7027b",
+          "line_no": 1,
+          "sku": "KP-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 10,
+          "unit_price_minor": 1875
+        },
+        {
+          "id": "fe33bfd7-92d2-5c37-91ab-39645d2c132a",
+          "line_no": 2,
+          "sku": "KP-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 5,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "74a75299-9812-5f81-b5da-c0417c224e2b",
+          "line_no": 3,
+          "sku": "KP-NOT-12",
+          "description": "Notebooks, pack of 12",
+          "qty": 2,
+          "unit_price_minor": 2240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "87f12777-eebe-539f-ba6a-49f2c9b7c5aa",
+          "received_at": "2026-07-11",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            },
+            {
+              "line_no": 3,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "394d92eb-3b9f-5b0a-bd30-8c1fa6fa1199",
+      "po_number": "PO-10054",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 82190,
+      "lines": [
+        {
+          "id": "832aff23-59ec-5ae0-9d5e-d3f4338ecf01",
+          "line_no": 1,
+          "sku": "BL-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 1,
+          "unit_price_minor": 18900
+        },
+        {
+          "id": "5c09ef14-e35e-52ec-8a1f-4ddb1a390865",
+          "line_no": 2,
+          "sku": "BL-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 1,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "09b60862-b1cd-5047-acac-0f7605f041f2",
+          "line_no": 3,
+          "sku": "BL-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 24,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "cf8f432b-24f5-50aa-ad87-9b20a84283a9",
+          "line_no": 4,
+          "sku": "BL-NOT-12",
+          "description": "Notebooks, pack of 12",
+          "qty": 1,
+          "unit_price_minor": 2240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "f6e7b8d9-cedc-5703-b69e-2630bf73f513",
+          "received_at": "2026-08-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 24
+            },
+            {
+              "line_no": 4,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c965e157-4ae6-5196-9181-b973fe947410",
+      "po_number": "PO-10055",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 189380,
+      "lines": [
+        {
+          "id": "1e6b224a-a8f5-57cd-b8ab-8eaac69b358b",
+          "line_no": 1,
+          "sku": "MIP-VLV-BL",
+          "description": "Ball valve 1 inch",
+          "qty": 12,
+          "unit_price_minor": 5490
+        },
+        {
+          "id": "170137f1-4e6b-51b0-b860-251d03b64796",
+          "line_no": 2,
+          "sku": "MIP-GSK-SET",
+          "description": "Gasket set, universal",
+          "qty": 10,
+          "unit_price_minor": 4550
+        },
+        {
+          "id": "653769b1-d678-526b-8bce-3de87dafd3bd",
+          "line_no": 3,
+          "sku": "MIP-HYD-HS",
+          "description": "Hydraulic hose, 2m",
+          "qty": 10,
+          "unit_price_minor": 7800
+        }
+      ],
+      "receipts": [
+        {
+          "id": "2ffa301f-76b2-511f-9357-6b972e591f85",
+          "received_at": "2026-08-01",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 6
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            },
+            {
+              "line_no": 3,
+              "qty_received": 5
+            }
+          ]
+        },
+        {
+          "id": "e8ee0878-eda8-596b-b0c9-a26f260d15aa",
+          "received_at": "2026-08-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 6
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            },
+            {
+              "line_no": 3,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02d1f51b-61ee-5acb-9abd-29f510879fda",
+      "po_number": "PO-10056",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 8870,
+      "lines": [
+        {
+          "id": "17cb84be-1601-5427-807e-d3a6ca590202",
+          "line_no": 1,
+          "sku": "CP-TAPE-48",
+          "description": "Packing tape 48mm, roll",
+          "qty": 20,
+          "unit_price_minor": 349
+        },
+        {
+          "id": "5e9849a7-d062-52dc-a0e7-5b5393313be2",
+          "line_no": 2,
+          "sku": "CP-LBL-SHP",
+          "description": "Shipping labels, box of 500",
+          "qty": 1,
+          "unit_price_minor": 1890
+        }
+      ],
+      "receipts": [
+        {
+          "id": "592a49de-bad6-5cf5-aaaf-456f91179b0e",
+          "received_at": "2026-06-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 20
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "404ae4b3-c8b2-54a4-8f5a-ca86d8c15af5",
+      "po_number": "PO-10057",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 20070,
+      "lines": [
+        {
+          "id": "69445b24-fd4f-5312-8060-a7fd7756d041",
+          "line_no": 1,
+          "sku": "CP-BOX-M",
+          "description": "Corrugated box, medium",
+          "qty": 2,
+          "unit_price_minor": 185
+        },
+        {
+          "id": "b4a44b43-a789-56ee-b2fc-2ba202e6c513",
+          "line_no": 2,
+          "sku": "CP-BOX-L",
+          "description": "Corrugated box, large",
+          "qty": 50,
+          "unit_price_minor": 265
+        },
+        {
+          "id": "8619fb19-ac9d-52ab-9493-c5a2234e1cf5",
+          "line_no": 3,
+          "sku": "CP-BUB-50",
+          "description": "Bubble wrap, 50m roll",
+          "qty": 3,
+          "unit_price_minor": 2150
+        }
+      ],
+      "receipts": [
+        {
+          "id": "6f60fd3e-21f7-511c-9cae-ef63d8352ed0",
+          "received_at": "2026-03-02",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 50
+            },
+            {
+              "line_no": 3,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cb1d23bf-7a7c-5e7d-a047-24e3f50c7d3c",
+      "po_number": "PO-10058",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 109800,
+      "lines": [
+        {
+          "id": "a1af0e92-a3de-5dee-a893-29436f20ee7d",
+          "line_no": 1,
+          "sku": "MIP-VLV-BL",
+          "description": "Ball valve 1 inch",
+          "qty": 20,
+          "unit_price_minor": 5490
+        }
+      ],
+      "receipts": [
+        {
+          "id": "9602e58b-c986-5f87-a3f0-44fcb6e4e5a9",
+          "received_at": "2026-03-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1a82bdf8-6dff-5849-9a5f-788ccf062b63",
+      "po_number": "PO-10059",
+      "supplier_key": "pennine",
+      "currency": "GBP",
+      "total_minor": 240780,
+      "lines": [
+        {
+          "id": "0dd32b27-f1bc-521c-a4d0-8d56466c3594",
+          "line_no": 1,
+          "sku": "PES-FIL-OIL",
+          "description": "Oil filter, heavy duty",
+          "qty": 10,
+          "unit_price_minor": 2360
+        },
+        {
+          "id": "fa84bbb2-0a55-5596-a6ce-204002ea526e",
+          "line_no": 2,
+          "sku": "PES-VLV-BL",
+          "description": "Ball valve 1 inch",
+          "qty": 2,
+          "unit_price_minor": 5490
+        },
+        {
+          "id": "db52d935-d5cc-5f00-8b4c-028fdac9d875",
+          "line_no": 3,
+          "sku": "PES-GSK-SET",
+          "description": "Gasket set, universal",
+          "qty": 24,
+          "unit_price_minor": 4550
+        },
+        {
+          "id": "994026a8-ce95-59ee-a147-5094efc177a7",
+          "line_no": 4,
+          "sku": "PES-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 2,
+          "unit_price_minor": 48500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "08bb0b21-512c-5d35-86a8-2f736976d4cb",
+          "received_at": "2026-03-12",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            },
+            {
+              "line_no": 3,
+              "qty_received": 24
+            },
+            {
+              "line_no": 4,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "503f6e09-1676-594a-8ee5-4f2af129ef18",
+      "po_number": "PO-10060",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 132680,
+      "lines": [
+        {
+          "id": "8403963d-475c-5ac3-9ef6-57ac9c8196fc",
+          "line_no": 1,
+          "sku": "KP-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 5,
+          "unit_price_minor": 18900
+        },
+        {
+          "id": "51769fa8-2780-58cc-8180-0d5c8f54b1c1",
+          "line_no": 2,
+          "sku": "KP-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 24,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "4fee4c15-6e88-5281-861b-28339b7519df",
+          "line_no": 3,
+          "sku": "KP-LBL-RL",
+          "description": "Label roll, 1000 labels",
+          "qty": 10,
+          "unit_price_minor": 1150
+        },
+        {
+          "id": "c962f7af-8854-55d9-8031-bb7dd4277a12",
+          "line_no": 4,
+          "sku": "KP-NOT-12",
+          "description": "Notebooks, pack of 12",
+          "qty": 5,
+          "unit_price_minor": 2240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "63523b34-9a39-5a74-8d09-35fc4f116200",
+          "received_at": "2026-06-19",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            },
+            {
+              "line_no": 3,
+              "qty_received": 5
+            },
+            {
+              "line_no": 4,
+              "qty_received": 2
+            }
+          ]
+        },
+        {
+          "id": "9bfa0150-1588-5d1f-8405-5fcb89948a31",
+          "received_at": "2026-06-23",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            },
+            {
+              "line_no": 3,
+              "qty_received": 5
+            },
+            {
+              "line_no": 4,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "db7a029f-e577-57bf-94ce-c44e6e60a97d",
+      "po_number": "PO-10061",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 4300,
+      "lines": [
+        {
+          "id": "035eb88f-2166-58a5-b2b8-11af051f5da1",
+          "line_no": 1,
+          "sku": "CP-BUB-50",
+          "description": "Bubble wrap, 50m roll",
+          "qty": 2,
+          "unit_price_minor": 2150
+        }
+      ],
+      "receipts": [
+        {
+          "id": "aa06db75-3bca-5ee5-a66e-216e52c75b0a",
+          "received_at": "2026-03-08",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "efeaf86f-43cb-5cf0-a67f-fc184237a0e0",
+      "po_number": "PO-10062",
+      "supplier_key": "caledonian",
+      "currency": "GBP",
+      "total_minor": 43000,
+      "lines": [
+        {
+          "id": "edebeff6-bc17-5a8a-af75-4a91452f7732",
+          "line_no": 1,
+          "sku": "CCS-SUG-5K",
+          "description": "Sugar 5kg",
+          "qty": 50,
+          "unit_price_minor": 860
+        }
+      ],
+      "receipts": [
+        {
+          "id": "3a0555bc-dfa0-56fb-ab0e-9cc117c86d41",
+          "received_at": "2026-04-22",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8feee1ce-53e3-56bc-8354-e4d3815c85ca",
+      "po_number": "PO-10063",
+      "supplier_key": "apex",
+      "currency": "USD",
+      "total_minor": 242500,
+      "lines": [
+        {
+          "id": "f4a8e11b-7b38-50a6-b1ad-969e76aa49c3",
+          "line_no": 1,
+          "sku": "AFS-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 5,
+          "unit_price_minor": 48500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "140aa7e2-1155-599f-a377-79c31c6343cb",
+          "received_at": "2026-07-13",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "05f002c5-13a4-5aab-bcd7-284d5f5cf1f3",
+      "po_number": "PO-10064",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 201900,
+      "lines": [
+        {
+          "id": "5c1ef227-6c20-58b7-bf77-402ee598978a",
+          "line_no": 1,
+          "sku": "KP-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 20,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "1336d498-3bb0-5907-9758-294b8c416836",
+          "line_no": 2,
+          "sku": "KP-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 10,
+          "unit_price_minor": 18900
+        }
+      ],
+      "receipts": [
+        {
+          "id": "4473dc72-2ab5-5fe5-a460-bc38c886b366",
+          "received_at": "2026-07-02",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 20
+            },
+            {
+              "line_no": 2,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f328bf86-517a-53e1-bc05-154e54a4a681",
+      "po_number": "PO-10065",
+      "supplier_key": "lumiere",
+      "currency": "EUR",
+      "total_minor": 11280,
+      "lines": [
+        {
+          "id": "d31ccba9-041e-5294-a0c9-d36c9b48d225",
+          "line_no": 1,
+          "sku": "LF-BUB-50",
+          "description": "Bubble wrap, 50m roll",
+          "qty": 5,
+          "unit_price_minor": 2150
+        },
+        {
+          "id": "96b8e50c-0d2a-56df-843a-d7f3175e9d53",
+          "line_no": 2,
+          "sku": "LF-BOX-L",
+          "description": "Corrugated box, large",
+          "qty": 2,
+          "unit_price_minor": 265
+        }
+      ],
+      "receipts": [
+        {
+          "id": "f462ae8d-797f-5a59-90b3-de074f8bed31",
+          "received_at": "2026-03-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            }
+          ]
+        },
+        {
+          "id": "8a90399a-99f7-55a0-953b-29cbe55d650c",
+          "received_at": "2026-03-19",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6aa4fa64-eb0f-5304-aa69-4a1433672144",
+      "po_number": "PO-10066",
+      "supplier_key": "pennine",
+      "currency": "GBP",
+      "total_minor": 59120,
+      "lines": [
+        {
+          "id": "7d3834ed-4a15-5536-84dd-8cf82cf7a37a",
+          "line_no": 1,
+          "sku": "PES-FIL-OIL",
+          "description": "Oil filter, heavy duty",
+          "qty": 24,
+          "unit_price_minor": 2360
+        },
+        {
+          "id": "89120fc6-9390-5487-84f9-26073df0b2f2",
+          "line_no": 2,
+          "sku": "PES-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 2,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "2ddd9827-b55c-5547-b659-ada39deadad4",
+          "received_at": "2026-05-31",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            }
+          ]
+        },
+        {
+          "id": "9a919378-c96e-536a-96ca-f86af74ceaf5",
+          "received_at": "2026-06-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "08de51f8-d813-552e-bf64-fe2c8f6090c9",
+      "po_number": "PO-10067",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 190920,
+      "lines": [
+        {
+          "id": "5b8ddd15-ea7d-5948-b503-d6a90363c6bf",
+          "line_no": 1,
+          "sku": "MIP-HYD-HS",
+          "description": "Hydraulic hose, 2m",
+          "qty": 24,
+          "unit_price_minor": 7800
+        },
+        {
+          "id": "f48c6d7a-10dc-535d-985b-0bb358d3d129",
+          "line_no": 2,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 3,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "d094b7d2-f2ed-509d-8de1-a9ee14427e7b",
+          "received_at": "2026-05-28",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 24
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "95d423de-0af3-5b27-91ca-2d277b86ca49",
+      "po_number": "PO-10068",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 11200,
+      "lines": [
+        {
+          "id": "0ff67ae6-b801-5b78-bcc7-03887d1b6969",
+          "line_no": 1,
+          "sku": "KP-NOT-12",
+          "description": "Notebooks, pack of 12",
+          "qty": 5,
+          "unit_price_minor": 2240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "a438516f-f1c5-5f6e-b2d4-ffcc08862688",
+          "received_at": "2026-08-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            }
+          ]
+        },
+        {
+          "id": "9c823036-382a-5c08-bb6e-fdabf75f594b",
+          "received_at": "2026-08-09",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b2ab7156-4c35-5e5a-ae90-b2bdff669db0",
+      "po_number": "PO-10069",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 3720,
+      "lines": [
+        {
+          "id": "b41819aa-a8fb-5da9-aca8-ff944f370304",
+          "line_no": 1,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 3,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "3261e2a5-641f-5da9-8794-daf2b2e70121",
+          "received_at": "2026-07-03",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "81d0f986-8ca8-58ee-8ffd-6e44a544da1f",
+      "po_number": "PO-10070",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 178290,
+      "lines": [
+        {
+          "id": "f1f8b522-1059-5a90-b497-34ee9d3b8178",
+          "line_no": 1,
+          "sku": "KP-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 20,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "e2755363-5bcb-5736-ba88-df5fc5ef725a",
+          "line_no": 2,
+          "sku": "KP-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 3,
+          "unit_price_minor": 18900
+        },
+        {
+          "id": "a5451f06-bd2a-53c9-a2c3-a55f61ef5116",
+          "line_no": 3,
+          "sku": "KP-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 12,
+          "unit_price_minor": 8950
+        },
+        {
+          "id": "b5fe1c47-23dc-554e-a10e-80bd427d3e7d",
+          "line_no": 4,
+          "sku": "KP-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 1,
+          "unit_price_minor": 1290
+        }
+      ],
+      "receipts": [
+        {
+          "id": "504271c5-2f7a-5c4d-a125-c32646ebf71a",
+          "received_at": "2026-04-03",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 20
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            },
+            {
+              "line_no": 3,
+              "qty_received": 12
+            },
+            {
+              "line_no": 4,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "227bac22-8a78-5a15-8dec-3d4156e3266b",
+      "po_number": "PO-10071",
+      "supplier_key": "olivar",
+      "currency": "EUR",
+      "total_minor": 120700,
+      "lines": [
+        {
+          "id": "7852aa7c-f1ff-5a6b-aa0e-ee6f58ac30e3",
+          "line_no": 1,
+          "sku": "OS-WAT-24",
+          "description": "Bottled water, case of 24",
+          "qty": 10,
+          "unit_price_minor": 1120
+        },
+        {
+          "id": "965202b5-784b-55b5-9d24-5fce390e8fb2",
+          "line_no": 2,
+          "sku": "OS-NAP-2K",
+          "description": "Paper napkins, pack of 2000",
+          "qty": 50,
+          "unit_price_minor": 2190
+        }
+      ],
+      "receipts": [
+        {
+          "id": "2eb21dac-fd87-5649-af26-3abb383efdf6",
+          "received_at": "2026-06-12",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "71f82199-f6c8-5b2e-b02e-8d8f7ab2e3d1",
+      "po_number": "PO-10072",
+      "supplier_key": "rheinwerk",
+      "currency": "EUR",
+      "total_minor": 52380,
+      "lines": [
+        {
+          "id": "e41f4464-8eb8-59cd-b1d5-738a0cc14564",
+          "line_no": 1,
+          "sku": "RW-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 12,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "7a07c4e4-c353-5bec-8451-10a836814188",
+          "line_no": 2,
+          "sku": "RW-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 12,
+          "unit_price_minor": 1875
+        }
+      ],
+      "receipts": [
+        {
+          "id": "33756213-ac47-5ac6-8d46-e2612a3ee6bc",
+          "received_at": "2026-03-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 6
+            },
+            {
+              "line_no": 2,
+              "qty_received": 6
+            }
+          ]
+        },
+        {
+          "id": "fa128bd9-341a-529b-a58f-1107ac8d881e",
+          "received_at": "2026-03-18",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 6
+            },
+            {
+              "line_no": 2,
+              "qty_received": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2a1d94dc-81c1-5277-b500-2a34ead117c5",
+      "po_number": "PO-10073",
+      "supplier_key": "redwood",
+      "currency": "USD",
+      "total_minor": 643000,
+      "lines": [
+        {
+          "id": "057adad5-bc6a-5126-9220-a058889a462b",
+          "line_no": 1,
+          "sku": "RFM-WST-PK",
+          "description": "Waste collection, per pickup",
+          "qty": 50,
+          "unit_price_minor": 6500
+        },
+        {
+          "id": "b89516e4-f610-59fe-abd0-6bacfcc3a49b",
+          "line_no": 2,
+          "sku": "RFM-LGT-RPL",
+          "description": "Light fitting replacement",
+          "qty": 50,
+          "unit_price_minor": 4400
+        },
+        {
+          "id": "51a375e5-5843-5db9-a0b4-7b501ae6a48a",
+          "line_no": 3,
+          "sku": "RFM-PST-CTL",
+          "description": "Pest control treatment",
+          "qty": 10,
+          "unit_price_minor": 9800
+        }
+      ],
+      "receipts": [
+        {
+          "id": "d0bb002a-ac67-5e21-8938-684b906b5e8a",
+          "received_at": "2026-04-21",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            },
+            {
+              "line_no": 2,
+              "qty_received": 50
+            },
+            {
+              "line_no": 3,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "511c6020-c2f8-557f-a72a-58061b4ba6e8",
+      "po_number": "PO-10074",
+      "supplier_key": "lumiere",
+      "currency": "EUR",
+      "total_minor": 8775,
+      "lines": [
+        {
+          "id": "6c1ca1c1-223c-5807-b532-9cbcf0a66731",
+          "line_no": 1,
+          "sku": "LF-STR-WR",
+          "description": "Stretch wrap, 500mm roll",
+          "qty": 2,
+          "unit_price_minor": 1275
+        },
+        {
+          "id": "6e34d7bd-a031-52d9-8d78-2a275a3331cc",
+          "line_no": 2,
+          "sku": "LF-BOX-M",
+          "description": "Corrugated box, medium",
+          "qty": 5,
+          "unit_price_minor": 185
+        },
+        {
+          "id": "5ed9c796-bc34-5de8-8b23-236297bc740b",
+          "line_no": 3,
+          "sku": "LF-BOX-L",
+          "description": "Corrugated box, large",
+          "qty": 20,
+          "unit_price_minor": 265
+        }
+      ],
+      "receipts": [
+        {
+          "id": "9a586569-9073-5bb1-a2f8-8507480c1905",
+          "received_at": "2026-08-09",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            },
+            {
+              "line_no": 3,
+              "qty_received": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cc35e9b4-33f1-506b-b945-1d40aa2b8ffe",
+      "po_number": "PO-10075",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 110270,
+      "lines": [
+        {
+          "id": "55393102-686b-56ca-b1a6-35248d344a4e",
+          "line_no": 1,
+          "sku": "CP-BOX-M",
+          "description": "Corrugated box, medium",
+          "qty": 24,
+          "unit_price_minor": 185
+        },
+        {
+          "id": "623aab11-d2f8-57ad-908e-8c0e5821e5e4",
+          "line_no": 2,
+          "sku": "CP-PAL-STD",
+          "description": "Wooden pallet, standard",
+          "qty": 3,
+          "unit_price_minor": 1450
+        },
+        {
+          "id": "ff2d4d7a-f5a6-5258-893d-4db574952452",
+          "line_no": 3,
+          "sku": "CP-TAPE-48",
+          "description": "Packing tape 48mm, roll",
+          "qty": 20,
+          "unit_price_minor": 349
+        },
+        {
+          "id": "b13df720-9e68-5f84-80ff-18533c962bc1",
+          "line_no": 4,
+          "sku": "CP-LBL-SHP",
+          "description": "Shipping labels, box of 500",
+          "qty": 50,
+          "unit_price_minor": 1890
+        }
+      ],
+      "receipts": [
+        {
+          "id": "89e24d9d-bb04-5e69-92be-6adefed26f59",
+          "received_at": "2026-05-01",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 24
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            },
+            {
+              "line_no": 3,
+              "qty_received": 20
+            },
+            {
+              "line_no": 4,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fcdc7a0e-7ad7-5cdc-abb9-5a12f309bc94",
+      "po_number": "PO-10076",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 890,
+      "lines": [
+        {
+          "id": "619ca71a-3ee5-5889-a7ca-91c84d832275",
+          "line_no": 1,
+          "sku": "PLE-PIP-TIP",
+          "description": "Pipette tips, rack of 96",
+          "qty": 1,
+          "unit_price_minor": 890
+        }
+      ],
+      "receipts": [
+        {
+          "id": "bb489704-3938-5888-8957-47892e98ab7b",
+          "received_at": "2026-03-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6a657d18-e6ab-59b7-bdb7-01a6802b9e19",
+      "po_number": "PO-10077",
+      "supplier_key": "thames",
+      "currency": "GBP",
+      "total_minor": 220470,
+      "lines": [
+        {
+          "id": "a0d5bdbb-e977-5fcb-9d05-29a4f588b09d",
+          "line_no": 1,
+          "sku": "TVS-LBL-RL",
+          "description": "Label roll, 1000 labels",
+          "qty": 24,
+          "unit_price_minor": 1150
+        },
+        {
+          "id": "3efc0f8c-1ac2-5643-b901-0cfea8476d90",
+          "line_no": 2,
+          "sku": "TVS-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 3,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "fdfbdb9d-7d01-507c-93ac-40827378f6bd",
+          "line_no": 3,
+          "sku": "TVS-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 10,
+          "unit_price_minor": 18900
+        }
+      ],
+      "receipts": [
+        {
+          "id": "fb04a3f1-a220-5853-8156-21f4ce507da1",
+          "received_at": "2026-03-18",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 24
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            },
+            {
+              "line_no": 3,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "0b2a846c-0a5d-5d38-9edd-d77075fce8d7",
+      "po_number": "PO-10078",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 545920,
+      "lines": [
+        {
+          "id": "d40c6e36-0862-523d-9c90-0b8668ad8763",
+          "line_no": 1,
+          "sku": "PLE-PIP-TIP",
+          "description": "Pipette tips, rack of 96",
+          "qty": 50,
+          "unit_price_minor": 890
+        },
+        {
+          "id": "43902277-fd2d-5148-96ef-dae267d82882",
+          "line_no": 2,
+          "sku": "PLE-BAL-DIG",
+          "description": "Digital balance 0.01g",
+          "qty": 10,
+          "unit_price_minor": 42500
+        },
+        {
+          "id": "12ab0c79-c2ca-59f6-8ff1-9881a55c72bd",
+          "line_no": 3,
+          "sku": "PLE-BEA-250",
+          "description": "Glass beaker 250ml",
+          "qty": 3,
+          "unit_price_minor": 640
+        },
+        {
+          "id": "37d7653d-97ef-50da-8b15-a25ec9e63aae",
+          "line_no": 4,
+          "sku": "PLE-MIC-SLD",
+          "description": "Microscope slides, box of 72",
+          "qty": 50,
+          "unit_price_minor": 1490
+        }
+      ],
+      "receipts": [
+        {
+          "id": "b389f108-b567-5c71-8332-718e446d30b0",
+          "received_at": "2026-06-11",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            },
+            {
+              "line_no": 2,
+              "qty_received": 10
+            },
+            {
+              "line_no": 3,
+              "qty_received": 3
+            },
+            {
+              "line_no": 4,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "182016d7-0bd2-573a-9254-fdf077f76ce6",
+      "po_number": "PO-10079",
+      "supplier_key": "redwood",
+      "currency": "USD",
+      "total_minor": 65000,
+      "lines": [
+        {
+          "id": "04b8ee46-dc61-5b33-b1b7-e46c3c8cb5b9",
+          "line_no": 1,
+          "sku": "RFM-WST-PK",
+          "description": "Waste collection, per pickup",
+          "qty": 10,
+          "unit_price_minor": 6500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "eff238bb-e0ca-5c6d-a582-fc6e8040be00",
+          "received_at": "2026-05-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "30fbc042-6a7e-579c-983b-19564b928fdc",
+      "po_number": "PO-10080",
+      "supplier_key": "lumiere",
+      "currency": "EUR",
+      "total_minor": 21500,
+      "lines": [
+        {
+          "id": "d8881603-0b07-5caa-9358-840231781cb3",
+          "line_no": 1,
+          "sku": "LF-BUB-50",
+          "description": "Bubble wrap, 50m roll",
+          "qty": 10,
+          "unit_price_minor": 2150
+        }
+      ],
+      "receipts": [
+        {
+          "id": "93478a5b-269a-50bd-a132-3f25b4e53ea1",
+          "received_at": "2026-05-23",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            }
+          ]
+        },
+        {
+          "id": "34a20167-4f40-550c-bb49-df9c30e7b18a",
+          "received_at": "2026-05-27",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "020a495d-7a43-52c5-94fe-5d1b6dc857ea",
+      "po_number": "PO-10081",
+      "supplier_key": "caledonian",
+      "currency": "GBP",
+      "total_minor": 2240,
+      "lines": [
+        {
+          "id": "eb4b6107-29e6-55b2-9e3b-c6eb7415ccd4",
+          "line_no": 1,
+          "sku": "CCS-WAT-24",
+          "description": "Bottled water, case of 24",
+          "qty": 2,
+          "unit_price_minor": 1120
+        }
+      ],
+      "receipts": [
+        {
+          "id": "8bbdb52a-3e10-5632-807b-f2896fed8ea4",
+          "received_at": "2026-05-11",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            }
+          ]
+        },
+        {
+          "id": "7fd51787-c45a-5418-92f5-df1c4aecff86",
+          "received_at": "2026-05-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d1161d0a-f2f3-5743-9ffe-f5de922167e8",
+      "po_number": "PO-10082",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 274500,
+      "lines": [
+        {
+          "id": "f21b7a42-83a4-5672-a6d9-386701f6cc1c",
+          "line_no": 1,
+          "sku": "MIP-VLV-BL",
+          "description": "Ball valve 1 inch",
+          "qty": 50,
+          "unit_price_minor": 5490
+        }
+      ],
+      "receipts": [
+        {
+          "id": "145ebf14-a4bb-59d3-9bd9-228b618b13d0",
+          "received_at": "2026-07-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f661b15c-62f0-551e-a286-f8cce21b5592",
+      "po_number": "PO-10083",
+      "supplier_key": "redwood",
+      "currency": "USD",
+      "total_minor": 235200,
+      "lines": [
+        {
+          "id": "538dc02f-b80f-5e6a-a419-c48c6bbfd1c7",
+          "line_no": 1,
+          "sku": "RFM-PST-CTL",
+          "description": "Pest control treatment",
+          "qty": 24,
+          "unit_price_minor": 9800
+        }
+      ],
+      "receipts": [
+        {
+          "id": "735e18f9-630f-5d47-9d13-9bb43a0ffc28",
+          "received_at": "2026-07-19",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 24
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ca4cbf03-6c74-502e-bfa7-82f99769bd24",
+      "po_number": "PO-10084",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 6200,
+      "lines": [
+        {
+          "id": "4730bd63-38ca-588a-b996-24251aab53a7",
+          "line_no": 1,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 5,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "28f88f6e-0c88-5243-9092-30f86d01f219",
+          "received_at": "2026-06-08",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            }
+          ]
+        },
+        {
+          "id": "ee08b2fa-54ec-5b67-a2e0-9c8002ba48fc",
+          "received_at": "2026-06-12",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6496f309-9320-54ee-ae3b-913bc845369c",
+      "po_number": "PO-10085",
+      "supplier_key": "thames",
+      "currency": "GBP",
+      "total_minor": 211400,
+      "lines": [
+        {
+          "id": "b9ee546c-85b7-5848-92c6-7c1600b5ef47",
+          "line_no": 1,
+          "sku": "TVS-NOT-12",
+          "description": "Notebooks, pack of 12",
+          "qty": 10,
+          "unit_price_minor": 2240
+        },
+        {
+          "id": "957ace46-88c1-5293-9c47-1b12e09102fc",
+          "line_no": 2,
+          "sku": "TVS-STP-HD",
+          "description": "Heavy-duty stapler",
+          "qty": 50,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "97ac48bc-6b28-59ce-83a7-21031f0bf006",
+          "line_no": 3,
+          "sku": "TVS-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 50,
+          "unit_price_minor": 1290
+        }
+      ],
+      "receipts": [
+        {
+          "id": "0ca4abf8-f1c6-5039-a21b-cdcb6de43759",
+          "received_at": "2026-07-02",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 50
+            },
+            {
+              "line_no": 3,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7b7a7b49-9710-575f-adda-8e41433ffbe6",
+      "po_number": "PO-10086",
+      "supplier_key": "caledonian",
+      "currency": "GBP",
+      "total_minor": 4320,
+      "lines": [
+        {
+          "id": "87c4353d-f5cb-58d6-9601-139ed0208532",
+          "line_no": 1,
+          "sku": "CCS-MLK-12",
+          "description": "UHT milk, case of 12",
+          "qty": 3,
+          "unit_price_minor": 1440
+        }
+      ],
+      "receipts": [
+        {
+          "id": "ab9d9de2-2246-5ab4-9de0-d24e92525638",
+          "received_at": "2026-07-25",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d9fbd125-7c55-598b-83b3-875acf50e2ca",
+      "po_number": "PO-10087",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 36000,
+      "lines": [
+        {
+          "id": "9e8601b8-1efb-592e-97bd-7e39802322ef",
+          "line_no": 1,
+          "sku": "MIP-FIL-OIL",
+          "description": "Oil filter, heavy duty",
+          "qty": 10,
+          "unit_price_minor": 2360
+        },
+        {
+          "id": "2a8b34b6-44db-51be-9405-6c19f4fc02c2",
+          "line_no": 2,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 10,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "f843765a-4035-5615-ba8e-1f89564a9ff1",
+          "received_at": "2026-03-01",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            }
+          ]
+        },
+        {
+          "id": "f3fa6ce7-54a6-511c-86d0-c0ad548a0cf6",
+          "received_at": "2026-03-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c0a1712f-7d57-5eb5-b6fc-83e85a984c0f",
+      "po_number": "PO-10088",
+      "supplier_key": "summit",
+      "currency": "USD",
+      "total_minor": 672000,
+      "lines": [
+        {
+          "id": "f0adb240-f7c0-5080-b197-ddc4903fb499",
+          "line_no": 1,
+          "sku": "SIT-LAP-14",
+          "description": "Laptop 14 inch, 16GB",
+          "qty": 6,
+          "unit_price_minor": 112000
+        }
+      ],
+      "receipts": [
+        {
+          "id": "d48a9e68-a869-56b6-9496-34a542fc3102",
+          "received_at": "2026-06-20",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "82fd7bbe-33d8-5eca-81ec-30b781f33f39",
+      "po_number": "PO-10089",
+      "supplier_key": "brightline",
+      "currency": "USD",
+      "total_minor": 102400,
+      "lines": [
+        {
+          "id": "0d5d6a82-695a-578e-8c9b-71771da9398f",
+          "line_no": 1,
+          "sku": "BL-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 10,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "81d04640-724e-53e2-8aab-ee0b60cccda4",
+          "line_no": 2,
+          "sku": "BL-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 10,
+          "unit_price_minor": 8950
+        }
+      ],
+      "receipts": [
+        {
+          "id": "796cc6ab-c177-53c7-9a2e-35ff11bfd9fb",
+          "received_at": "2026-07-10",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            }
+          ]
+        },
+        {
+          "id": "295d99f3-4373-54f0-a7a8-d021a166ca04",
+          "received_at": "2026-07-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "468556c4-a084-52d5-a78a-1fed3ecf4b56",
+      "po_number": "PO-10090",
+      "supplier_key": "apex",
+      "currency": "USD",
+      "total_minor": 20660,
+      "lines": [
+        {
+          "id": "7305735d-d997-5018-b779-d5dc33066aa5",
+          "line_no": 1,
+          "sku": "AFS-BLT-M8",
+          "description": "Hex bolt M8x40, box of 200",
+          "qty": 2,
+          "unit_price_minor": 2890
+        },
+        {
+          "id": "0ac0c1db-c4d3-5871-87d6-a062e54c706e",
+          "line_no": 2,
+          "sku": "AFS-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 12,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "1df8f352-41df-584c-a1dc-b32bb2f53047",
+          "received_at": "2026-06-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "321759b4-edcf-5b53-be12-d2a667b45946",
+      "po_number": "PO-10091",
+      "supplier_key": "rheinwerk",
+      "currency": "EUR",
+      "total_minor": 115225,
+      "lines": [
+        {
+          "id": "df130e0b-8536-50a9-8001-2961779228eb",
+          "line_no": 1,
+          "sku": "RW-NOT-12",
+          "description": "Notebooks, pack of 12",
+          "qty": 50,
+          "unit_price_minor": 2240
+        },
+        {
+          "id": "57e4c1b3-b796-5687-85c5-53b2b4e7e727",
+          "line_no": 2,
+          "sku": "RW-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 5,
+          "unit_price_minor": 645
+        }
+      ],
+      "receipts": [
+        {
+          "id": "a3770355-0109-58cc-8f60-7a66fb619c99",
+          "received_at": "2026-02-28",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 25
+            },
+            {
+              "line_no": 2,
+              "qty_received": 2
+            }
+          ]
+        },
+        {
+          "id": "24a23589-1962-5f30-8d80-20171255c6c4",
+          "received_at": "2026-03-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 25
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d9166771-0bf6-5467-b3b2-30395e1e05ce",
+      "po_number": "PO-10092",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 12520,
+      "lines": [
+        {
+          "id": "c6e2e801-34da-5707-ba63-2479aa793c89",
+          "line_no": 1,
+          "sku": "MIP-LUB-5L",
+          "description": "Industrial lubricant, 5L",
+          "qty": 1,
+          "unit_price_minor": 6320
+        },
+        {
+          "id": "1570a826-9a5a-599c-9aac-bb60a9102f9b",
+          "line_no": 2,
+          "sku": "MIP-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 5,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "31cb7055-a001-5823-b89a-efcffc7e41a6",
+          "received_at": "2026-07-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "900f2b5f-f414-59a0-92c9-3638d7873602",
+      "po_number": "PO-10093",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 67460,
+      "lines": [
+        {
+          "id": "4384e937-0d63-5b32-b58f-53dab8d1af38",
+          "line_no": 1,
+          "sku": "MIP-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 1,
+          "unit_price_minor": 48500
+        },
+        {
+          "id": "0dc8efc7-3f4f-5605-83e7-0052ba0a3590",
+          "line_no": 2,
+          "sku": "MIP-LUB-5L",
+          "description": "Industrial lubricant, 5L",
+          "qty": 3,
+          "unit_price_minor": 6320
+        }
+      ],
+      "receipts": [
+        {
+          "id": "d7dfc112-7073-50e9-93ba-9e7b13da32a9",
+          "received_at": "2026-06-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f8cd0d44-7aca-5011-98bc-aea1c2f6d37d",
+      "po_number": "PO-10094",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 541250,
+      "lines": [
+        {
+          "id": "edb42c7f-05dc-5293-a649-c144ad70fb79",
+          "line_no": 1,
+          "sku": "KP-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 50,
+          "unit_price_minor": 8950
+        },
+        {
+          "id": "d4786e20-5a85-5912-82c5-b95e837446c4",
+          "line_no": 2,
+          "sku": "KP-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 50,
+          "unit_price_minor": 1875
+        }
+      ],
+      "receipts": [
+        {
+          "id": "013ec9d0-ab02-55da-9e79-537196a493b5",
+          "received_at": "2026-04-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            },
+            {
+              "line_no": 2,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7ac80b69-981c-57e6-954e-5bc3210041c2",
+      "po_number": "PO-10095",
+      "supplier_key": "pioneer",
+      "currency": "USD",
+      "total_minor": 640,
+      "lines": [
+        {
+          "id": "57fa80d6-e21a-5dc9-b90c-02f5a2e20124",
+          "line_no": 1,
+          "sku": "PLE-BEA-250",
+          "description": "Glass beaker 250ml",
+          "qty": 1,
+          "unit_price_minor": 640
+        }
+      ],
+      "receipts": [
+        {
+          "id": "96443612-68c8-5df9-8199-8119a2391aa5",
+          "received_at": "2026-07-22",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6b9a20ab-91f8-5eff-af51-f214101aa492",
+      "po_number": "PO-10096",
+      "supplier_key": "caledonian",
+      "currency": "GBP",
+      "total_minor": 71800,
+      "lines": [
+        {
+          "id": "b0f44242-7ec2-521a-b36c-4841a0289ed4",
+          "line_no": 1,
+          "sku": "CCS-SUG-5K",
+          "description": "Sugar 5kg",
+          "qty": 50,
+          "unit_price_minor": 860
+        },
+        {
+          "id": "6221c605-7b47-5c30-bd2e-ed6e05350656",
+          "line_no": 2,
+          "sku": "CCS-MLK-12",
+          "description": "UHT milk, case of 12",
+          "qty": 20,
+          "unit_price_minor": 1440
+        }
+      ],
+      "receipts": [
+        {
+          "id": "709d09fd-3195-5fa6-84c0-635bd345af2f",
+          "received_at": "2026-05-15",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 50
+            },
+            {
+              "line_no": 2,
+              "qty_received": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "de17e652-9d51-575c-b6a5-518decec9176",
+      "po_number": "PO-10097",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 90726,
+      "lines": [
+        {
+          "id": "7a158089-8325-54b5-8b1e-5ff918161cac",
+          "line_no": 1,
+          "sku": "CP-TAPE-48",
+          "description": "Packing tape 48mm, roll",
+          "qty": 24,
+          "unit_price_minor": 349
+        },
+        {
+          "id": "ad6c808a-d3c6-56f2-a1c9-77fd020cf5f7",
+          "line_no": 2,
+          "sku": "CP-MAIL-B",
+          "description": "Padded mailers, pack of 100",
+          "qty": 20,
+          "unit_price_minor": 3120
+        },
+        {
+          "id": "ad54daa8-4b43-5aa6-a69b-9bce98d95e13",
+          "line_no": 3,
+          "sku": "CP-PAL-STD",
+          "description": "Wooden pallet, standard",
+          "qty": 12,
+          "unit_price_minor": 1450
+        },
+        {
+          "id": "2188a638-1bda-54ee-a4ab-6533c4839a67",
+          "line_no": 4,
+          "sku": "CP-STR-WR",
+          "description": "Stretch wrap, 500mm roll",
+          "qty": 2,
+          "unit_price_minor": 1275
+        }
+      ],
+      "receipts": [
+        {
+          "id": "4a837795-f165-54b5-b802-8718b327de7d",
+          "received_at": "2026-03-27",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 24
+            },
+            {
+              "line_no": 2,
+              "qty_received": 20
+            },
+            {
+              "line_no": 3,
+              "qty_received": 12
+            },
+            {
+              "line_no": 4,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fd8d61e7-4f56-5426-a05f-2e214a484b41",
+      "po_number": "PO-10098",
+      "supplier_key": "caledonian",
+      "currency": "GBP",
+      "total_minor": 58800,
+      "lines": [
+        {
+          "id": "b8dcf0c8-cc42-5e6c-a5f4-b10031a20bdb",
+          "line_no": 1,
+          "sku": "CCS-COF-1KG",
+          "description": "Ground coffee 1kg",
+          "qty": 24,
+          "unit_price_minor": 1890
+        },
+        {
+          "id": "f5f07cf5-1aa3-5367-b478-5c7cd3f35762",
+          "line_no": 2,
+          "sku": "CCS-WAT-24",
+          "description": "Bottled water, case of 24",
+          "qty": 12,
+          "unit_price_minor": 1120
+        }
+      ],
+      "receipts": [
+        {
+          "id": "a60dc4b1-f6cb-558a-8f61-d1335d3dcb40",
+          "received_at": "2026-05-10",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 24
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f1e64727-c654-5797-aa3b-a7d7927756e8",
+      "po_number": "PO-10099",
+      "supplier_key": "thames",
+      "currency": "GBP",
+      "total_minor": 265680,
+      "lines": [
+        {
+          "id": "b284ce18-6d6d-537e-a795-34c0a2b40cda",
+          "line_no": 1,
+          "sku": "TVS-TON-BK",
+          "description": "Toner cartridge, black",
+          "qty": 24,
+          "unit_price_minor": 8950
+        },
+        {
+          "id": "865942bf-abd3-5858-9388-573af215022e",
+          "line_no": 2,
+          "sku": "TVS-A4-500",
+          "description": "A4 copier paper, 500 sheets",
+          "qty": 24,
+          "unit_price_minor": 645
+        },
+        {
+          "id": "b4f5f65b-49c3-544a-8e09-28015f6c4401",
+          "line_no": 3,
+          "sku": "TVS-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 10,
+          "unit_price_minor": 1290
+        },
+        {
+          "id": "92a6bcb6-f545-5ead-8336-ce3c929c9ffb",
+          "line_no": 4,
+          "sku": "TVS-FLD-100",
+          "description": "Manila folders, pack of 100",
+          "qty": 12,
+          "unit_price_minor": 1875
+        }
+      ],
+      "receipts": [
+        {
+          "id": "8816160b-6636-5fbf-9d0a-961c0b50c5ff",
+          "received_at": "2026-04-14",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 24
+            },
+            {
+              "line_no": 2,
+              "qty_received": 24
+            },
+            {
+              "line_no": 3,
+              "qty_received": 10
+            },
+            {
+              "line_no": 4,
+              "qty_received": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ad6d4b09-bb2a-5bba-bfd6-37c4b09c38c4",
+      "po_number": "PO-10100",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 34200,
+      "lines": [
+        {
+          "id": "5f08609b-efef-5fe1-b076-1e839c474400",
+          "line_no": 1,
+          "sku": "CP-STR-WR",
+          "description": "Stretch wrap, 500mm roll",
+          "qty": 12,
+          "unit_price_minor": 1275
+        },
+        {
+          "id": "359bc80a-8ad1-59c9-87f6-3e71727d703d",
+          "line_no": 2,
+          "sku": "CP-LBL-SHP",
+          "description": "Shipping labels, box of 500",
+          "qty": 10,
+          "unit_price_minor": 1890
+        }
+      ],
+      "receipts": [
+        {
+          "id": "0db48fb5-2a2e-516d-bb85-66747489c273",
+          "received_at": "2026-03-31",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5839900e-8403-59e8-94aa-e2a58c8c4c57",
+      "po_number": "PO-10101",
+      "supplier_key": "olivar",
+      "currency": "EUR",
+      "total_minor": 33440,
+      "lines": [
+        {
+          "id": "8158a4f8-3e4b-543b-a271-6080dedf98d6",
+          "line_no": 1,
+          "sku": "OS-MLK-12",
+          "description": "UHT milk, case of 12",
+          "qty": 1,
+          "unit_price_minor": 1440
+        },
+        {
+          "id": "5dbe0ec7-bcbd-552c-a926-797e808950af",
+          "line_no": 2,
+          "sku": "OS-TEA-100",
+          "description": "Tea bags, box of 100",
+          "qty": 50,
+          "unit_price_minor": 640
+        }
+      ],
+      "receipts": [
+        {
+          "id": "6a5dc3ae-94e8-5977-acba-d2e4fdf0b8c6",
+          "received_at": "2026-04-29",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "17ea2cd7-ce00-5a65-b726-3f8124d5e141",
+      "po_number": "PO-10102",
+      "supplier_key": "rheinwerk",
+      "currency": "EUR",
+      "total_minor": 280560,
+      "lines": [
+        {
+          "id": "a9dec5b9-970c-54ad-b0a6-24717cc1c01a",
+          "line_no": 1,
+          "sku": "RW-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 12,
+          "unit_price_minor": 18900
+        },
+        {
+          "id": "14ce9547-d45c-5cd0-8d0c-884b770284dc",
+          "line_no": 2,
+          "sku": "RW-NOT-12",
+          "description": "Notebooks, pack of 12",
+          "qty": 24,
+          "unit_price_minor": 2240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "bcbb6491-efaa-544f-a3a8-a6b333951623",
+          "received_at": "2026-06-19",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 24
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8f88fa94-cae6-5d2d-9121-ab9fb3dd423f",
+      "po_number": "PO-10103",
+      "supplier_key": "apex",
+      "currency": "USD",
+      "total_minor": 487480,
+      "lines": [
+        {
+          "id": "b4eb9256-05fe-56ff-8d68-6574b2b2fe50",
+          "line_no": 1,
+          "sku": "AFS-MTR-1HP",
+          "description": "Electric motor 1HP",
+          "qty": 10,
+          "unit_price_minor": 48500
+        },
+        {
+          "id": "78664388-1c5b-528d-b8bd-cfc283e97b83",
+          "line_no": 2,
+          "sku": "AFS-BRG-6204",
+          "description": "Ball bearing 6204",
+          "qty": 2,
+          "unit_price_minor": 1240
+        }
+      ],
+      "receipts": [
+        {
+          "id": "e39bdf37-f767-5588-b43d-55dda55aed4c",
+          "received_at": "2026-07-26",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            }
+          ]
+        },
+        {
+          "id": "5639e427-44f2-5787-a13d-f2d70fc230db",
+          "received_at": "2026-07-30",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 5
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f23f119b-7cbc-5f38-add7-01b7e9428b4f",
+      "po_number": "PO-10104",
+      "supplier_key": "keystone",
+      "currency": "USD",
+      "total_minor": 102300,
+      "lines": [
+        {
+          "id": "2fdcfa15-55c6-577a-9686-f807e2393bd0",
+          "line_no": 1,
+          "sku": "KP-CHR-ERG",
+          "description": "Ergonomic desk chair",
+          "qty": 2,
+          "unit_price_minor": 18900
+        },
+        {
+          "id": "c9ae7406-f206-5091-959e-35af336f55f7",
+          "line_no": 2,
+          "sku": "KP-PEN-BX",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 50,
+          "unit_price_minor": 1290
+        }
+      ],
+      "receipts": [
+        {
+          "id": "48e6a289-e0e8-56d2-ab4a-d03096cb8aaa",
+          "received_at": "2026-05-05",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 2
+            },
+            {
+              "line_no": 2,
+              "qty_received": 50
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "51ba4be1-5b53-50a4-9163-038b720a965c",
+      "po_number": "PO-10105",
+      "supplier_key": "meridian",
+      "currency": "USD",
+      "total_minor": 27950,
+      "lines": [
+        {
+          "id": "08dc16b3-2dc0-567f-a1a1-6f94720bcf19",
+          "line_no": 1,
+          "sku": "MIP-GSK-SET",
+          "description": "Gasket set, universal",
+          "qty": 1,
+          "unit_price_minor": 4550
+        },
+        {
+          "id": "053c9558-012b-54cc-afb4-d3a26a9501fc",
+          "line_no": 2,
+          "sku": "MIP-HYD-HS",
+          "description": "Hydraulic hose, 2m",
+          "qty": 3,
+          "unit_price_minor": 7800
+        }
+      ],
+      "receipts": [
+        {
+          "id": "ba5d6b5f-e504-59fa-99b8-723102b7ac7f",
+          "received_at": "2026-08-17",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "58b99f25-79f1-585c-8dcc-2c2e0860a42d",
+      "po_number": "PO-10106",
+      "supplier_key": "coastal",
+      "currency": "USD",
+      "total_minor": 77800,
+      "lines": [
+        {
+          "id": "e4cbadff-11fd-5ff2-9620-b98dce94b184",
+          "line_no": 1,
+          "sku": "CP-BUB-50",
+          "description": "Bubble wrap, 50m roll",
+          "qty": 20,
+          "unit_price_minor": 2150
+        },
+        {
+          "id": "4ea509f3-37c3-5484-b7b7-318e20463721",
+          "line_no": 2,
+          "sku": "CP-PAL-STD",
+          "description": "Wooden pallet, standard",
+          "qty": 24,
+          "unit_price_minor": 1450
+        }
+      ],
+      "receipts": [
+        {
+          "id": "9f1bb3d1-6c5b-50f9-a0f7-ebef07cbbeec",
+          "received_at": "2026-05-12",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            }
+          ]
+        },
+        {
+          "id": "0772f380-a1e8-5474-a4b7-16774e9832ef",
+          "received_at": "2026-05-16",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 10
+            },
+            {
+              "line_no": 2,
+              "qty_received": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ed5d2cfe-5332-52e2-b65e-db30cb8a6c52",
+      "po_number": "PO-10107",
+      "supplier_key": "olivar",
+      "currency": "EUR",
+      "total_minor": 8780,
+      "lines": [
+        {
+          "id": "4f5bb46f-d7b3-56c7-b89c-a1eaedc991cd",
+          "line_no": 1,
+          "sku": "OS-CUP-1K",
+          "description": "Paper cups, sleeve of 1000",
+          "qty": 1,
+          "unit_price_minor": 4350
+        },
+        {
+          "id": "c585dd5c-2207-537e-8927-94a8cfe5ad4d",
+          "line_no": 2,
+          "sku": "OS-NAP-2K",
+          "description": "Paper napkins, pack of 2000",
+          "qty": 1,
+          "unit_price_minor": 2190
+        },
+        {
+          "id": "62a041f6-cac9-5337-b655-cce9295b1cc1",
+          "line_no": 3,
+          "sku": "OS-WAT-24",
+          "description": "Bottled water, case of 24",
+          "qty": 2,
+          "unit_price_minor": 1120
+        }
+      ],
+      "receipts": [
+        {
+          "id": "bdb4813d-4d4c-5b1e-9c0e-a54d8da367a3",
+          "received_at": "2026-08-08",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 1
+            },
+            {
+              "line_no": 2,
+              "qty_received": 1
+            },
+            {
+              "line_no": 3,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

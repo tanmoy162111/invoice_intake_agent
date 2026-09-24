@@ -1,0 +1,79 @@
+{
+  "id": "inv-033",
+  "file": "IMG_4231.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "B",
+  "received_order": 33,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0613",
+    "invoice_date": "2026-03-17",
+    "due_date": "2026-05-16",
+    "po_number": "PO-10004",
+    "currency": "USD",
+    "subtotal_minor": 245955,
+    "tax_total_minor": 19676,
+    "total_minor": 265631,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Label roll, 1000 labels",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 1150,
+      "amount_minor": 13800,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 1290,
+      "amount_minor": 15480,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Toner cartridge, black",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 8950,
+      "amount_minor": 214800,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 1,
+      "unit_price_minor": 1875,
+      "amount_minor": 1875,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": "invoice_date",
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "LOW_CONFIDENCE_FIELD"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "LOW_CONFIDENCE_FIELD",
+      "detail": "invoice_date is smudged and cannot be read reliably"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "inv-008",
+  "file": "scan0008.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 8,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0859",
+    "invoice_date": "2026-03-18",
+    "due_date": "2026-04-17",
+    "po_number": "PO-10003",
+    "currency": "USD",
+    "subtotal_minor": 663720,
+    "tax_total_minor": 39823,
+    "total_minor": 703543,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Electric motor 1HP",
+      "sku": "MIP-MTR-1HP",
+      "quantity": 12,
+      "unit_price_minor": 48500,
+      "amount_minor": 582000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ball bearing 6204",
+      "sku": "MIP-BRG-6204",
+      "quantity": 3,
+      "unit_price_minor": 1240,
+      "amount_minor": 3720,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Hydraulic hose, 2m",
+      "sku": "MIP-HYD-HS",
+      "quantity": 10,
+      "unit_price_minor": 7800,
+      "amount_minor": 78000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": "invoice_number",
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "LOW_CONFIDENCE_FIELD"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "LOW_CONFIDENCE_FIELD",
+      "detail": "invoice_number is smudged and cannot be read reliably"
+    }
+  ]
+}

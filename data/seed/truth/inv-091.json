@@ -1,0 +1,54 @@
+{
+  "id": "inv-091",
+  "file": "IMG_4637.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "D",
+  "received_order": 91,
+  "readable": true,
+  "supplier_key": "rheinwerk",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Rheinwerk Bürobedarf GmbH",
+    "supplier_tax_id": "DE325333087",
+    "supplier_address": "697 Industrial Way, Köln",
+    "supplier_bank_account": "DE20 3554 6670 1194 6383 4401",
+    "invoice_number": "RW-2026-0603",
+    "invoice_date": "2026-03-20",
+    "due_date": "2026-04-19",
+    "po_number": "PO-10091",
+    "currency": "EUR",
+    "subtotal_minor": 115225,
+    "tax_total_minor": 21893,
+    "total_minor": 137118,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Notebooks, pack of 12",
+      "sku": "RW-NOT-12",
+      "quantity": 50,
+      "unit_price_minor": 2240,
+      "amount_minor": 112000,
+      "tax_rate_bp": 1900
+    },
+    {
+      "line_no": 2,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": "RW-A4-500",
+      "quantity": 5,
+      "unit_price_minor": 645,
+      "amount_minor": 3225,
+      "tax_rate_bp": 1900
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

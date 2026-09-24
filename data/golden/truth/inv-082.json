@@ -1,0 +1,52 @@
+{
+  "id": "inv-082",
+  "file": "Rheinwerk-RW-2026-0613.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "D",
+  "received_order": 82,
+  "readable": true,
+  "supplier_key": "rheinwerk",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Rheinwerk Bürobedarf GmbH",
+    "supplier_tax_id": "DE325333087",
+    "supplier_address": "697 Industrial Way, Köln",
+    "supplier_bank_account": "DE20 3554 6670 1194 6383 4401",
+    "invoice_number": "RW-2026-0613",
+    "invoice_date": "2026-04-18",
+    "due_date": "2026-05-18",
+    "po_number": null,
+    "currency": "EUR",
+    "subtotal_minor": 11500,
+    "tax_total_minor": 2185,
+    "total_minor": 13685,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Label roll, 1000 labels",
+      "sku": "RW-LBL-RL",
+      "quantity": 10,
+      "unit_price_minor": 1150,
+      "amount_minor": 11500,
+      "tax_rate_bp": 1900
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "NO_PO"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "NO_PO",
+      "detail": "invoice has no PO number and no PO matches"
+    }
+  ]
+}

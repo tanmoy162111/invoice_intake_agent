@@ -1,0 +1,82 @@
+{
+  "id": "inv-104",
+  "file": "scan0104.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "E",
+  "received_order": 104,
+  "readable": true,
+  "supplier_key": null,
+  "supplier_on_file": false,
+  "header": {
+    "supplier_name": "Brightline Offices Supplies Ltd",
+    "supplier_tax_id": null,
+    "supplier_address": "103 Station Rd, Columbus, OH",
+    "supplier_bank_account": null,
+    "invoice_number": "BR-2026-0401",
+    "invoice_date": "2026-03-17",
+    "due_date": "2026-04-16",
+    "po_number": null,
+    "currency": "USD",
+    "subtotal_minor": 53855,
+    "tax_total_minor": 4308,
+    "total_minor": 58163,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 1875,
+      "amount_minor": 45000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 645,
+      "amount_minor": 3225,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Notebooks, pack of 12",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 2240,
+      "amount_minor": 4480,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Label roll, 1000 labels",
+      "sku": null,
+      "quantity": 1,
+      "unit_price_minor": 1150,
+      "amount_minor": 1150,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "UNKNOWN_SUPPLIER"
+    ],
+    "may_raise": [
+      "NO_PO",
+      "PO_NOT_FOUND"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "UNKNOWN_SUPPLIER",
+      "detail": "'Brightline Offices Supplies Ltd' is not in the supplier master"
+    }
+  ]
+}

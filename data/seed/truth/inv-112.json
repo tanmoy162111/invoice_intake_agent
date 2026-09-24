@@ -1,0 +1,54 @@
+{
+  "id": "inv-112",
+  "file": "scan0112.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 112,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0913",
+    "invoice_date": "2026-06-15",
+    "due_date": "2026-07-30",
+    "po_number": "PO-10067",
+    "currency": "USD",
+    "subtotal_minor": 190920,
+    "tax_total_minor": 11455,
+    "total_minor": 202375,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Hydraulic hose, 2m",
+      "sku": "MIP-HYD-HS",
+      "quantity": 24,
+      "unit_price_minor": 7800,
+      "amount_minor": 187200,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ball bearing 6204",
+      "sku": "MIP-BRG-6204",
+      "quantity": 3,
+      "unit_price_minor": 1240,
+      "amount_minor": 3720,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

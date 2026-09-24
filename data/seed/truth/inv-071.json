@@ -1,0 +1,70 @@
+{
+  "id": "inv-071",
+  "file": "IMG_4497.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "D",
+  "received_order": 71,
+  "readable": true,
+  "supplier_key": "caledonian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Caledonian Catering Supplies Ltd",
+    "supplier_tax_id": "GB111320267",
+    "supplier_address": "35 Market St, Glasgow",
+    "supplier_bank_account": "GB58 4610 4921 9185 8543 2895",
+    "invoice_number": "CCS-2026-0783",
+    "invoice_date": "2026-08-14",
+    "due_date": "2026-09-28",
+    "po_number": "PO-10011",
+    "currency": "GBP",
+    "subtotal_minor": 101880,
+    "tax_total_minor": 5094,
+    "total_minor": 160974,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Paper cups, sleeve of 1000",
+      "sku": "CCS-CUP-1K",
+      "quantity": 12,
+      "unit_price_minor": 4350,
+      "amount_minor": 52200,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 2,
+      "description": "UHT milk, case of 12",
+      "sku": "CCS-MLK-12",
+      "quantity": 3,
+      "unit_price_minor": 1440,
+      "amount_minor": 4320,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 3,
+      "description": "Ground coffee 1kg",
+      "sku": "CCS-COF-1KG",
+      "quantity": 24,
+      "unit_price_minor": 1890,
+      "amount_minor": 45360,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "TOTAL_MISMATCH"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "TOTAL_MISMATCH",
+      "detail": "total 106974 -> 160974"
+    }
+  ]
+}

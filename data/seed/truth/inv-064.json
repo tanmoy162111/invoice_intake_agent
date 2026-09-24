@@ -1,0 +1,61 @@
+{
+  "id": "inv-064",
+  "file": "IMG_4448.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "A",
+  "received_order": 64,
+  "readable": true,
+  "supplier_key": "lumiere",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Lumière Fournitures SARL",
+    "supplier_tax_id": "DE670684662",
+    "supplier_address": "857 Harbour Rd, Utrecht",
+    "supplier_bank_account": "DE59 3052 9564 0005 6879 7490",
+    "invoice_number": "LF-2026-0248",
+    "invoice_date": "2026-06-28",
+    "due_date": "2026-07-28",
+    "po_number": "PO-10010",
+    "currency": "EUR",
+    "subtotal_minor": 567600,
+    "tax_total_minor": 113520,
+    "total_minor": 681120,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Padded mailers, pack of 100",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 3120,
+      "amount_minor": 516000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Bubble wrap, 50m roll",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 2150,
+      "amount_minor": 51600,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "LINE_MATH_MISMATCH"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "LINE_MATH_MISMATCH",
+      "detail": "line 1: 156000 -> 516000"
+    }
+  ]
+}

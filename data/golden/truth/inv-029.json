@@ -1,0 +1,61 @@
+{
+  "id": "inv-029",
+  "file": "scan0029.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "A",
+  "received_order": 29,
+  "readable": true,
+  "supplier_key": "brightline",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Brightline Office Supplies Inc.",
+    "supplier_tax_id": "69-9397618",
+    "supplier_address": "347 Harbour Rd, Portland, OR",
+    "supplier_bank_account": "ABA 533367701 / Acct 1472427652",
+    "invoice_number": "BL-2026-0511",
+    "invoice_date": "2026-06-14",
+    "due_date": "2026-07-14",
+    "po_number": "PO-10031",
+    "currency": "USD",
+    "subtotal_minor": 47760,
+    "tax_total_minor": 3821,
+    "total_minor": 51581,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": null,
+      "quantity": 20,
+      "unit_price_minor": 645,
+      "amount_minor": 12900,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Heavy-duty stapler",
+      "sku": null,
+      "quantity": 14,
+      "unit_price_minor": 2490,
+      "amount_minor": 34860,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "QTY_VARIANCE"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "QTY_VARIANCE",
+      "detail": "line 2: PO qty 12, invoiced 14"
+    }
+  ]
+}

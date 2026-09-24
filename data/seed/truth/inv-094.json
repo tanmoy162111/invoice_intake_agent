@@ -1,0 +1,63 @@
+{
+  "id": "inv-094",
+  "file": "scan0094.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "B",
+  "received_order": 94,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0635",
+    "invoice_date": "2026-07-24",
+    "due_date": "2026-08-23",
+    "po_number": "PO-10053",
+    "currency": "USD",
+    "subtotal_minor": 35680,
+    "tax_total_minor": 2854,
+    "total_minor": 38534,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 1875,
+      "amount_minor": 18750,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Heavy-duty stapler",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 2490,
+      "amount_minor": 12450,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Notebooks, pack of 12",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 2240,
+      "amount_minor": 4480,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

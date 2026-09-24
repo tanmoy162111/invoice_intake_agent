@@ -1,0 +1,74 @@
+{
+  "id": "inv-090",
+  "file": "Redwood-rfm-2026-0504.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 90,
+  "readable": true,
+  "supplier_key": "redwood",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Redwood Facility Maintenance",
+    "supplier_tax_id": "17-8600401",
+    "supplier_address": "54 Harbour Rd, Tampa, FL",
+    "supplier_bank_account": "ABA 129719713 / Acct 6857911042",
+    "invoice_number": "rfm-2026-0504",
+    "invoice_date": "2026-04-28",
+    "due_date": "2026-05-28",
+    "po_number": "PO-10073",
+    "currency": "USD",
+    "subtotal_minor": 643000,
+    "tax_total_minor": 45010,
+    "total_minor": 688010,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Waste collection, per pickup",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 6500,
+      "amount_minor": 325000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Light fitting replacement",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 4400,
+      "amount_minor": 220000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Pest control treatment",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 9800,
+      "amount_minor": 98000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": "inv-023",
+  "expected": {
+    "must_raise": [
+      "POSSIBLE_DUPLICATE"
+    ],
+    "may_raise": [
+      "PO_OVERBILLED",
+      "QTY_NOT_RECEIVED",
+      "QTY_VARIANCE"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "POSSIBLE_DUPLICATE",
+      "detail": "duplicate of inv-077 (RFM-2026-0504)"
+    }
+  ]
+}

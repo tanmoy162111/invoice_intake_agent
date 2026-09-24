@@ -1,0 +1,63 @@
+{
+  "id": "inv-116",
+  "file": "IMG_4812.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "E",
+  "received_order": 116,
+  "readable": true,
+  "supplier_key": "summit",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Summit IT Hardware Corp.",
+    "supplier_tax_id": null,
+    "supplier_address": "727 Mill Lane, Tampa, FL",
+    "supplier_bank_account": null,
+    "invoice_number": "SIT-2026-0413",
+    "invoice_date": "2026-03-14",
+    "due_date": "2026-04-28",
+    "po_number": "PO-98683",
+    "currency": "USD",
+    "subtotal_minor": 731700,
+    "tax_total_minor": 73170,
+    "total_minor": 804870,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Network switch 8-port",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 12900,
+      "amount_minor": 645000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Monitor 27 inch",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 28900,
+      "amount_minor": 86700,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "PO_NOT_FOUND"
+    ],
+    "may_raise": [
+      "NO_PO"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "PO_NOT_FOUND",
+      "detail": "PO-98683 does not exist"
+    }
+  ]
+}

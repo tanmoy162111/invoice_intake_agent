@@ -1,0 +1,63 @@
+{
+  "id": "inv-109",
+  "file": "Coastal-CP-2026-0234.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 109,
+  "readable": true,
+  "supplier_key": "coastal",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Coastal Packaging Ltd.",
+    "supplier_tax_id": null,
+    "supplier_address": "893 Mill Lane, Tampa, FL",
+    "supplier_bank_account": "ABA 376578283 / Acct 4502596013",
+    "invoice_number": "CP-2026-0234",
+    "invoice_date": "2026-03-14",
+    "due_date": "2026-04-13",
+    "po_number": "PO-10057",
+    "currency": "USD",
+    "subtotal_minor": 20070,
+    "tax_total_minor": 1405,
+    "total_minor": 21475,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Corrugated box, medium",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 185,
+      "amount_minor": 370,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Corrugated box, large",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 265,
+      "amount_minor": 13250,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Bubble wrap, 50m roll",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 2150,
+      "amount_minor": 6450,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

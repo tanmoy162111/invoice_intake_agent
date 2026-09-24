@@ -1,0 +1,64 @@
+{
+  "id": "inv-085",
+  "file": "IMG_4595.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "E",
+  "received_order": 85,
+  "readable": true,
+  "supplier_key": null,
+  "supplier_on_file": false,
+  "header": {
+    "supplier_name": "Zenith Novelty Traders",
+    "supplier_tax_id": null,
+    "supplier_address": "893 Mill Lane, Portland, OR",
+    "supplier_bank_account": null,
+    "invoice_number": "ZE-2026-0412",
+    "invoice_date": "2026-04-15",
+    "due_date": "2026-05-15",
+    "po_number": null,
+    "currency": "USD",
+    "subtotal_minor": 61670,
+    "tax_total_minor": 4934,
+    "total_minor": 66604,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Bottled water, case of 24",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 1120,
+      "amount_minor": 56000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ground coffee 1kg",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 1890,
+      "amount_minor": 5670,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "UNKNOWN_SUPPLIER"
+    ],
+    "may_raise": [
+      "NO_PO",
+      "PO_NOT_FOUND"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "UNKNOWN_SUPPLIER",
+      "detail": "'Zenith Novelty Traders' is not in the supplier master"
+    }
+  ]
+}

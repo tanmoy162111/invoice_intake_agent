@@ -1,0 +1,54 @@
+{
+  "id": "inv-081",
+  "file": "Apex-AFS-2026-0768.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "E",
+  "received_order": 81,
+  "readable": true,
+  "supplier_key": "apex",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Apex Fastener Supply Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "777 Mill Lane, Tampa, FL",
+    "supplier_bank_account": null,
+    "invoice_number": "AFS-2026-0768",
+    "invoice_date": "2026-06-27",
+    "due_date": "2026-07-27",
+    "po_number": "PO-10090",
+    "currency": "USD",
+    "subtotal_minor": 20660,
+    "tax_total_minor": 1550,
+    "total_minor": 22210,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Hex bolt M8x40, box of 200",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 2890,
+      "amount_minor": 5780,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ball bearing 6204",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 1240,
+      "amount_minor": 14880,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

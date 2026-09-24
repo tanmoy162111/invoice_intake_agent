@@ -1,0 +1,45 @@
+{
+  "id": "inv-093",
+  "file": "scan0093.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 93,
+  "readable": true,
+  "supplier_key": "pioneer",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Pioneer Lab Equipment Inc.",
+    "supplier_tax_id": "24-9050066",
+    "supplier_address": "274 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 483347900 / Acct 8531047253",
+    "invoice_number": "PLE-2026-0762",
+    "invoice_date": "2026-07-27",
+    "due_date": "2026-08-26",
+    "po_number": "PO-10095",
+    "currency": "USD",
+    "subtotal_minor": 640,
+    "tax_total_minor": 58,
+    "total_minor": 698,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Glass beaker 250ml",
+      "sku": "PLE-BEA-250",
+      "quantity": 1,
+      "unit_price_minor": 640,
+      "amount_minor": 640,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

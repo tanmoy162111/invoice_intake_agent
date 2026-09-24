@@ -1,0 +1,63 @@
+{
+  "id": "inv-021",
+  "file": "IMG_4147.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "C",
+  "received_order": 21,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0910",
+    "invoice_date": "2026-08-23",
+    "due_date": "2026-09-22",
+    "po_number": "PO-10055",
+    "currency": "USD",
+    "subtotal_minor": 189380,
+    "tax_total_minor": 11363,
+    "total_minor": 200743,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ball valve 1 inch",
+      "sku": "MIP-VLV-BL",
+      "quantity": 12,
+      "unit_price_minor": 5490,
+      "amount_minor": 65880,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Gasket set, universal",
+      "sku": "MIP-GSK-SET",
+      "quantity": 10,
+      "unit_price_minor": 4550,
+      "amount_minor": 45500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Hydraulic hose, 2m",
+      "sku": "MIP-HYD-HS",
+      "quantity": 10,
+      "unit_price_minor": 7800,
+      "amount_minor": 78000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

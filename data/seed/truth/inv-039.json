@@ -1,0 +1,70 @@
+{
+  "id": "inv-039",
+  "file": "Brightline-BL-2026-0523.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 39,
+  "readable": true,
+  "supplier_key": "brightline",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Brightline Office Supplies Inc.",
+    "supplier_tax_id": "69-9397618",
+    "supplier_address": "347 Harbour Rd, Portland, OR",
+    "supplier_bank_account": "ABA 533367701 / Acct 1472427652",
+    "invoice_number": "BL-2026-0523",
+    "invoice_date": "2026-06-20",
+    "due_date": "2026-07-20",
+    "po_number": "PO-10041",
+    "currency": "USD",
+    "subtotal_minor": 58435,
+    "tax_total_minor": 4675,
+    "total_minor": 63110,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Label roll, 1000 labels",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 1150,
+      "amount_minor": 11500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 1875,
+      "amount_minor": 45000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 645,
+      "amount_minor": 1935,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "QTY_NOT_RECEIVED"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "QTY_NOT_RECEIVED",
+      "detail": "line 2: billed 24, received 17"
+    }
+  ]
+}

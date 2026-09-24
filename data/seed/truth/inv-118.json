@@ -1,0 +1,63 @@
+{
+  "id": "inv-118",
+  "file": "Lumière-LF-2026-0252.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 118,
+  "readable": true,
+  "supplier_key": "lumiere",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Lumière Fournitures SARL",
+    "supplier_tax_id": "DE670684662",
+    "supplier_address": "857 Harbour Rd, Utrecht",
+    "supplier_bank_account": "DE59 3052 9564 0005 6879 7490",
+    "invoice_number": "LF-2026-0252",
+    "invoice_date": "2026-08-20",
+    "due_date": "2026-10-19",
+    "po_number": "PO-10074",
+    "currency": "EUR",
+    "subtotal_minor": 8775,
+    "tax_total_minor": 1755,
+    "total_minor": 10530,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Stretch wrap, 500mm roll",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 1275,
+      "amount_minor": 2550,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Corrugated box, medium",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 185,
+      "amount_minor": 925,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Corrugated box, large",
+      "sku": null,
+      "quantity": 20,
+      "unit_price_minor": 265,
+      "amount_minor": 5300,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

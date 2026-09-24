@@ -1,0 +1,54 @@
+{
+  "id": "inv-073",
+  "file": "Caledonian-CCS-2026-0795.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "D",
+  "received_order": 73,
+  "readable": true,
+  "supplier_key": "caledonian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Caledonian Catering Supplies Ltd",
+    "supplier_tax_id": "GB111320267",
+    "supplier_address": "35 Market St, Glasgow",
+    "supplier_bank_account": "GB58 4610 4921 9185 8543 2895",
+    "invoice_number": "CCS-2026-0795",
+    "invoice_date": "2026-05-22",
+    "due_date": "2026-06-21",
+    "po_number": "PO-10096",
+    "currency": "GBP",
+    "subtotal_minor": 71800,
+    "tax_total_minor": 3590,
+    "total_minor": 75390,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Sugar 5kg",
+      "sku": "CCS-SUG-5K",
+      "quantity": 50,
+      "unit_price_minor": 860,
+      "amount_minor": 43000,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 2,
+      "description": "UHT milk, case of 12",
+      "sku": "CCS-MLK-12",
+      "quantity": 20,
+      "unit_price_minor": 1440,
+      "amount_minor": 28800,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

@@ -1,0 +1,61 @@
+{
+  "id": "inv-099",
+  "file": "Pioneer-PLE-2026-0744.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "C",
+  "received_order": 99,
+  "readable": true,
+  "supplier_key": "pioneer",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Pioneer Lab Equipment Inc.",
+    "supplier_tax_id": "24-9050066",
+    "supplier_address": "274 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 483347900 / Acct 8531040972",
+    "invoice_number": "PLE-2026-0744",
+    "invoice_date": "2026-04-15",
+    "due_date": "2026-05-30",
+    "po_number": "PO-10021",
+    "currency": "USD",
+    "subtotal_minor": 38430,
+    "tax_total_minor": 3459,
+    "total_minor": 41889,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Pipette tips, rack of 96",
+      "sku": "PLE-PIP-TIP",
+      "quantity": 3,
+      "unit_price_minor": 890,
+      "amount_minor": 2670,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Microscope slides, box of 72",
+      "sku": "PLE-MIC-SLD",
+      "quantity": 24,
+      "unit_price_minor": 1490,
+      "amount_minor": 35760,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "BANK_DETAILS_CHANGED"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "BANK_DETAILS_CHANGED",
+      "detail": "account on file ABA 483347900 / Acct 8531047253 -> ABA 483347900 / Acct 8531040972"
+    }
+  ]
+}

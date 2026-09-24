@@ -1,0 +1,74 @@
+{
+  "id": "inv-050",
+  "file": "Apex-AFS-2026-0758.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "E",
+  "received_order": 50,
+  "readable": true,
+  "supplier_key": "apex",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Apex Fastener Supply Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "777 Mill Lane, Tampa, FL",
+    "supplier_bank_account": null,
+    "invoice_number": "AFS-2026-0758",
+    "invoice_date": "2026-04-17",
+    "due_date": "2026-06-16",
+    "po_number": "PO-10049",
+    "currency": "USD",
+    "subtotal_minor": 52740,
+    "tax_total_minor": 3956,
+    "total_minor": 56696,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Oil filter, heavy duty",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 2360,
+      "amount_minor": 7080,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Hex bolt M8x40, box of 200",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 2890,
+      "amount_minor": 34680,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Ball valve 1 inch",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 5490,
+      "amount_minor": 10980,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": "inv-022",
+  "expected": {
+    "must_raise": [
+      "POSSIBLE_DUPLICATE"
+    ],
+    "may_raise": [
+      "PO_OVERBILLED",
+      "QTY_NOT_RECEIVED",
+      "QTY_VARIANCE"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "POSSIBLE_DUPLICATE",
+      "detail": "duplicate of inv-053 (AFS-2026-0758)"
+    }
+  ]
+}

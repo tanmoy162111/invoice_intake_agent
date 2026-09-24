@@ -1,0 +1,79 @@
+{
+  "id": "inv-041",
+  "file": "IMG_4287.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "A",
+  "received_order": 41,
+  "readable": true,
+  "supplier_key": "brightline",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Brightline Office Supplies Inc.",
+    "supplier_tax_id": "69-9397618",
+    "supplier_address": "347 Harbour Rd, Portland, OR",
+    "supplier_bank_account": "ABA 533367701 / Acct 1472427652",
+    "invoice_number": "BL-2026-0506",
+    "invoice_date": "2026-05-28",
+    "due_date": "2026-06-27",
+    "po_number": "PO-10025",
+    "currency": "USD",
+    "subtotal_minor": 242854,
+    "tax_total_minor": 19428,
+    "total_minor": 262282,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 6,
+      "unit_price_minor": 1875,
+      "amount_minor": 11250,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 1,
+      "unit_price_minor": 1354,
+      "amount_minor": 1354,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Label roll, 1000 labels",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 1150,
+      "amount_minor": 3450,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Ergonomic desk chair",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 18900,
+      "amount_minor": 226800,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "PRICE_VARIANCE"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "PRICE_VARIANCE",
+      "detail": "line 2: 1290 -> 1354 (+5%)"
+    }
+  ]
+}

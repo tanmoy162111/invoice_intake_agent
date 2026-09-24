@@ -1,0 +1,52 @@
+{
+  "id": "inv-004",
+  "file": "Apex-AFS-2026-0749.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "E",
+  "received_order": 4,
+  "readable": true,
+  "supplier_key": "apex",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Apex Fastener Supply Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "777 Mill Lane, Tampa, FL",
+    "supplier_bank_account": null,
+    "invoice_number": "AFS-2026-0749",
+    "invoice_date": "2026-03-23",
+    "due_date": "2026-05-07",
+    "po_number": "PO-10009",
+    "currency": "USD",
+    "subtotal_minor": 54500,
+    "tax_total_minor": 4088,
+    "total_minor": 58588,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Gasket set, universal",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 4550,
+      "amount_minor": 54500,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "LINE_MATH_MISMATCH"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "LINE_MATH_MISMATCH",
+      "detail": "line 1: 45500 -> 54500"
+    }
+  ]
+}

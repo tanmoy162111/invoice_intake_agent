@@ -1,0 +1,70 @@
+{
+  "id": "inv-077",
+  "file": "scan0077.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "B",
+  "received_order": 77,
+  "readable": true,
+  "supplier_key": "coastal",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Coastal Packaging Ltd.",
+    "supplier_tax_id": null,
+    "supplier_address": "893 Mill Lane, Tampa, FL",
+    "supplier_bank_account": "ABA 376578283 / Acct 4502596013",
+    "invoice_number": "CP-2026-0216",
+    "invoice_date": "2026-06-19",
+    "due_date": "2026-07-19",
+    "po_number": "PO-10007",
+    "currency": "USD",
+    "subtotal_minor": 82200,
+    "tax_total_minor": 5754,
+    "total_minor": 87954,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Wooden pallet, standard",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 1450,
+      "amount_minor": 9200,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Stretch wrap, 500mm roll",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 1275,
+      "amount_minor": 63750,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Corrugated box, medium",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 185,
+      "amount_minor": 9250,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "LINE_MATH_MISMATCH"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "LINE_MATH_MISMATCH",
+      "detail": "line 1: 2900 -> 9200"
+    }
+  ]
+}

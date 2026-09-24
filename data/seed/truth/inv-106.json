@@ -1,0 +1,72 @@
+{
+  "id": "inv-106",
+  "file": "Pioneer-PLE-2026-0759.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "C",
+  "received_order": 106,
+  "readable": true,
+  "supplier_key": "pioneer",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Pioneer Lab Equipment Inc.",
+    "supplier_tax_id": "24-9050066",
+    "supplier_address": "274 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 483347900 / Acct 8531047253",
+    "invoice_number": "PLE-2026-0759",
+    "invoice_date": "2026-06-18",
+    "due_date": "2026-07-18",
+    "po_number": "PO-10078",
+    "currency": "USD",
+    "subtotal_minor": 545920,
+    "tax_total_minor": 49133,
+    "total_minor": 595053,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Pipette tips, rack of 96",
+      "sku": "PLE-PIP-TIP",
+      "quantity": 50,
+      "unit_price_minor": 890,
+      "amount_minor": 44500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Digital balance 0.01g",
+      "sku": "PLE-BAL-DIG",
+      "quantity": 10,
+      "unit_price_minor": 42500,
+      "amount_minor": 425000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Glass beaker 250ml",
+      "sku": "PLE-BEA-250",
+      "quantity": 3,
+      "unit_price_minor": 640,
+      "amount_minor": 1920,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Microscope slides, box of 72",
+      "sku": "PLE-MIC-SLD",
+      "quantity": 50,
+      "unit_price_minor": 1490,
+      "amount_minor": 74500,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

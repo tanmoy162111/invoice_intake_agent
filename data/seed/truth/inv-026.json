@@ -1,0 +1,45 @@
+{
+  "id": "inv-026",
+  "file": "Meridian-MIP-2026-0923.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "C",
+  "received_order": 26,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0923",
+    "invoice_date": "2026-07-23",
+    "due_date": "2026-09-06",
+    "po_number": "PO-10082",
+    "currency": "USD",
+    "subtotal_minor": 274500,
+    "tax_total_minor": 16470,
+    "total_minor": 290970,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ball valve 1 inch",
+      "sku": "MIP-VLV-BL",
+      "quantity": 50,
+      "unit_price_minor": 5490,
+      "amount_minor": 274500,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

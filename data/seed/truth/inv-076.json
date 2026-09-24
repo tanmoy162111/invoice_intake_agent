@@ -1,0 +1,54 @@
+{
+  "id": "inv-076",
+  "file": "IMG_4532.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "C",
+  "received_order": 76,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0942",
+    "invoice_date": "2026-06-24",
+    "due_date": "2026-08-23",
+    "po_number": "PO-10093",
+    "currency": "USD",
+    "subtotal_minor": 67460,
+    "tax_total_minor": 4048,
+    "total_minor": 71508,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Electric motor 1HP",
+      "sku": "MIP-MTR-1HP",
+      "quantity": 1,
+      "unit_price_minor": 48500,
+      "amount_minor": 48500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Industrial lubricant, 5L",
+      "sku": "MIP-LUB-5L",
+      "quantity": 3,
+      "unit_price_minor": 6320,
+      "amount_minor": 18960,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

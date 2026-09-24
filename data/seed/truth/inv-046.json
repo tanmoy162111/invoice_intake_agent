@@ -1,0 +1,72 @@
+{
+  "id": "inv-046",
+  "file": "Keystone-KP-2026-0650.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 46,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0650",
+    "invoice_date": "2026-04-17",
+    "due_date": "2026-06-16",
+    "po_number": "PO-10070",
+    "currency": "USD",
+    "subtotal_minor": 178290,
+    "tax_total_minor": 14263,
+    "total_minor": 192553,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": null,
+      "quantity": 20,
+      "unit_price_minor": 645,
+      "amount_minor": 12900,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ergonomic desk chair",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 18900,
+      "amount_minor": 56700,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Toner cartridge, black",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 8950,
+      "amount_minor": 107400,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 1,
+      "unit_price_minor": 1290,
+      "amount_minor": 1290,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

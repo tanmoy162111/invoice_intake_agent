@@ -1,0 +1,72 @@
+{
+  "id": "inv-107",
+  "file": "scan0107.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "E",
+  "received_order": 107,
+  "readable": true,
+  "supplier_key": "pennine",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Pennine Engineering Supplies Ltd",
+    "supplier_tax_id": null,
+    "supplier_address": "892 Station Rd, Bristol",
+    "supplier_bank_account": null,
+    "invoice_number": "PES-2026-0367",
+    "invoice_date": "2026-03-20",
+    "due_date": "2026-04-19",
+    "po_number": "PO-10059",
+    "currency": "GBP",
+    "subtotal_minor": 240780,
+    "tax_total_minor": 48156,
+    "total_minor": 288936,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Oil filter, heavy duty",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 2360,
+      "amount_minor": 23600,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ball valve 1 inch",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 5490,
+      "amount_minor": 10980,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Gasket set, universal",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 4550,
+      "amount_minor": 109200,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Electric motor 1HP",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 48500,
+      "amount_minor": 97000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

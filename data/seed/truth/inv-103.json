@@ -1,0 +1,72 @@
+{
+  "id": "inv-103",
+  "file": "Thames-TVS-2026-0687.pdf",
+  "split": "dev",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 103,
+  "readable": true,
+  "supplier_key": "thames",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Thames Valley Stationers Ltd",
+    "supplier_tax_id": null,
+    "supplier_address": "475 Station Rd, Glasgow",
+    "supplier_bank_account": "GB25 2818 3812 7197 4930 3341",
+    "invoice_number": "TVS-2026-0687",
+    "invoice_date": "2026-04-18",
+    "due_date": "2026-06-17",
+    "po_number": "PO-10099",
+    "currency": "GBP",
+    "subtotal_minor": 265680,
+    "tax_total_minor": 53136,
+    "total_minor": 318816,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Toner cartridge, black",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 8950,
+      "amount_minor": 214800,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 645,
+      "amount_minor": 15480,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 1290,
+      "amount_minor": 12900,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Manila folders, pack of 100",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 1875,
+      "amount_minor": 22500,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

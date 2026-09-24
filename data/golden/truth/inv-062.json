@@ -1,0 +1,45 @@
+{
+  "id": "inv-062",
+  "file": "Redwood-RFM-2026-0511.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 62,
+  "readable": true,
+  "supplier_key": "redwood",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Redwood Facility Maintenance",
+    "supplier_tax_id": "17-8600401",
+    "supplier_address": "54 Harbour Rd, Tampa, FL",
+    "supplier_bank_account": "ABA 129719713 / Acct 6857911042",
+    "invoice_number": "RFM-2026-0511",
+    "invoice_date": "2026-07-23",
+    "due_date": "2026-08-22",
+    "po_number": "PO-10083",
+    "currency": "USD",
+    "subtotal_minor": 235200,
+    "tax_total_minor": 16464,
+    "total_minor": 251664,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Pest control treatment",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 9800,
+      "amount_minor": 235200,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

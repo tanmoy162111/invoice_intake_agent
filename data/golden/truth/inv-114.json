@@ -1,0 +1,72 @@
+{
+  "id": "inv-114",
+  "file": "Keystone-KP-2026-0624.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 114,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0624",
+    "invoice_date": "2026-08-17",
+    "due_date": "2026-09-16",
+    "po_number": "PO-94935",
+    "currency": "USD",
+    "subtotal_minor": 313780,
+    "tax_total_minor": 25102,
+    "total_minor": 338882,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Notebooks, pack of 12",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 2240,
+      "amount_minor": 4480,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ergonomic desk chair",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 18900,
+      "amount_minor": 94500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Toner cartridge, black",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 8950,
+      "amount_minor": 214800,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "PO_NOT_FOUND"
+    ],
+    "may_raise": [
+      "NO_PO"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "PO_NOT_FOUND",
+      "detail": "PO-94935 does not exist"
+    }
+  ]
+}

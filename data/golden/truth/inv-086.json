@@ -1,0 +1,63 @@
+{
+  "id": "inv-086",
+  "file": "Thames-TVS-2026-0682.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 86,
+  "readable": true,
+  "supplier_key": "thames",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Thames Valley Stationers Ltd",
+    "supplier_tax_id": null,
+    "supplier_address": "475 Station Rd, Glasgow",
+    "supplier_bank_account": "GB25 2818 3812 7197 4930 3341",
+    "invoice_number": "TVS-2026-0682",
+    "invoice_date": "2026-07-18",
+    "due_date": "2026-08-17",
+    "po_number": "PO-10085",
+    "currency": "GBP",
+    "subtotal_minor": 211400,
+    "tax_total_minor": 42280,
+    "total_minor": 253680,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Notebooks, pack of 12",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 2240,
+      "amount_minor": 22400,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Heavy-duty stapler",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 2490,
+      "amount_minor": 124500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 1290,
+      "amount_minor": 64500,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

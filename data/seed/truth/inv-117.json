@@ -1,0 +1,82 @@
+{
+  "id": "inv-117",
+  "file": "scan0117.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "C",
+  "received_order": 117,
+  "readable": true,
+  "supplier_key": "meridian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Meridian Industrial Parts LLC",
+    "supplier_tax_id": "38-2698816",
+    "supplier_address": "422 Oak Ave, Austin, TX",
+    "supplier_bank_account": "ABA 332171150 / Acct 9655427721",
+    "invoice_number": "MIP-2026-0902",
+    "invoice_date": "2026-06-13",
+    "due_date": "2026-07-13",
+    "po_number": "PO-10044",
+    "currency": "GBP",
+    "subtotal_minor": 237489,
+    "tax_total_minor": 14249,
+    "total_minor": 251738,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ball valve 1 inch",
+      "sku": "MIP-VLV-BL",
+      "quantity": 1,
+      "unit_price_minor": 4337,
+      "amount_minor": 4337,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Hex bolt M8x40, box of 200",
+      "sku": "MIP-BLT-M8",
+      "quantity": 1,
+      "unit_price_minor": 2283,
+      "amount_minor": 2283,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Ball bearing 6204",
+      "sku": "MIP-BRG-6204",
+      "quantity": 1,
+      "unit_price_minor": 979,
+      "amount_minor": 979,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Electric motor 1HP",
+      "sku": "MIP-MTR-1HP",
+      "quantity": 6,
+      "unit_price_minor": 38315,
+      "amount_minor": 229890,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "CURRENCY_MISMATCH"
+    ],
+    "may_raise": [
+      "PRICE_VARIANCE",
+      "PO_OVERBILLED"
+    ],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "CURRENCY_MISMATCH",
+      "detail": "invoice in GBP, PO in USD"
+    }
+  ]
+}

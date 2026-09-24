@@ -1,0 +1,52 @@
+{
+  "id": "inv-088",
+  "file": "Apex-AFS-2026-0755.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "E",
+  "received_order": 88,
+  "readable": true,
+  "supplier_key": "apex",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Apex Fastener Supply Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "777 Mill Lane, Tampa, FL",
+    "supplier_bank_account": null,
+    "invoice_number": "AFS-2026-0755",
+    "invoice_date": "2026-08-27",
+    "due_date": "2026-10-26",
+    "po_number": "PO-10029",
+    "currency": "USD",
+    "subtotal_minor": 429000,
+    "tax_total_minor": 32175,
+    "total_minor": 461175,
+    "payment_terms": "Net 60"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Hydraulic hose, 2m",
+      "sku": null,
+      "quantity": 50,
+      "unit_price_minor": 8580,
+      "amount_minor": 429000,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "PRICE_VARIANCE"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "PRICE_VARIANCE",
+      "detail": "line 1: 7800 -> 8580 (+10%)"
+    }
+  ]
+}

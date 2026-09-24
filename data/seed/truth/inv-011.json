@@ -1,0 +1,72 @@
+{
+  "id": "inv-011",
+  "file": "scan0011.pdf",
+  "split": "dev",
+  "doc_quality": "scanned",
+  "layout": "B",
+  "received_order": 11,
+  "readable": true,
+  "supplier_key": "keystone",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Keystone Printing Co.",
+    "supplier_tax_id": null,
+    "supplier_address": "381 Mill Lane, Columbus, OH",
+    "supplier_bank_account": "ABA 371059502 / Acct 1506018295",
+    "invoice_number": "KP-2026-0639",
+    "invoice_date": "2026-07-13",
+    "due_date": "2026-08-27",
+    "po_number": "PO-10060",
+    "currency": "USD",
+    "subtotal_minor": 132680,
+    "tax_total_minor": 10614,
+    "total_minor": 143294,
+    "payment_terms": "Net 45"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Ergonomic desk chair",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 18900,
+      "amount_minor": 94500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "A4 copier paper, 500 sheets",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 645,
+      "amount_minor": 15480,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Label roll, 1000 labels",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 1150,
+      "amount_minor": 11500,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 4,
+      "description": "Notebooks, pack of 12",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 2240,
+      "amount_minor": 11200,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

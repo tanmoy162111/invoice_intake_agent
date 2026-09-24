@@ -1,0 +1,45 @@
+{
+  "id": "inv-079",
+  "file": "IMG_4553.jpg",
+  "split": "dev",
+  "doc_quality": "photo",
+  "layout": "D",
+  "received_order": 79,
+  "readable": true,
+  "supplier_key": "caledonian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Caledonian Catering Supplies Ltd",
+    "supplier_tax_id": "GB111320267",
+    "supplier_address": "35 Market St, Glasgow",
+    "supplier_bank_account": "GB58 4610 4921 9185 8543 2895",
+    "invoice_number": "CCS-2026-0789",
+    "invoice_date": "2026-05-22",
+    "due_date": "2026-06-21",
+    "po_number": "PO-10081",
+    "currency": "GBP",
+    "subtotal_minor": 2240,
+    "tax_total_minor": 112,
+    "total_minor": 2352,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Bottled water, case of 24",
+      "sku": "CCS-WAT-24",
+      "quantity": 2,
+      "unit_price_minor": 1120,
+      "amount_minor": 2240,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": []
+}

@@ -1,0 +1,79 @@
+{
+  "id": "inv-009",
+  "file": "scan0009.pdf",
+  "split": "golden",
+  "doc_quality": "scanned",
+  "layout": "D",
+  "received_order": 9,
+  "readable": true,
+  "supplier_key": "caledonian",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Caledonian Catering Supplies Ltd",
+    "supplier_tax_id": "GB111320267",
+    "supplier_address": "35 Market St, Glasgow",
+    "supplier_bank_account": "GB58 4610 4921 9185 8543 2895",
+    "invoice_number": "CCS-2026-0781",
+    "invoice_date": "2026-07-15",
+    "due_date": "2026-08-14",
+    "po_number": "PO-10001",
+    "currency": "GBP",
+    "subtotal_minor": 99860,
+    "tax_total_minor": 4993,
+    "total_minor": 104853,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Bottled water, case of 24",
+      "sku": "CCS-WAT-24",
+      "quantity": 50,
+      "unit_price_minor": 1120,
+      "amount_minor": 56000,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 2,
+      "description": "Tea bags, box of 100",
+      "sku": "CCS-TEA-100",
+      "quantity": 1,
+      "unit_price_minor": 640,
+      "amount_minor": 640,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 3,
+      "description": "Snack box assortment",
+      "sku": "CCS-SNK-BX",
+      "quantity": 10,
+      "unit_price_minor": 3890,
+      "amount_minor": 38900,
+      "tax_rate_bp": 500
+    },
+    {
+      "line_no": 4,
+      "description": "UHT milk, case of 12",
+      "sku": "CCS-MLK-12",
+      "quantity": 3,
+      "unit_price_minor": 1440,
+      "amount_minor": 4320,
+      "tax_rate_bp": 500
+    }
+  ],
+  "obscured_field": "total",
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [
+      "LOW_CONFIDENCE_FIELD"
+    ],
+    "may_raise": [],
+    "should_clear": false
+  },
+  "planted": [
+    {
+      "code": "LOW_CONFIDENCE_FIELD",
+      "detail": "total is smudged and cannot be read reliably"
+    }
+  ]
+}
