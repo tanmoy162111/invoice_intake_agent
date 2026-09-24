@@ -12,6 +12,10 @@ dependencies = [
   "psycopg[binary]>=3.2",
   "alembic>=1.13",
   "cryptography>=50.0.1",
+  "pdfplumber>=0.11.10",
+  "python-multipart>=0.0.32",
+  "pypdfium2>=5.13.0",
+  "pillow>=12.3.0",
 ]
 
 [dependency-groups]
@@ -24,8 +28,6 @@ dev = [
 ]
 generator = [
     "numpy>=2.5.3",
-    "pillow>=12.3.0",
-    "pypdfium2>=5.13.0",
     "rapidfuzz>=3.14.6",
     "reportlab>=5.0.1",
 ]
@@ -54,6 +56,10 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 python_version = "3.12"
 plugins = ["pydantic.mypy"]
 files = ["src/intake"]
+
+[[tool.mypy.overrides]]
+module = ["pypdfium2", "pdfplumber"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "intake.core.*"

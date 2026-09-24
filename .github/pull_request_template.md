@@ -12,3 +12,4 @@
 
 ## Docs updated
 - [ ] Yes / not needed because…
+- [ ] `docs/report.md` chapter and `docs/manual.md` updated for this milestone (plain words, how it works, under the hood)

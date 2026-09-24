@@ -12,6 +12,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Identity,
+    Index,
     Integer,
     Numeric,
     String,
@@ -296,7 +297,10 @@ class LlmCall(Base):
 
 class Job(Base):
     __tablename__ = "jobs"
-    __table_args__ = (one_of("status", JobStatus, "status"),)
+    __table_args__ = (
+        one_of("status", JobStatus, "status"),
+        Index("ix_jobs_claim", "status", "run_after"),
+    )
     id: Mapped[uuid.UUID] = uuid_pk()
     tenant_id: Mapped[uuid.UUID] = tenant_fk()
     type: Mapped[str] = mapped_column(Text, nullable=False)
@@ -312,6 +316,7 @@ class Job(Base):
     )
     locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_error: Mapped[str | None] = mapped_column(Text)
+    dedupe_key: Mapped[str | None] = mapped_column(Text, unique=True)
     created_at: Mapped[datetime] = created_at()
 
 

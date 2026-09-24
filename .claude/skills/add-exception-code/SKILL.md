@@ -7,7 +7,7 @@ argument-hint: <CODE_NAME> [severity: info|review|block]
 
 # Add an exception code
 
-Add exception code `$ARGUMENTS` following `demo-a-developer-playbook.md` §6.7, §7 and M7. Every code needs all five artifacts below; do not finish with any missing.
+Add exception code `$ARGUMENTS` following `docs/playbook.md` §6.7, §7 and M7. Every code needs all five artifacts below; do not finish with any missing.
 
 ## Before writing code
 1. Read playbook §7 (taxonomy and severity meanings) and the existing `apps/api/src/intake/core/exceptions.py`, `docs/exception-taxonomy.md`, and the existing tests for a similar code. Match their style.
