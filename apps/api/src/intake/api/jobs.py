@@ -25,6 +25,7 @@ class FailedJob(BaseModel):
 class JobsOut(BaseModel):
     counts: dict[str, int]
     stuck: int
+    paused: int  # deferred on purpose: spend cap reached or extraction not configured
     oldest_queued_age_s: float | None
     failed: list[FailedJob]
 
@@ -46,6 +47,7 @@ def job_overview(
     return JobsOut(
         counts=st.counts,
         stuck=st.stuck,
+        paused=st.paused,
         oldest_queued_age_s=st.oldest_queued_age_s,
         failed=[
             FailedJob(id=j.id, type=j.type, attempts=j.attempts, last_error=j.last_error)

@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from intake.api import documents, jobs
+from intake.api import documents, extraction, jobs
 from intake.api.deps import require_token
 from intake.api.guard import UploadGuard
 from intake.api.health import router as health_router
@@ -37,6 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     protected = [Depends(require_token)]
     app.include_router(documents.router, dependencies=protected)
     app.include_router(jobs.router, dependencies=protected)
+    app.include_router(extraction.router, dependencies=protected)
 
     @app.get("/openapi.json", include_in_schema=False, dependencies=protected)
     def openapi_schema() -> dict[str, object]:

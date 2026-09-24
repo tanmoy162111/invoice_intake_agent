@@ -36,7 +36,7 @@ _MONTHS = {
     for m in names
 }  # fmt: skip
 _ISO = re.compile(r"^(\d{4})-(\d{1,2})-(\d{1,2})$")
-_NUMERIC = re.compile(r"^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$")
+_NUMERIC = re.compile(r"^(\d{1,2})([/.-])(\d{1,2})\2(\d{4})$")
 _DAY_MONTH_NAME = re.compile(r"^(\d{1,2})(?:st|nd|rd|th)?[ \-]([A-Za-z]+)\.?,?[ \-](\d{4})$")
 _MONTH_NAME_DAY = re.compile(r"^([A-Za-z]+)\.? (\d{1,2})(?:st|nd|rd|th)?,? (\d{4})$")
 
@@ -49,12 +49,16 @@ def _build(year: int, month: int, day: int, text: str) -> date:
 
 
 def parse_date(text: str, *, day_first: bool | None = None) -> date:
-    """Parse a printed date. Two-digit years and ambiguous d/m vs m/d raise."""
+    """Parse a printed date. Two-digit years and ambiguous d/m vs m/d raise. A dotted numeric date
+    is day-first; slash and hyphen dates are ambiguous unless a day or month is above 12 or
+    `day_first` says how to read them."""
     raw = text.strip()
     if m := _ISO.match(raw):
         return _build(int(m[1]), int(m[2]), int(m[3]), text)
     if m := _NUMERIC.match(raw):
-        a, b, year = int(m[1]), int(m[2]), int(m[3])
+        a, sep, b, year = int(m[1]), m[2], int(m[3]), int(m[4])
+        if sep == ".":  # 07.06.2026: the dot is the day-first (European) convention
+            return _build(year, b, a, text)
         if a > 12:
             return _build(year, b, a, text)
         if b > 12:

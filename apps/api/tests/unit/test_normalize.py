@@ -40,6 +40,22 @@ def test_parse_date_ambiguous_resolved_by_hint() -> None:
     assert parse_date("03/04/2026", day_first=False) == date(2026, 3, 4)
 
 
+def test_dotted_numeric_dates_are_day_first() -> None:
+    # 07.06.2026 is 7 June: a dot separator is the day-first (European) convention.
+    assert parse_date("07.06.2026") == date(2026, 6, 7)
+    assert parse_date("03.04.2026") == date(2026, 4, 3)
+
+
+def test_dotted_date_with_an_impossible_month_is_rejected() -> None:
+    with pytest.raises(ValueError):
+        parse_date("03.13.2026")
+
+
+def test_hyphenated_numeric_dates_stay_ambiguous() -> None:
+    with pytest.raises(AmbiguousDateError):
+        parse_date("03-04-2026")
+
+
 def test_parse_date_same_day_and_month_is_not_ambiguous() -> None:
     assert parse_date("05/05/2026") == date(2026, 5, 5)
 
