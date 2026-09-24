@@ -65,6 +65,7 @@ def load_master(session: Session, master: dict[str, Any], vault: BankVault) -> i
                 bank_account_hash=vault.hash(s["bank_account"]),
                 bank_account_encrypted=vault.encrypt(s["bank_account"]),
                 default_currency=s["default_currency"],
+                tax_rate_bp=s.get("tax_rate_bp"),
                 is_active=True,
             ),
             created,

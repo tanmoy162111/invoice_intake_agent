@@ -177,6 +177,7 @@ def master_data(world: World) -> dict[str, Any]:
                 "tax_id": s.tax_id,
                 "bank_account": s.bank_account,
                 "default_currency": s.currency,
+                "tax_rate_bp": s.tax_rate_bp,
             }
             for s in world.suppliers
         ],
