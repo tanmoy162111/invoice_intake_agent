@@ -11,6 +11,7 @@ from intake.core.exceptions import ExceptionCode
 from intake.core.extraction import NormalizeError
 from intake.core.ingest import IngestErrorCode
 from intake.core.llm_budget import ExtractionFailure
+from intake.core.match import MatchCode, MatchSettings
 from intake.core.validate import CheckCode, ValidationSettings
 from intake.main import create_app
 
@@ -72,7 +73,7 @@ def test_manual_explains_every_reason_an_invoice_can_fail(code: str) -> None:
 
 EXTRACTION_SETTING_PREFIXES = (
     "llm_", "ollama_", "extraction_", "extract_", "daily_", "field_", "validation_", "app_",
-    "dedupe_",
+    "dedupe_", "match_",
 )  # fmt: skip
 
 
@@ -118,3 +119,26 @@ def test_manual_explains_every_reason_a_duplicate_check_is_skipped() -> None:
                    "EARLIER_INVOICES_STILL_PENDING", "SUPPLIER_UNCERTAIN",
                    "TOO_MANY_TO_COMPARE"):  # fmt: skip
         assert f"`{reason}`" in section
+
+
+def test_manual_explains_every_3_way_match_check() -> None:
+    section = MANUAL.split("### 4.13")[1].split("## 5. Reference")[0]
+    for code in MatchCode:
+        assert f"`{code.value}`" in section
+
+
+def test_manual_explains_every_reason_a_match_check_is_skipped() -> None:
+    section = MANUAL.split("### 4.13")[1].split("## 5. Reference")[0]
+    for reason in ("NO_PO", "CANNOT_INFER_PO", "AMBIGUOUS_PO", "NO_LINES", "PO_HAS_NO_LINES",
+                   "NO_RECEIPT", "NO_MATCHED_LINES", "UNREADABLE_LINE",
+                   "CURRENCY_DIFFERS_FROM_PO", "CURRENCY_UNKNOWN", "NO_SUBTOTAL",
+                   "EARLIER_INVOICES_STILL_PENDING", "EARLIER_BILLING_UNKNOWN",
+                   "TOO_MANY_POS_TO_COMPARE", "PO_INFERRED", "SUPPLIER_UNKNOWN", "CREDIT_NOTE",
+                   "PO_NOT_OPEN"):  # fmt: skip
+        assert f"`{reason}`" in section
+
+
+@pytest.mark.parametrize("name", list(MatchSettings.__dataclass_fields__))
+def test_manual_lists_every_tenant_match_setting(name: str) -> None:
+    section = MANUAL.split("### 4.11")[1].split("## 5. Reference")[0]
+    assert f"`match_{name}`" in section, f"match_{name} is missing from manual section 4.11"

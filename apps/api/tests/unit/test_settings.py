@@ -24,7 +24,9 @@ def test_the_default_environment_is_development() -> None:
     assert Settings().app_env == "development"
 
 
-@pytest.mark.parametrize("name", ["dedupe_poll_s", "dedupe_max_wait_s"])
-def test_duplicate_wait_settings_must_be_positive(name: str) -> None:
+@pytest.mark.parametrize(
+    "name", ["dedupe_poll_s", "dedupe_max_wait_s", "match_poll_s", "match_max_wait_s"]
+)
+def test_wait_settings_must_be_positive(name: str) -> None:
     with pytest.raises(ValidationError):
         Settings(**{name: 0})  # type: ignore[arg-type]

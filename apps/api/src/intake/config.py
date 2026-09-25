@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     dedupe_poll_s: int = Field(default=10, ge=1)
     dedupe_max_wait_s: int = Field(default=300, ge=1)
 
+    # 3-way match (M6): wait for earlier invoices that are not read or matched yet, then give up.
+    match_poll_s: int = Field(default=10, ge=1)
+    match_max_wait_s: int = Field(default=300, ge=1)
+
     # Job queue
     job_max_attempts: int = 3
     job_backoff_base_s: int = 10

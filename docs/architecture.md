@@ -185,3 +185,28 @@ validate_invoice ─▶ (status checking) ─▶ enqueue detect_duplicates ─�
 - **Migration** `0008`: index on `invoices (tenant_id, supplier_id)`.
 - **Not yet:** turning a duplicate result into an exception and routing (M7). File-level duplicates
   (same SHA-256) stay a separate M2 check.
+
+## 3-way matching (M6)
+
+```
+detect_duplicates ─▶ enqueue match_invoice ─▶ earlier invoices unread or unmatched? ─ yes ─▶ defer (WAITING_FOR_EARLIER_INVOICES)
+                                                        │ no
+                                                        ▼
+       load PO candidates, receipts, earlier billing ─▶ core/match.check_match ─▶ check_results (7 rows) + invoice_lines.matched_po_line_id + audit
+```
+
+- **Pure rules** in `core/match.py`: `check_match(invoice, pos, settings)` returns one `MatchCheck` per
+  `MatchCode` (pass, fail or skipped with a reason) plus the PO id, whether it was inferred, and the line
+  pairs. `match_lines` pairs by SKU, then description similarity, then amount, never guessing between two
+  equally good PO lines. No database or I/O; the stage supplies `PoRef`s that already carry received and
+  earlier-billed quantities and earlier billed amounts.
+- **Stage** (`checks/matching.py`): only an invoice in `checking` is worked on; the `NO_PO` row is the
+  "already matched" marker (all seven rows are written in one transaction). PO candidates are the PO the
+  invoice names (any supplier, so another supplier's PO is reported) plus the supplier's own POs, capped at
+  2,000. Earlier billing comes from earlier invoices' `invoice_lines.matched_po_line_id` (quantities) and
+  their `PO_OVERBILLED.details` (`po_id`, `billed_minor`).
+- **Waiting:** a `Deferral` like M5, settings `MATCH_POLL_S` and `MATCH_MAX_WAIT_S`. On expiry, cumulative
+  checks that would pass become `skipped`.
+- **Audit:** `match_completed` carries the PO id, whether it was inferred, the outcome of each code, the
+  line pairs (line number and method) and the pending count. No invoice numbers.
+- **Not yet:** exceptions, explanations and routing (M7). The invoice stays in `checking`.

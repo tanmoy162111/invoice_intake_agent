@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M5 (duplicate detection), 2026-09-25.
+> **Describes:** the system after M6 (3-way matching), 2026-09-25.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -291,6 +291,11 @@ docker compose exec db psql -U intake -c "
 | `supplier_fuzzy_min` | 90 | A closest supplier at or above this similarity is *suggested* (never trusted) |
 | `dedupe_window_days` | 7 | Days apart two invoices can be and still be a soft duplicate |
 | `dedupe_number_similarity_min` | 85 | How similar two invoice numbers must be (0 to 100) for a soft duplicate |
+| `match_price_tolerance_bp` | 200 | How far a unit price may differ from the purchase order, either way, in basis points (200 = 2%) |
+| `match_qty_tolerance_bp` | 0 | How far the billed quantity may exceed the ordered quantity, in basis points (0 = exact) |
+| `match_description_similarity_min` | 80 | How alike two line descriptions must be (0 to 100) to count as the same line when there is no SKU |
+| `match_po_total_tolerance_bp` | 200 | When an invoice names no purchase order: how close the subtotal must be to an open order's total for that order to be suggested |
+| `match_overbill_tolerance_minor` | 0 | Extra billing above a purchase order's total that is still accepted, in cents |
 
 An invalid value is ignored and the default is used. Old invoices in the demo data will start to look
 "too old" a year after they are dated; set `VALIDATION_TODAY` (section 5.4) to keep a demo stable.
@@ -318,6 +323,55 @@ read the check waits: the job shows under `paused` in `/jobs` with `last_error` 
 It checks again every 10 seconds and goes ahead after 5 minutes (`DEDUPE_POLL_S`, `DEDUPE_MAX_WAIT_S`).
 Two client settings tune it (section 4.11): `dedupe_window_days` (7) and `dedupe_number_similarity_min` (85).
 A file that is byte-for-byte the same is refused earlier, at upload (section 5.1).
+
+### 4.13 See the 3-way match with the purchase order
+
+After the duplicate check, each invoice is compared with its purchase order (PO) and the goods receipts
+recorded for it. Seven more rows appear in `check_results`, one per code, always all seven:
+
+```bash
+docker compose exec db psql -U intake -c "
+  select check_code, details->>'outcome' as outcome, details
+  from check_results
+  where invoice_id = '<invoice-id>'
+    and check_code in ('NO_PO','PO_NOT_FOUND','PRICE_VARIANCE','QTY_VARIANCE',
+                       'RECEIPT_MISSING','QTY_NOT_RECEIVED','PO_OVERBILLED');"
+```
+
+| Code | `fail` means |
+|---|---|
+| `NO_PO` | The invoice names no PO and no open PO of that supplier, in the same currency, has a total within tolerance of the subtotal. If exactly one does, it is used for the other checks but the result is `skipped` (`PO_INFERRED`, its number in `details`): a PO guessed from the total is for a person to confirm |
+| `PO_NOT_FOUND` | The PO number is not in the system (`NOT_IN_SYSTEM`), belongs to a different supplier (`PO_OF_OTHER_SUPPLIER`), or the PO is not open, for example closed or cancelled (`PO_NOT_OPEN`). If the invoice's supplier is not known the result is `skipped` (`SUPPLIER_UNKNOWN`) |
+| `PRICE_VARIANCE` | A unit price is further from the PO price than the limit. `findings` lists each line, both prices, the variance and the limit |
+| `QTY_VARIANCE` | A line bills more than the PO ordered, counting what earlier invoices already billed (`OVER_PO_QTY`), or a line is not on the PO at all (`LINE_NOT_ON_PO`). Billing *less* than ordered is fine: it is a partial invoice |
+| `RECEIPT_MISSING` | Nothing has been received for the PO |
+| `QTY_NOT_RECEIVED` | A line bills more than has been received so far, across all receipts and earlier invoices |
+| `PO_OVERBILLED` | This invoice's subtotal plus what earlier invoices billed against the PO is more than the PO total (both are before tax) |
+
+Invoice lines are matched to PO lines by SKU first, then by similar description, then by amount. A PO line is
+used once, and a line that could be either of two PO lines is left unmatched instead of guessed (it then
+shows as `LINE_NOT_ON_PO`). A SKU shared by two PO lines does not pair by SKU, and a line whose SKU differs
+from the PO line's SKU is never paired by description or amount (that would hide a substitution). "Earlier" means received earlier. Which PO lines each invoice line matched is
+stored on the invoice line (`invoice_lines.matched_po_line_id`).
+
+`skipped` means the check could not be done, and **must never be read as a pass**. Reasons: `NO_PO`
+(no purchase order was found, so nothing else could be compared), `CANNOT_INFER_PO` (no PO number and the
+supplier, currency or subtotal is missing), `PO_INFERRED` (see `NO_PO` above), `SUPPLIER_UNKNOWN`,
+`AMBIGUOUS_PO` (no number and more than one open PO fits, or two POs of the supplier have the same number once
+punctuation is ignored), `CREDIT_NOTE` (a negative quantity, amount or subtotal: a person decides, and it is
+never counted as reducing what was billed),
+`NO_LINES` and `PO_HAS_NO_LINES`, `NO_RECEIPT` (the receipt check is already `RECEIPT_MISSING`),
+`NO_MATCHED_LINES`, `UNREADABLE_LINE` (a matched line has no readable price or quantity),
+`CURRENCY_DIFFERS_FROM_PO` and `CURRENCY_UNKNOWN` (amounts are not compared across currencies),
+`NO_SUBTOTAL`, `EARLIER_INVOICES_STILL_PENDING` (the wait ran out), `EARLIER_BILLING_UNKNOWN` (an earlier
+invoice on the same PO has an unreadable quantity or amount, so the running total cannot be trusted) and
+`TOO_MANY_POS_TO_COMPARE` (more than 2,000 purchase orders to search; refused rather than cut short).
+
+While earlier invoices are still being read or matched the job waits: it shows under `paused` in `/jobs`
+with `last_error` `WAITING_FOR_EARLIER_INVOICES`. It checks again every 10 seconds and goes ahead after
+5 minutes (`MATCH_POLL_S`, `MATCH_MAX_WAIT_S`). Five client settings tune the matching (section 4.11).
+The currency rule (`CURRENCY_MISMATCH`) is a validation check (section 4.10); the matching skips amount
+checks when the currencies differ instead of repeating it.
 
 ---
 
@@ -387,6 +441,7 @@ login arrives in M8. If no token is configured the server refuses everything exc
 | `APP_ENV` | `development` | `development`, `test` or `production`. Production refuses `VALIDATION_TODAY` |
 | `VALIDATION_TODAY` | empty | A fixed "as of" date (`YYYY-MM-DD`) for the date checks. Test and demo only |
 | `DEDUPE_POLL_S`, `DEDUPE_MAX_WAIT_S` | 10, 300 | How often the duplicate check re-tries while earlier invoices are unread, and when it stops waiting (seconds) |
+| `MATCH_POLL_S`, `MATCH_MAX_WAIT_S` | 10, 300 | The same, for the 3-way match: how often it re-tries while earlier invoices are unread or unmatched, and when it stops waiting (seconds) |
 | `EXTRACT_TIMEOUT_S` | 120 | How long one model call may take before it counts as a failure to retry |
 | `EXTRACT_NOT_CONFIGURED_RETRY_S` | 300 | How often a paused job checks whether reading has been configured |
 | `FIELD_CONFIDENCE_MIN` | 0.8 | Below this a critical field counts as doubtful |
@@ -471,7 +526,7 @@ today and every one is planted in the demo data.** The exact wording comes from
 
 | When | You will be able to |
 |---|---|
-| M4 to M7 | See every problem explained with real numbers and a suggested fix, and each invoice routed |
+| M7 | See every problem explained with real numbers and a suggested fix, and each invoice routed |
 | M8 | Work the review queue in a browser, on a phone too; correct fields; approve or reject |
 | M9 | Read the complete history of any invoice |
 | M10 | See measured accuracy per field and per document quality |
