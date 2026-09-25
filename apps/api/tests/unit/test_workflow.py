@@ -19,6 +19,9 @@ from intake.core.workflow import can_transition
         (S.NEEDS_REVIEW, S.APPROVED),
         (S.NEEDS_REVIEW, S.REJECTED),
         (S.APPROVED, S.EXPORTED),
+        (S.NEEDS_REVIEW, S.EXTRACTED),  # M8: a correction sends it back through the checks
+        (S.CLEARED, S.EXTRACTED),
+        (S.CLEARED, S.REJECTED),  # M8: a reviewer can reject a cleared invoice
     ],
 )
 def test_allowed_transitions(a: S, b: S) -> None:
@@ -35,6 +38,11 @@ def test_allowed_transitions(a: S, b: S) -> None:
         (S.EXPORTED, S.RECEIVED),
         (S.APPROVED, S.NEEDS_REVIEW),
         (S.RECEIVED, S.RECEIVED),
+        (S.APPROVED, S.EXTRACTED),  # a decision is final: no correction after approval
+        (S.REJECTED, S.EXTRACTED),
+        (S.FAILED, S.NEEDS_REVIEW),  # a failed invoice can only be retried
+        (S.FAILED, S.APPROVED),
+        (S.CHECKING, S.EXTRACTED),
     ],
 )
 def test_forbidden_transitions(a: S, b: S) -> None:
@@ -64,7 +72,7 @@ def test_should_retry() -> None:
     assert not should_retry(attempts=3, max_attempts=3)
 
 
-def test_transition_table_is_exactly_the_playbook_diagram() -> None:
+def test_transition_table_is_the_playbook_diagram_plus_the_m8_edges() -> None:
     from intake.core.workflow import TRANSITIONS
 
     edges = {(a, b) for a, targets in TRANSITIONS.items() for b in targets}
@@ -80,6 +88,9 @@ def test_transition_table_is_exactly_the_playbook_diagram() -> None:
         (S.NEEDS_REVIEW, S.APPROVED),
         (S.NEEDS_REVIEW, S.REJECTED),
         (S.APPROVED, S.EXPORTED),
+        (S.NEEDS_REVIEW, S.EXTRACTED),
+        (S.CLEARED, S.EXTRACTED),
+        (S.CLEARED, S.REJECTED),
     }
 
 

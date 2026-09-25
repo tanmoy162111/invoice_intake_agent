@@ -8,8 +8,10 @@ TRANSITIONS: dict[S, frozenset[S]] = {
     S.FAILED: frozenset({S.EXTRACTING}),
     S.EXTRACTED: frozenset({S.CHECKING}),
     S.CHECKING: frozenset({S.CLEARED, S.NEEDS_REVIEW}),
-    S.CLEARED: frozenset({S.APPROVED}),
-    S.NEEDS_REVIEW: frozenset({S.APPROVED, S.REJECTED}),
+    # M8: correcting a field sends an open invoice back through the checks (extracted), and a
+    # reviewer can reject a cleared invoice as well as one that needs review.
+    S.CLEARED: frozenset({S.APPROVED, S.REJECTED, S.EXTRACTED}),
+    S.NEEDS_REVIEW: frozenset({S.APPROVED, S.REJECTED, S.EXTRACTED}),
     S.APPROVED: frozenset({S.EXPORTED}),
     S.REJECTED: frozenset(),
     S.EXPORTED: frozenset(),
