@@ -1,10 +1,11 @@
+import time
 from collections.abc import Iterator
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from intake.api.auth import token_problem
+from intake.api.auth import Caller, resolve_caller
 from intake.config import Settings
 from intake.ingest.service import UploadIngestor
 from intake.ingest.storage import LocalStorage
@@ -33,10 +34,19 @@ def storage_dep(request: Request) -> LocalStorage:
 def require_token(
     settings: Annotated[Settings, Depends(settings_dep)],
     authorization: Annotated[str | None, Header()] = None,
-) -> None:
-    """Interim auth (static bearer token) until real login lands in M8. Fails closed."""
-    problem = token_problem(settings, authorization)
-    if problem:
-        status, message = problem
-        headers = {"WWW-Authenticate": "Bearer"} if status == 401 else None
-        raise HTTPException(status, message, headers=headers)
+) -> Caller:
+    """Every route but /health and the login: the static API token (scripts) or a reviewer's
+    signed session. Fails closed."""
+    caller = resolve_caller(settings, authorization, int(time.time()))
+    if isinstance(caller, Caller):
+        return caller
+    status, message = caller
+    headers = {"WWW-Authenticate": "Bearer"} if status == 401 else None
+    raise HTTPException(status, message, headers=headers)
+
+
+def require_user(caller: Annotated[Caller, Depends(require_token)]) -> str:
+    """Review actions need a signed-in reviewer so the history names who acted."""
+    if caller.kind != "user" or not caller.user:
+        raise HTTPException(403, "sign in as a reviewer to do this")
+    return caller.user

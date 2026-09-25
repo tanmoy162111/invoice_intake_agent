@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     api_token: str = ""
     default_tenant_id: str = "00000000-0000-4000-8000-00000000d3a0"
 
+    # Reviewer login (M8): one demo user. Empty password or secret means nobody can log in.
+    reviewer_username: str = "reviewer"
+    reviewer_password: str = ""
+    session_secret: str = ""
+    session_ttl_s: int = Field(default=8 * 3600, ge=60)
+
     # Ingestion limits (playbook §6.1)
     max_upload_bytes: int = 15 * 1024 * 1024
     max_pages: int = 10

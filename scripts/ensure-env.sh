@@ -18,5 +18,7 @@ set_if_empty() { # KEY GENERATOR-COMMAND
 set_if_empty BANK_ENCRYPTION_KEY \
   '(cd apps/api && uv run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")'
 set_if_empty API_TOKEN 'python3 -c "import secrets; print(secrets.token_urlsafe(32))"'
+set_if_empty REVIEWER_PASSWORD 'python3 -c "import secrets; print(secrets.token_urlsafe(12))"'
+set_if_empty SESSION_SECRET 'python3 -c "import secrets; print(secrets.token_urlsafe(32))"'
 # A default model, so an older .env with a blank EXTRACTION_MODEL still works. The API key is never generated.
 set_if_empty EXTRACTION_MODEL 'echo claude-sonnet-5'
