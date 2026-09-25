@@ -206,9 +206,9 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.CURRENCY_MISMATCH,
             _S.REVIEW,
-            "The invoice is in {invoice_currency}, but {against} is in {expected_currency}.",
+            "The invoice is in {invoice_currency}, but {against} {expected_currency}.",
             "Confirm the currency with the supplier",
-            {"invoice_currency": "EUR", "against": "the PO", "expected_currency": "USD"},
+            {"invoice_currency": "EUR", "against": "the PO is in", "expected_currency": "USD"},
         ),
         _spec(
             _C.ABOVE_APPROVAL_LIMIT,
