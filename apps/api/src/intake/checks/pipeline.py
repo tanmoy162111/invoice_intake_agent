@@ -38,6 +38,10 @@ from intake.extract.service import db_now
 VALIDATE_JOB = "validate_invoice"
 
 
+class WrongTenant(Exception):
+    """A job named an invoice that belongs to another tenant."""
+
+
 def _field(session: Session, invoice_id: uuid.UUID, name: str) -> FieldExtraction | None:
     return session.execute(
         select(FieldExtraction).where(
@@ -65,6 +69,15 @@ def load_facts(session: Session, inv: Invoice) -> InvoiceFacts:
     currency = _field(session, inv.id, "currency")
     tax_id = _field(session, inv.id, "supplier_tax_id")
     bank = _field(session, inv.id, "supplier_bank_account")
+    # "Nothing printed" only counts when the model was sure; an unread account must not look
+    # like an unchanged one.
+    signals = (bank.signals or {}) if bank else {}
+    bank_absence_certain = (
+        bank is not None
+        and bank.raw_value is None
+        and signals.get("missing") is True
+        and signals.get("self_confidence") == "high"
+    )
     return InvoiceFacts(
         currency=inv.currency,
         printed_currency=currency.raw_value if currency else None,
@@ -80,6 +93,7 @@ def load_facts(session: Session, inv: Invoice) -> InvoiceFacts:
         supplier_name=inv.supplier_name,
         supplier_tax_id=tax_id.normalized_value if tax_id else None,
         bank_account_hash=bank.normalized_value if bank else None,
+        bank_absence_certain=bank_absence_certain,
     )  # fmt: skip
 
 
@@ -89,19 +103,24 @@ def _today(session: Session, settings: Settings) -> date:
     return db_now(session).astimezone(UTC).date()
 
 
-def validate_invoice(session: Session, settings: Settings, invoice_id: uuid.UUID) -> None:
+def validate_invoice(
+    session: Session, settings: Settings, invoice_id: uuid.UUID, *, tenant_id: uuid.UUID
+) -> None:
     inv = session.get_one(Invoice, invoice_id)
+    if inv.tenant_id != tenant_id:
+        raise WrongTenant
     if InvoiceStatus(inv.status) is not InvoiceStatus.EXTRACTED:
         return  # already checked (the results and the status change commit together)
     set_invoice_status(
         session, inv, InvoiceStatus.CHECKING, actor_type=ActorType.SYSTEM, actor_id="worker"
     )
     tenant = session.get_one(Tenant, inv.tenant_id)
+    today = _today(session, settings)
     match, results = validate(
         load_facts(session, inv),
         _supplier_records(session, inv.tenant_id),
         ValidationSettings.from_tenant(tenant.settings or {}),
-        _today(session, settings),
+        today,
     )
     for r in results:
         session.add(
@@ -123,5 +142,7 @@ def validate_invoice(session: Session, settings: Settings, invoice_id: uuid.UUID
             "failed": by_outcome[Outcome.FAIL],
             "skipped": by_outcome[Outcome.SKIPPED],
             "supplier_matched_by": match.matched_by,
+            "as_of": today.isoformat(),
+            "as_of_overridden": settings.validation_today is not None,
         },
     )  # fmt: skip

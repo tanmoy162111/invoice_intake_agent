@@ -85,6 +85,9 @@ class InvoiceFacts:
     supplier_name: str | None
     supplier_tax_id: str | None
     bank_account_hash: str | None  # keyed hash; never the account number
+    # True only when the extraction was sure no bank account is printed. Without a hash, an
+    # unread account must not look like an unchanged one.
+    bank_absence_certain: bool = False
 
 
 def _int_setting(raw: Mapping[str, object], key: str, default: int, low: int, high: int) -> int:
@@ -134,6 +137,7 @@ class SupplierMatch:
     matched_by: str | None  # "tax_id" or "name"
     closest_name: str | None = None
     closest_score: float = 0.0
+    conflict: str | None = None  # the identifiers point at different suppliers: never trusted
 
 
 def _name_key(name: str) -> str:
@@ -146,27 +150,44 @@ def _tax_key(tax_id: str) -> str:
     return " ".join(tax_id.split()).upper()
 
 
+def _find_by_name(key: str, suppliers: Sequence[SupplierRecord]) -> SupplierRecord | None:
+    if not key:  # a name made only of punctuation identifies nobody
+        return None
+    for s in suppliers:
+        if key in (_name_key(n) for n in (s.name, *s.aliases)):
+            return s
+    return None
+
+
 def match_supplier(
     name: str | None, tax_id: str | None, suppliers: Sequence[SupplierRecord], fuzzy_min: int
 ) -> SupplierMatch:
     """A supplier is *known* only by an exact tax id or an exact name or alias (ignoring case and
-    punctuation). A similar name is never enough on its own: a near-identical name from an
-    unverified sender is a classic impersonation pattern. The closest match is returned so a person
-    can be pointed at it."""
-    if tax_id and tax_id.strip():
-        wanted = _tax_key(tax_id)
-        for s in suppliers:
-            if s.tax_id and _tax_key(s.tax_id) == wanted:
-                return SupplierMatch(s, "tax_id")
-    if not name or not name.strip():
+    punctuation), and the identifiers that are printed must all agree. A tax id that belongs to
+    one supplier next to the name of another, or a known name next to a different tax id, is a
+    conflict and not a match. A similar name is never enough on its own: a near-identical name
+    from an unverified sender is a classic impersonation pattern. The closest match is returned so
+    a person can be pointed at it."""
+    key = _name_key(name) if name and name.strip() else ""
+    printed_tax = _tax_key(tax_id) if tax_id and tax_id.strip() else ""
+    by_tax = next((s for s in suppliers if s.tax_id and printed_tax == _tax_key(s.tax_id)), None)
+    by_name = _find_by_name(key, suppliers)
+
+    if by_tax is not None:
+        if key and by_name is not by_tax:  # a name is printed and it is not this supplier's
+            return SupplierMatch(None, None, by_tax.name, 100.0, "NAME_DIFFERS_FROM_TAX_ID")
+        return SupplierMatch(by_tax, "tax_id")
+    if by_name is not None:
+        if printed_tax and by_name.tax_id:  # a different tax id is printed than the one on file
+            return SupplierMatch(None, None, by_name.name, 100.0, "TAX_ID_DIFFERS_FROM_RECORD")
+        return SupplierMatch(by_name, "name")
+    if not key:
         return SupplierMatch(None, None)
-    key = _name_key(name)
     best: tuple[float, SupplierRecord] | None = None
     for s in suppliers:
-        candidates = [_name_key(n) for n in (s.name, *s.aliases)]
-        if key in candidates:
-            return SupplierMatch(s, "name")
-        score = max((fuzz.token_sort_ratio(key, c) for c in candidates), default=0.0)
+        score = max(
+            (fuzz.token_sort_ratio(key, _name_key(c)) for c in (s.name, *s.aliases)), default=0.0
+        )
         if best is None or score > best[0]:
             best = (score, s)
     if best is None:
@@ -187,6 +208,11 @@ def _line_tax(amount_minor: int, rate_percent: Decimal) -> int:
     sign = -1 if amount_minor < 0 else 1
     cents = (Decimal(abs(amount_minor)) * rate_percent / 100).quantize(Decimal(1), ROUND_HALF_UP)
     return sign * int(cents)
+
+
+def _clip(text: str | None, limit: int = 100) -> str | None:
+    """Untrusted document text is bounded before it is stored in a result."""
+    return text if text is None or len(text) <= limit else text[:limit]
 
 
 def _dec(q: Decimal) -> str:
@@ -243,10 +269,13 @@ def _check_totals(f: InvoiceFacts, s: ValidationSettings) -> CheckResult:
             {"name": "SUBTOTAL_PLUS_TAX_IS_TOTAL", "ok": ok, "expected_minor": expected,
              "actual_minor": f.total_minor}
         )  # fmt: skip
-    outcome = (
-        Outcome.SKIPPED if not checks
-        else Outcome.PASS if all(c["ok"] for c in checks) else Outcome.FAIL
-    )  # fmt: skip
+    total_compared = any(c["name"] == "SUBTOTAL_PLUS_TAX_IS_TOTAL" for c in checks)
+    if any(not c["ok"] for c in checks):
+        outcome = Outcome.FAIL
+    elif total_compared:  # a lines-sum match alone never stands in for the total
+        outcome = Outcome.PASS
+    else:
+        outcome = Outcome.SKIPPED
     return _result(
         CheckCode.TOTAL_MISMATCH, outcome, lines_sum_minor=lines_sum,
         subtotal_minor=f.subtotal_minor, tax_minor=f.tax_minor, total_minor=f.total_minor,
@@ -275,7 +304,8 @@ def _check_tax(f: InvoiceFacts, s: ValidationSettings, sup: SupplierRecord | Non
         source = "lines"
     else:
         return _result(CheckCode.TAX_MISMATCH, Outcome.SKIPPED, reason="NO_RATE_TO_COMPARE")
-    tolerance = max(1, len(f.lines)) * s.tax_tolerance_per_line_minor
+    # The supplier's rate is one rounding of the subtotal; line rates are one rounding per line.
+    tolerance = s.tax_tolerance_per_line_minor * (1 if source == "supplier" else len(f.lines))
     ok = abs(expected - f.tax_minor) <= tolerance
     return _result(
         CheckCode.TAX_MISMATCH, Outcome.PASS if ok else Outcome.FAIL, source=source,
@@ -314,10 +344,12 @@ def _check_currency(f: InvoiceFacts, sup: SupplierRecord | None) -> CheckResult:
         return _result(CheckCode.CURRENCY_MISMATCH, Outcome.SKIPPED, reason="UNKNOWN_SUPPLIER")
     details: dict[str, object] = {
         "invoice_currency": f.currency, "supplier_currency": sup.default_currency,
-        "printed": f.printed_currency,
+        "printed": _clip(f.printed_currency),
     }  # fmt: skip
     if f.currency is not None:
-        outcome = Outcome.PASS if f.currency == sup.default_currency else Outcome.FAIL
+        outcome = (
+            Outcome.PASS if f.currency.upper() == sup.default_currency.upper() else Outcome.FAIL
+        )
         return CheckResult(CheckCode.CURRENCY_MISMATCH, outcome, details)
     printed = (f.printed_currency or "").strip()
     if printed in _SYMBOL_CURRENCY:  # a symbol that could not be settled on its own
@@ -342,9 +374,10 @@ def _check_supplier(f: InvoiceFacts, m: SupplierMatch, s: ValidationSettings) ->
             matched_by=m.matched_by,
         )
     return _result(
-        CheckCode.UNKNOWN_SUPPLIER, Outcome.FAIL, printed_name=f.supplier_name,
-        printed_tax_id=f.supplier_tax_id, closest_name=m.closest_name,
+        CheckCode.UNKNOWN_SUPPLIER, Outcome.FAIL, printed_name=_clip(f.supplier_name),
+        printed_tax_id=_clip(f.supplier_tax_id), closest_name=_clip(m.closest_name),
         closest_score=m.closest_score, suggested=m.closest_score >= s.supplier_fuzzy_min,
+        conflict=m.conflict,
     )  # fmt: skip
 
 
@@ -352,8 +385,10 @@ def _check_bank(f: InvoiceFacts, sup: SupplierRecord | None) -> CheckResult:
     code = CheckCode.BANK_DETAILS_CHANGED
     if sup is None:
         return _result(code, Outcome.SKIPPED, reason="UNKNOWN_SUPPLIER")
-    if f.bank_account_hash is None:  # nothing printed, so nothing changed
-        return _result(code, Outcome.PASS, supplier_id=sup.id, bank_on_invoice=False)
+    if f.bank_account_hash is None:
+        if f.bank_absence_certain:  # certainly nothing printed, so nothing changed
+            return _result(code, Outcome.PASS, supplier_id=sup.id, bank_on_invoice=False)
+        return _result(code, Outcome.SKIPPED, supplier_id=sup.id, reason="BANK_NOT_READ")
     if sup.bank_account_hash is None:
         return _result(code, Outcome.SKIPPED, supplier_id=sup.id, reason="NO_BANK_ON_FILE")
     same = hmac.compare_digest(f.bank_account_hash, sup.bank_account_hash)

@@ -209,6 +209,7 @@ class FieldExtraction(Base):
 
 class CheckResult(Base):
     __tablename__ = "check_results"
+    __table_args__ = (UniqueConstraint("invoice_id", "check_code", "rule_version"),)
     id: Mapped[uuid.UUID] = uuid_pk()
     tenant_id: Mapped[uuid.UUID] = tenant_fk()
     invoice_id: Mapped[uuid.UUID] = mapped_column(

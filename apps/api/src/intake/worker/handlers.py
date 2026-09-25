@@ -77,7 +77,9 @@ def make_extract_handler(client_factory: ClientFactory = build_client) -> Handle
 def _validate_invoice(
     session: Session, storage: LocalStorage, settings: Settings, job: Job
 ) -> None:
-    validate_invoice(session, settings, uuid.UUID(job.payload["invoice_id"]))
+    validate_invoice(
+        session, settings, uuid.UUID(job.payload["invoice_id"]), tenant_id=job.tenant_id
+    )
 
 
 HANDLERS: dict[str, Handler] = {

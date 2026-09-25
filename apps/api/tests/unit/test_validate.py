@@ -182,6 +182,21 @@ def test_total_only_does_the_checks_it_has_data_for() -> None:
     assert outcome(CheckCode.TOTAL_MISMATCH, subtotal_minor=None) is Outcome.SKIPPED
 
 
+def test_a_matching_lines_sum_alone_never_passes_the_total() -> None:
+    # subtotal 102400 matches the lines, but with no tax figure the total (999) was never compared
+    r = run(facts(tax_minor=None, total_minor=999))["TOTAL_MISMATCH"]
+    assert r.outcome is Outcome.SKIPPED
+
+
+def test_a_missing_total_is_skipped_even_when_the_lines_add_up() -> None:
+    assert outcome(CheckCode.TOTAL_MISMATCH, total_minor=None) is Outcome.SKIPPED
+
+
+def test_a_failed_lines_sum_still_fails_when_the_total_cannot_be_compared() -> None:
+    r = run(facts(subtotal_minor=105000, tax_minor=None))["TOTAL_MISMATCH"]
+    assert r.outcome is Outcome.FAIL
+
+
 def test_total_is_skipped_when_a_line_amount_is_missing() -> None:
     lines = (line(1, "10", 1290, 12900), LineFacts(2, D("10"), 8950, None, None))
     r = run(facts(lines=lines))["TOTAL_MISMATCH"]
@@ -214,9 +229,20 @@ def test_tax_fails_against_the_suppliers_rate_with_numbers() -> None:
     )  # fmt: skip
 
 
-def test_tax_tolerance_grows_with_the_number_of_lines() -> None:
-    assert outcome(CheckCode.TAX_MISMATCH, tax_minor=8194) is Outcome.PASS  # 2 lines
-    assert outcome(CheckCode.TAX_MISMATCH, tax_minor=8195) is Outcome.FAIL
+def test_the_suppliers_rate_is_one_rounding_so_the_tolerance_is_one_unit() -> None:
+    many = tuple(line(n, "1", 100, 100) for n in range(1, 21))
+    f = facts(lines=many, subtotal_minor=2000, tax_minor=160, total_minor=2160)
+    assert run(replace(f, tax_minor=161))["TAX_MISMATCH"].outcome is Outcome.PASS
+    assert run(replace(f, tax_minor=162))["TAX_MISMATCH"].outcome is Outcome.FAIL  # 20 lines
+
+
+def test_tax_from_line_rates_tolerates_one_unit_per_line() -> None:
+    nobody = facts(
+        supplier_name="Nobody Ltd", supplier_tax_id=None,
+        lines=(line(1, "10", 1290, 12900, "5"), line(2, "10", 8950, 89500, "5")),
+    )  # fmt: skip
+    assert run(replace(nobody, tax_minor=5122))["TAX_MISMATCH"].outcome is Outcome.PASS
+    assert run(replace(nobody, tax_minor=5123))["TAX_MISMATCH"].outcome is Outcome.FAIL
 
 
 def test_tax_zero_rate_zero_tax() -> None:
@@ -376,13 +402,24 @@ def test_currency_is_skipped_for_an_unknown_supplier() -> None:
 
 
 def test_a_supplier_is_known_by_an_exact_tax_id() -> None:
-    m, _ = validate(
-        facts(supplier_name="Something Else", supplier_tax_id=" 69-9397618 "),
-        SUPPLIERS,
-        ValidationSettings(),
-        TODAY,
-    )
+    m = match_supplier(None, " 69-9397618 ", SUPPLIERS, 90)
     assert m.supplier == ACME and m.matched_by == "tax_id"
+
+
+def test_a_tax_id_and_an_agreeing_name_are_known() -> None:
+    m = match_supplier("Acme Supplies Ltd.", "69-9397618", SUPPLIERS, 90)
+    assert m.supplier == ACME and m.conflict is None
+
+
+def test_a_tax_id_with_a_name_that_is_not_the_suppliers_is_a_conflict() -> None:
+    m = match_supplier("Something Else", "69-9397618", SUPPLIERS, 90)
+    assert m.supplier is None and m.conflict == "NAME_DIFFERS_FROM_TAX_ID"
+    assert m.closest_name == "Acme Supplies Ltd."
+
+
+def test_a_tax_id_of_one_supplier_with_the_name_of_another_is_a_conflict() -> None:
+    m = match_supplier("Coastal Packaging Ltd.", "69-9397618", SUPPLIERS, 90)
+    assert m.supplier is None and m.conflict == "NAME_DIFFERS_FROM_TAX_ID"
 
 
 def test_a_supplier_is_known_by_an_exact_name_or_alias() -> None:
@@ -407,14 +444,21 @@ def test_a_weak_similarity_is_reported_but_not_suggested() -> None:
     assert m.supplier is None and m.closest_score < 90
 
 
-def test_the_tax_id_wins_over_a_conflicting_name() -> None:
-    m = match_supplier("Coastal Packaging Ltd.", "69-9397618", SUPPLIERS, 90)
-    assert m.supplier == ACME
-
-
-def test_a_wrong_tax_id_with_a_known_name_is_not_a_tax_id_match() -> None:
+def test_a_known_name_with_a_different_tax_id_is_a_conflict_not_a_match() -> None:
     m = match_supplier("Acme Supplies Ltd.", "00-0000000", SUPPLIERS, 90)
-    assert m.supplier == ACME and m.matched_by == "name"
+    assert m.supplier is None and m.conflict == "TAX_ID_DIFFERS_FROM_RECORD"
+    assert m.closest_name == "Acme Supplies Ltd."
+
+
+def test_a_known_name_is_enough_when_no_tax_id_is_printed_or_on_file() -> None:
+    assert match_supplier("Acme Supplies Ltd.", None, SUPPLIERS, 90).supplier == ACME
+    no_tax = replace(ACME, tax_id=None)
+    assert match_supplier("Acme Supplies Ltd.", "00-0000000", [no_tax], 90).supplier == no_tax
+
+
+def test_punctuation_only_names_match_nobody() -> None:
+    blank = replace(ACME, name="---", aliases=())
+    assert match_supplier("***", None, [blank], 90).supplier is None
 
 
 def test_no_name_and_no_tax_id_matches_nobody() -> None:
@@ -432,6 +476,11 @@ def test_unknown_supplier_check_reports_the_closest_match() -> None:
     assert r.outcome is Outcome.FAIL
     assert r.details["closest_name"] == "Coastal Packaging Ltd."
     assert r.details["suggested"] is True and r.details["printed_name"] == "Coastal Packing Ltd."
+
+
+def test_unknown_supplier_reports_a_conflict() -> None:
+    r = run(facts(supplier_tax_id="00-0000000"))["UNKNOWN_SUPPLIER"]
+    assert r.outcome is Outcome.FAIL and r.details["conflict"] == "TAX_ID_DIFFERS_FROM_RECORD"
 
 
 def test_unknown_supplier_passes_for_a_known_one() -> None:
@@ -463,9 +512,14 @@ def test_bank_hashes_are_never_put_in_the_details() -> None:
     assert "H-OTHER" not in str(r.details) and "H-ACME" not in str(r.details)
 
 
-def test_no_bank_account_on_the_invoice_passes_because_nothing_changed() -> None:
-    r = run(facts(bank_account_hash=None))["BANK_DETAILS_CHANGED"]
+def test_a_bank_account_certainly_absent_from_the_invoice_passes() -> None:
+    r = run(facts(bank_account_hash=None, bank_absence_certain=True))["BANK_DETAILS_CHANGED"]
     assert r.outcome is Outcome.PASS and r.details["bank_on_invoice"] is False
+
+
+def test_a_bank_account_that_may_just_be_unread_is_skipped_not_passed() -> None:
+    r = run(facts(bank_account_hash=None, bank_absence_certain=False))["BANK_DETAILS_CHANGED"]
+    assert r.outcome is Outcome.SKIPPED and r.details["reason"] == "BANK_NOT_READ"
 
 
 def test_a_supplier_without_a_bank_on_file_cannot_be_compared() -> None:
@@ -508,3 +562,15 @@ BAD_SETTINGS = [
 @pytest.mark.parametrize("bad", BAD_SETTINGS)
 def test_bad_tenant_settings_fall_back_to_the_safe_default(bad: dict[str, object]) -> None:
     assert ValidationSettings.from_tenant(bad) == ValidationSettings()
+
+
+def test_untrusted_text_in_the_details_is_clipped() -> None:
+    long_name = "X" * 5000
+    r = run(facts(supplier_name=long_name, supplier_tax_id=None))["UNKNOWN_SUPPLIER"]
+    assert len(str(r.details["printed_name"])) <= 100
+    junk = run(facts(currency=None, printed_currency="C" * 500))["CURRENCY_MISMATCH"]
+    assert len(str(junk.details["printed"])) <= 100
+
+
+def test_currency_codes_compare_case_insensitively() -> None:
+    assert outcome(CheckCode.CURRENCY_MISMATCH, currency="usd") is Outcome.PASS
