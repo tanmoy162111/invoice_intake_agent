@@ -7,6 +7,7 @@ that are not stored as check results are raised here: doubtful critical fields a
 the approval limit. Explanations come from the templates in `core/exceptions.py`, never free text.
 """
 
+import unicodedata
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
@@ -105,15 +106,31 @@ class ExceptionDraft:
 # ---- formatting -------------------------------------------------------------------------------
 
 
+def _int(value: object) -> int:
+    """A whole number from stored details; a float or a string is unusable, never rounded."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"not a whole number: {value!r}")
+    return value
+
+
+def _text(value: object, limit: int = 80) -> str:
+    """Text that came from a document, made safe to put in a sentence: control characters become
+    spaces, runs of spaces collapse, and it is cut to `limit` characters. Consumers must still
+    show it as plain text (never as markup)."""
+    cleaned = "".join(" " if unicodedata.category(ch)[0] in ("C", "Z") else ch for ch in str(value))
+    cleaned = " ".join(cleaned.split())
+    return cleaned if len(cleaned) <= limit else cleaned[: limit - 1] + "…"
+
+
 def _money(minor: object, currency: str | None) -> str:
-    amount = int(minor)  # type: ignore[call-overload]
+    amount = _int(minor)
     if currency in CURRENCY_EXPONENT:
         return format_money(Money(amount, str(currency)))
     return f"{Decimal(amount) / 100:,.2f}"
 
 
 def _bp(bp: object) -> str:
-    return format((Decimal(int(bp)) / 100).normalize(), "f") + "%"  # type: ignore[call-overload]
+    return format((Decimal(_int(bp)) / 100).normalize(), "f") + "%"
 
 
 def _signed_percent(actual: int, expected: int) -> str:
@@ -131,7 +148,8 @@ def _earlier(before: object) -> str:
 
 def _findings(d: Mapping[str, object]) -> list[Mapping[str, Any]]:
     found = d["findings"]
-    assert isinstance(found, list)
+    if not isinstance(found, list) or not all(isinstance(f, Mapping) for f in found):
+        raise ValueError("findings are not a list of records")
     return found
 
 
@@ -184,24 +202,21 @@ def _dates(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[s
     out: list[str] = []
     reasons: Any = d["reasons"]
     for r in reasons:
-        if r["code"] == "FUTURE_INVOICE_DATE":
-            field_, why = (
-                "invoice date",
-                f"it is in the future ({r['invoice_date']}; today is {d['today']})",
-            )
-        elif r["code"] == "INVOICE_TOO_OLD":
-            field_, why = (
-                "invoice date",
-                f"it is more than {r['max_age_days']} days old ({r['invoice_date']})",
+        kind = r["code"]
+        if kind == "FUTURE_INVOICE_DATE":
+            field_ = "invoice date"
+            why = f"it is in the future ({r['invoice_date']}; today is {d['today']})"
+        elif kind == "INVOICE_TOO_OLD":
+            field_ = "invoice date"
+            why = f"it is more than {r['max_age_days']} days old ({r['invoice_date']})"
+        elif kind == "DUE_BEFORE_INVOICE":
+            field_ = "due date"
+            why = (
+                f"it is before the invoice date "
+                f"(due {r['due_date']}, invoice dated {r['invoice_date']})"
             )
         else:
-            field_, why = (
-                "due date",
-                (
-                    f"it is before the invoice date "
-                    f"(due {r['due_date']}, invoice dated {r['invoice_date']})"
-                ),
-            )
+            raise ValueError(f"unknown date problem: {kind!r}")
         out.append(explain(_C.INVALID_DATE, field=field_, reason=why))
     return out
 
@@ -219,17 +234,18 @@ def _currency(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> lis
 
 
 def _unknown_supplier(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[str]:
-    name = d.get("printed_name") or (
-        f"Tax ID {d['printed_tax_id']}" if d.get("printed_tax_id") else "(no name printed)"
-    )
+    name = _text(d.get("printed_name")) if d.get("printed_name") else None
+    if not name:
+        tax_id = _text(d.get("printed_tax_id")) if d.get("printed_tax_id") else None
+        name = f"Tax ID {tax_id}" if tax_id else "(no name printed)"
     note = ""
     if d.get("closest_name") and d.get("closest_score"):
-        note = f" Closest match: '{d['closest_name']}' ({d['closest_score']}%)."
+        note = f" Closest match: '{_text(d['closest_name'])}' ({_int(d['closest_score'])}%)."
     return [explain(_C.UNKNOWN_SUPPLIER, name=str(name), closest_note=note)]
 
 
 def _bank(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[str]:
-    return [explain(_C.BANK_DETAILS_CHANGED, supplier=x.supplier_name or "this supplier")]
+    return [explain(_C.BANK_DETAILS_CHANGED, supplier=_text(x.supplier_name or "this supplier"))]
 
 
 def _duplicate(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[str]:
@@ -242,7 +258,7 @@ def _duplicate(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> li
     return [
         explain(
             _C.POSSIBLE_DUPLICATE,
-            other=str(d.get("existing_invoice_number") or "an earlier invoice"),
+            other=_text(d.get("existing_invoice_number") or "an earlier invoice", 40),
             match=match, days="an unknown number of" if days is None else str(days),
         )
     ]  # fmt: skip
@@ -261,16 +277,16 @@ _PO_PROBLEM = {
 def _po_not_found(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[str]:
     reason = d.get("reason")
     if reason == "PO_NOT_OPEN":
-        problem = f"is not open (its status is {d['status']})"
+        problem = f"is not open (its status is {_text(d['status'], 20)})"
     else:
         problem = _PO_PROBLEM[str(reason)]
-    return [explain(_C.PO_NOT_FOUND, po=str(d["po_number"]), problem=problem)]
+    return [explain(_C.PO_NOT_FOUND, po=_text(d["po_number"], 40), problem=problem)]
 
 
 def _price(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[str]:
     out = []
     for f in _findings(d):
-        actual, expected = int(f["invoice_unit_price_minor"]), int(f["po_unit_price_minor"])
+        actual, expected = _int(f["invoice_unit_price_minor"]), _int(f["po_unit_price_minor"])
         variance = (
             _signed_percent(actual, expected) if expected else "no percentage, the PO price is zero"
         )
@@ -288,18 +304,20 @@ def _qty(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[str
     for f in _findings(d):
         if f["kind"] == "LINE_NOT_ON_PO":
             out.append(explain(_C.QTY_VARIANCE, variant="line_not_on_po", line=str(f["line"])))
-        else:
+        elif f["kind"] == "OVER_PO_QTY":
             out.append(
                 explain(
                     _C.QTY_VARIANCE, line=str(f["line"]), actual=str(f["billed_qty"]),
                     earlier=_earlier(f["billed_before_qty"]), expected=str(f["po_qty"]),
                 )
             )  # fmt: skip
+        else:
+            raise ValueError(f"unknown quantity finding: {f['kind']!r}")
     return out
 
 
 def _receipt(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[str]:
-    return [explain(_C.RECEIPT_MISSING, po=str(d["po_number"]))]
+    return [explain(_C.RECEIPT_MISSING, po=_text(d["po_number"], 40))]
 
 
 def _not_received(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> list[str]:
@@ -316,8 +334,8 @@ def _overbilled(d: Mapping[str, object], c: str | None, x: ClassifyContext) -> l
     cur = str(d["currency"])
     return [
         explain(
-            _C.PO_OVERBILLED, po=str(d["po_number"]), billed=_money(d["billed_total_minor"], cur),
-            total=_money(d["po_total_minor"], cur),
+            _C.PO_OVERBILLED, po=_text(d["po_number"], 40),
+            billed=_money(d["billed_total_minor"], cur), total=_money(d["po_total_minor"], cur),
         )
     ]  # fmt: skip
 
@@ -362,7 +380,7 @@ def _draft(
 def _failed(row: CheckRow, code: ExceptionCode, x: ClassifyContext) -> ExceptionDraft:
     try:
         sentences = _BUILDERS[code](row.details, x.currency, x)
-    except (KeyError, TypeError, ValueError, AssertionError, ArithmeticError):
+    except (KeyError, TypeError, ValueError, AttributeError, ArithmeticError):
         sentences = []
     if not sentences:  # the check failed, but its details are unusable: still shown, never dropped
         text = explain_unchecked(code, "the details of the failure were not recorded")
@@ -376,7 +394,10 @@ def _skipped(row: CheckRow, code: ExceptionCode) -> ExceptionDraft:
     reason = row.details.get("reason")
     words = REASON_TEXT.get(str(reason)) if reason else "no reason was recorded"
     return _draft(
-        code, explain_unchecked(code, words or f"unrecognised reason {reason}"), True, row.details
+        code,
+        explain_unchecked(code, words or f"unrecognised reason {_text(reason, 40)}"),
+        True,
+        row.details,
     )
 
 
@@ -392,6 +413,9 @@ def _weak_field_draft(weak: Sequence[WeakField]) -> ExceptionDraft:
         else:
             have = (w.confidence * 100).quantize(Decimal(1), rounding=ROUND_HALF_UP)
             need = (w.minimum * 100).quantize(Decimal(1), rounding=ROUND_HALF_UP)
+            if have == need:  # a whole-number rounding would contradict itself: show the decimals
+                have = (w.confidence * 100).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+                need = (w.minimum * 100).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
             why = f"its confidence is {have}%, below the {need}% minimum"
         parts.append(explain(_C.LOW_CONFIDENCE_FIELD, field=_field_name(w.field), reason=why))
     evidence = {w.field: None if w.confidence is None else str(w.confidence) for w in weak}
@@ -409,12 +433,20 @@ def classify(checks: Sequence[CheckRow], ctx: ClassifyContext) -> list[Exception
             drafts.append(_failed(row, code, ctx))
         elif row.outcome is Outcome.SKIPPED:
             skipped.append((row, code))
-    raised = {d.code for d in drafts} | {c for _, c in skipped if c is _C.UNKNOWN_SUPPLIER}
-    raised |= {c for r, c in skipped if str(r.details.get("reason")) not in _DERIVED_FROM}
+
+    # A skipped check is dropped only when a *different* check already raised the root problem. A
+    # check skipped because of itself, or for a reason of its own, stays and can be a root.
+    def _reason(row: CheckRow) -> str:
+        return str(row.details.get("reason"))
+
+    roots = {d.code for d in drafts}
+    roots |= {c for r, c in skipped if _reason(r) not in _DERIVED_FROM}
+    roots |= {c for r, c in skipped if c in _DERIVED_FROM.get(_reason(r), ())}
     credit_seen = False
     for row, code in skipped:
-        reason = str(row.details.get("reason"))
-        if reason in _DERIVED_FROM and raised & set(_DERIVED_FROM[reason]):
+        reason = _reason(row)
+        derived_from = _DERIVED_FROM.get(reason, ())
+        if derived_from and code not in derived_from and roots & set(derived_from):
             continue  # the root problem is already an exception of its own
         if reason == "CREDIT_NOTE":
             if credit_seen:

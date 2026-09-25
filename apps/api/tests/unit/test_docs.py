@@ -153,9 +153,13 @@ def test_manual_explains_every_reason_an_invoice_is_routed_to_review() -> None:
         assert word in section
 
 
-def test_manual_lists_the_approval_limit_setting() -> None:
+@pytest.mark.parametrize(
+    "key",
+    ["approval_amount_limit_minor", "approval_limit_currency", "approval_amount_limits_minor"],
+)
+def test_manual_lists_the_approval_limit_settings(key: str) -> None:
     section = MANUAL.split("### 4.11")[1].split("## 5. Reference")[0]
-    assert "`approval_amount_limit_minor`" in section
+    assert f"`{key}`" in section
 
 
 def test_taxonomy_doc_names_every_second_wording() -> None:

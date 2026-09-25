@@ -406,3 +406,79 @@ def test_a_credit_note_is_one_card_not_five() -> None:
         ctx(),
     )
     assert len(drafts) == 1 and drafts[0].unchecked
+
+
+# ---- review fixes: self-suppression, wrong sentences, rounding, untrusted text ----------------
+
+
+def test_a_skipped_check_never_suppresses_itself() -> None:
+    d = one(row("UNKNOWN_SUPPLIER", Outcome.SKIPPED, reason="UNKNOWN_SUPPLIER"))
+    assert d.unchecked and d.code is C.UNKNOWN_SUPPLIER
+
+
+def test_the_root_kept_by_itself_still_explains_its_derived_skips() -> None:
+    drafts = classify(
+        [
+            row("UNKNOWN_SUPPLIER", Outcome.SKIPPED, reason="UNKNOWN_SUPPLIER"),
+            row("BANK_DETAILS_CHANGED", Outcome.SKIPPED, reason="UNKNOWN_SUPPLIER"),
+            row("CURRENCY_MISMATCH", Outcome.SKIPPED, reason="UNKNOWN_SUPPLIER"),
+        ],
+        ctx(),
+    )
+    assert [d.code for d in drafts] == [C.UNKNOWN_SUPPLIER]
+
+
+def test_two_derived_skips_cannot_suppress_each_other() -> None:
+    drafts = classify(
+        [
+            row("RECEIPT_MISSING", Outcome.SKIPPED, reason="NO_PO"),
+            row("PRICE_VARIANCE", Outcome.SKIPPED, reason="NO_PO"),
+        ],
+        ctx(),
+    )
+    assert len(drafts) == 2 and all(d.unchecked for d in drafts)
+
+
+@pytest.mark.parametrize(
+    "check",
+    [
+        row("INVALID_DATE", reasons=[{"code": "NEW_KIND", "due_date": "2026-05-01",
+                                      "invoice_date": "2026-06-01"}], today="2026-09-25"),
+        row("QTY_VARIANCE", findings=[{"line": 1, "kind": "SOMETHING_NEW"}]),
+        row("QTY_VARIANCE", findings="not a list"),
+        row("QTY_VARIANCE", findings=["not a dict"]),
+        row("LINE_MATH_MISMATCH", lines=[{"line_no": 1, "quantity": "1", "unit_price_minor": 45.5,
+                                          "expected_minor": 5, "amount_minor": 6}]),
+        row("PRICE_VARIANCE", findings=[{"line": 1, "invoice_unit_price_minor": 1,
+                                         "po_unit_price_minor": 2, "limit_bp": 1.5}]),
+    ],
+)  # fmt: skip
+def test_details_that_are_not_understood_are_never_worded_as_something_else(
+    check: CheckRow,
+) -> None:
+    d = one(check)
+    assert "details of the failure were not recorded" in d.explanation
+    assert d.severity in (Severity.REVIEW, Severity.BLOCK) and not d.unchecked
+
+
+def test_a_confidence_that_rounds_to_the_minimum_shows_the_decimals() -> None:
+    d = classify([], ctx(weak_fields=(WeakField("total", D("0.849"), D("0.85")),)))[0]
+    assert d.explanation == (
+        "We're not sure about the total: its confidence is 84.9%, below the 85.0% minimum."
+    )
+
+
+def test_untrusted_text_is_cleaned_and_capped_in_explanations() -> None:
+    long_name = "A" * 500
+    d = one(row("UNKNOWN_SUPPLIER", printed_name=long_name, closest_name="B" * 500,
+                closest_score=80, printed_tax_id=None))  # fmt: skip
+    assert len(d.explanation) < 250 and "A" * 81 not in d.explanation
+    messy = one(row("PO_NOT_FOUND", po_number="PO\n-1\x00<b>", reason="NOT_IN_SYSTEM"))
+    assert "\n" not in messy.explanation and "\x00" not in messy.explanation
+    bank = one(row("BANK_DETAILS_CHANGED"), supplier_name="Acme\r\nLtd" + "x" * 300)
+    assert "\r" not in bank.explanation and len(bank.explanation) < 250
+    dup = one(row("POSSIBLE_DUPLICATE", kind="hard", existing_invoice_number="N" * 300,
+                  days_apart=1))  # fmt: skip
+    assert len(dup.explanation) < 250
+    odd = one(row("TAX_MISMATCH", Outcome.SKIPPED, reason="R" * 300))
+    assert len(odd.explanation) < 300 and "unrecognised reason" in odd.explanation

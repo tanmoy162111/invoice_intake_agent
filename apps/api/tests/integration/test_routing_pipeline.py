@@ -360,3 +360,46 @@ def test_a_blank_document_failure_is_shown_as_an_unreadable_document_block(env: 
             == 0
         )
         s.rollback()
+
+
+def test_a_currency_with_no_configured_limit_needs_review(env: Env) -> None:
+    inv = invoices(env)
+    eur_cleared = [
+        i
+        for i, t in BY_ID.items()
+        if t["header"]["currency"] == "EUR" and inv[i].status == "cleared"
+    ]
+    assert eur_cleared, "the demo tenant has cleared EUR invoices"
+    invoice_id = env.ids[BY_ID[eur_cleared[0]]["file"]]
+    with Session(env.engine) as s:
+        tenant = s.get_one(Tenant, TENANT)
+        tenant.settings = {
+            k: v for k, v in tenant.settings.items() if k != "approval_amount_limits_minor"
+        }
+        s.execute(text("delete from exceptions where invoice_id = :i"), {"i": str(invoice_id)})
+        s.execute(
+            text("update invoices set status = 'checking', route = null where id = :i"),
+            {"i": str(invoice_id)},
+        )
+        s.flush()
+        assert route_invoice(s, env.settings, invoice_id, tenant_id=TENANT) is None
+        row = s.get_one(Invoice, invoice_id)
+        assert row.status == "needs_review" and row.route == "review"
+        event = s.execute(
+            select(AuditEvent)
+            .where(AuditEvent.invoice_id == invoice_id, AuditEvent.event_type == "routing_decided")
+            .order_by(AuditEvent.id.desc())
+        ).scalars().first()  # fmt: skip
+        assert event is not None and "NO_LIMIT" in event.data["reasons"]
+        s.rollback()
+
+
+def test_the_demo_tenant_has_a_limit_for_every_currency_it_uses(env: Env) -> None:
+    used = {t["header"]["currency"] for t in TRUTHS if t["header"]["currency"]}
+    with Session(env.engine) as s:
+        settings = s.get_one(Tenant, TENANT).settings
+    limits = {
+        "USD": settings["approval_amount_limit_minor"],
+        **settings["approval_amount_limits_minor"],
+    }
+    assert used <= set(limits), used - set(limits)

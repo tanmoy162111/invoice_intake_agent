@@ -288,7 +288,9 @@ docker compose exec db psql -U intake -c "
 | `line_tolerance_minor` | 1 | Rounding allowed per line, in cents |
 | `total_tolerance_minor` | 1 | Rounding allowed between subtotal plus tax and the total |
 | `tax_tolerance_per_line_minor` | 1 | Rounding allowed on tax (per line when line rates are used) |
-| `approval_amount_limit_minor` | none | The largest total (in cents of the invoice's own currency) that may clear without a person. Not set means every invoice needs review |
+| `approval_amount_limit_minor` | none | The largest total, in cents, that may clear without a person, for invoices in `approval_limit_currency` |
+| `approval_limit_currency` | `USD` | Which currency `approval_amount_limit_minor` is in |
+| `approval_amount_limits_minor` | none | Limits for other currencies, for example `{"EUR": 1000000, "GBP": 1000000}`. An invoice in a currency with no limit always needs review |
 | `supplier_fuzzy_min` | 90 | A closest supplier at or above this similarity is *suggested* (never trusted) |
 | `dedupe_window_days` | 7 | Days apart two invoices can be and still be a soft duplicate |
 | `dedupe_number_similarity_min` | 85 | How similar two invoice numbers must be (0 to 100) for a soft duplicate |
@@ -403,18 +405,23 @@ and quantity checks; a missing receipt explains the skipped received-quantity ch
 - there is no open `review` or `block` exception;
 - every important field (supplier, invoice number, date, total, currency) is at least as confident as
   `FIELD_CONFIDENCE_MIN`;
-- the total is not above the client's `approval_amount_limit_minor` (section 4.11), and is not negative;
+- the total is not above the client's limit for the invoice's currency (section 4.11), and is not zero or negative;
 - every check has a result.
 
 A changed bank account always sends the invoice to review, whatever its severity. The reasons are written to
 the history: the status change carries them, and a `routing_decided` event lists them with the exceptions.
-Reasons: `BANK_DETAILS_CHANGED`, `OPEN_EXCEPTIONS`, `LOW_CONFIDENCE`, `NO_TOTAL`, `CREDIT_NOTE`, `NO_LIMIT`
-(no approval limit is set), `ABOVE_LIMIT` and `MISSING_CHECKS`.
+Reasons: `BANK_DETAILS_CHANGED`, `OPEN_EXCEPTIONS`, `LOW_CONFIDENCE`, `NO_TOTAL`, `CREDIT_NOTE`,
+`ZERO_TOTAL`, `NO_LIMIT` (no approval limit is set for the invoice's currency), `ABOVE_LIMIT` and
+`MISSING_CHECKS`. A bank check that merely could not be done (the account could not be read, or none is on
+file) is a "could not be checked" exception, not a `BANK_DETAILS_CHANGED` reason.
 
 Good to know:
 
-- The approval limit is compared with the invoice total in the invoice's own currency; there is no
-  exchange-rate conversion.
+- A limit is only ever compared with a total in the same currency; there is no exchange-rate conversion. An
+  invoice in a currency with no configured limit always goes to review.
+- Text copied from the document into an explanation (supplier and PO names, invoice numbers) is cleaned of
+  control characters and cut to 80 characters (numbers to 40). It is plain text; a screen showing it must not
+  treat it as markup.
 - A cleared invoice still waits for a person to approve it (M8); nothing is paid or moved.
 - A blank document fails at reading (section 5.6). It stays `failed` (it can only be retried) and carries an
   open `UNREADABLE_DOCUMENT` exception so a reviewer sees it.

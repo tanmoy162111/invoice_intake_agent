@@ -7,7 +7,9 @@ NAMESPACE = "beyondai-intake-demo"  # uuid5 namespace seed for stable row ids
 
 # Tenant settings stored in tenants.settings and used by later milestones.
 TENANT_SETTINGS = {
-    "approval_amount_limit_minor": 1_000_000,  # 10,000.00 in the tenant's main currency
+    "approval_amount_limit_minor": 1_000_000,  # 10,000.00 in the tenant's main currency (USD)
+    # A limit is only compared with a total in its own currency (there are no exchange rates).
+    "approval_amount_limits_minor": {"EUR": 1_000_000, "GBP": 1_000_000},
     "price_tolerance_pct": 2.0,
     "qty_tolerance_pct": 0.0,
     "auto_approve_cleared": False,

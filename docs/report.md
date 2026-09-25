@@ -715,8 +715,10 @@ nothing is ever waved through because it was skipped.
 - **Stage** `checks/routing.py::route_invoice`, chained after the match as a `route_invoice` job. Exceptions,
   route and status commit together; the status change is the idempotency marker. Audit events:
   `exception_raised`, `status_changed` (with the reasons) and `routing_decided`, all codes and ids only.
-- **Tenant setting** `approval_amount_limit_minor`, compared with the invoice total in its own currency (no
-  exchange rates). No migration and no new environment settings.
+- **Tenant settings** `approval_amount_limit_minor` (for `approval_limit_currency`, default USD) and
+  `approval_amount_limits_minor` (other currencies). A limit is only compared with a total in its own currency
+  (no exchange rates); a currency with no limit goes to review. No migration and no new environment settings;
+  the demo tenant in `master.json` has limits for USD, EUR and GBP.
 - `db/invoices.fail_extraction` raises the `UNREADABLE_DOCUMENT` exception. ADR 0007 records the decisions.
 
 **What we proved.** (Recorded answers built from the answer key; real PDFs, worker and database; all 118
@@ -734,7 +736,16 @@ readable seed invoices.)
 | A missing check result | Invoice goes to review |
 | Same invoice routed twice | Nothing added |
 | Invoice numbers in the audit log | None |
-| Automated tests | 1072 pass, decision-logic coverage 99.9% |
+| Automated tests | 1104 pass, decision-logic coverage 99.9% |
+
+Two independent reviews (decision logic and security) ran; neither found a critical or high issue. Fixed
+test-first: a skipped check that could suppress itself and leave no exception (latent), a bank check that
+could not be done being reported as "bank changed", details that were not understood being worded as
+something else (now they fall back to "details not recorded", still raised at the check's own severity), a
+confidence that rounded to its own minimum, untrusted document text in explanations (now cleaned and capped),
+a zero total (now to review), the approval limit being compared across currencies (now per currency), rule
+versions sorted as text, and no lock on the invoice while routing. Not changed: a partial unique index on open
+exceptions (needs a migration, left for M8 when exceptions become editable).
 
 **The finding to plan around.** Of the 60 invoices the seed marks as clearable, 34 clear and 26 are held.
 Two are held because a similar earlier invoice has no readable currency, so the duplicate check could not be
@@ -746,8 +757,8 @@ model the scores may differ).
 
 **Left open.**
 - **Confidence on scans and photos** (above): decide after the real-model evaluation.
-- **Approval limit currency.** One number is compared in each invoice's own currency; per-currency limits, if
-  a client needs them.
+- **Approval limit values.** The demo limits are one number for USD, EUR and GBP; a real client sets their own
+  per currency (there is deliberately no conversion).
 - **Correcting a field** must re-run the checks and the routing and reopen exceptions that no longer apply
   (M8). Until then a routed invoice is not re-routed.
 - The M8 queue must list `failed` invoices (a blank document) as well as `needs_review`.
@@ -785,7 +796,7 @@ or rule requires running the evaluation and reporting the result first.
 | M4 | 792 | 99.9% | Green | 21/21 planted problems caught, 0/60 clearable invoices flagged; look-alike suppliers rejected |
 | M5 | 885 | 99.9% | Green | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
 | M6 | 972 | 99.9% | Green | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
-| M7 | 1072 | 99.9% | Pending | 58/58 planted problems raised as exceptions; 0 false clears; every explanation carries its real numbers (23/23 checked) |
+| M7 | 1104 | 99.9% | Pending | 58/58 planted problems raised as exceptions; 0 false clears; every explanation carries its real numbers (23/23 checked) |
 
 The build gates on decision-logic coverage of at least 90%.
 

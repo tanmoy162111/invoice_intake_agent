@@ -23,7 +23,7 @@ from intake.config import Settings
 from intake.core.classify import CheckRow, ClassifyContext, WeakField, classify
 from intake.core.confidence import CRITICAL_FIELDS, fields_below_threshold
 from intake.core.match import MatchCode
-from intake.core.routing import RoutedException, RoutingInput, decide_route
+from intake.core.routing import RoutedException, RoutingInput, approval_limit_for, decide_route
 from intake.core.statuses import ActorType, InvoiceStatus
 from intake.core.validate import CheckCode, Outcome
 from intake.db.invoices import set_invoice_status
@@ -45,6 +45,12 @@ EXPECTED_CHECKS = (
 )
 
 
+def _version_number(version: str) -> int:
+    """'v10' is newer than 'v9' (a text sort would say the opposite)."""
+    digits = version.lstrip("vV")
+    return int(digits) if digits.isdigit() else 0
+
+
 def _outcome(row: CheckResult) -> Outcome:
     stored = row.details.get("outcome")
     if isinstance(stored, str) and stored in {o.value for o in Outcome}:
@@ -55,11 +61,14 @@ def _outcome(row: CheckResult) -> Outcome:
 def _check_rows(session: Session, inv: Invoice) -> list[CheckRow]:
     """One row per check code: the latest rule version wins."""
     latest: dict[str, CheckResult] = {}
-    for r in session.execute(
-        select(CheckResult)
-        .where(CheckResult.tenant_id == inv.tenant_id, CheckResult.invoice_id == inv.id)
-        .order_by(CheckResult.rule_version)
-    ).scalars():
+    for r in sorted(
+        session.execute(
+            select(CheckResult).where(
+                CheckResult.tenant_id == inv.tenant_id, CheckResult.invoice_id == inv.id
+            )
+        ).scalars(),
+        key=lambda row: _version_number(row.rule_version),
+    ):
         latest[r.check_code] = r
     return [CheckRow(code, _outcome(r), r.details) for code, r in latest.items()]
 
@@ -82,17 +91,11 @@ def _weak_fields(session: Session, inv: Invoice, minimum: Decimal) -> list[WeakF
     ]
 
 
-def _approval_limit(tenant: Tenant) -> int | None:
-    limit = (tenant.settings or {}).get("approval_amount_limit_minor")
-    if isinstance(limit, int) and not isinstance(limit, bool) and limit >= 0:
-        return limit
-    return None
-
-
 def route_invoice(
     session: Session, settings: Settings, invoice_id: uuid.UUID, *, tenant_id: uuid.UUID
 ) -> None:
-    inv = session.get_one(Invoice, invoice_id)
+    # Locked: a re-claimed job must not route the same invoice twice at the same time.
+    inv = session.get_one(Invoice, invoice_id, with_for_update=True)
     if inv.tenant_id != tenant_id:
         raise WrongTenant
     if InvoiceStatus(inv.status) is not InvoiceStatus.CHECKING:
@@ -109,7 +112,7 @@ def route_invoice(
         else None
     )
     rows = _check_rows(session, inv)
-    limit = _approval_limit(tenant)
+    limit = approval_limit_for(tenant.settings or {}, inv.currency)
     weak = _weak_fields(session, inv, settings.field_confidence_min)
     ctx = ClassifyContext(
         currency=inv.currency,
@@ -136,7 +139,7 @@ def route_invoice(
     present = {r.code for r in rows}
     decision = decide_route(
         RoutingInput(
-            exceptions=[RoutedException(d.code, d.severity) for d in drafts],
+            exceptions=[RoutedException(d.code, d.severity, d.unchecked) for d in drafts],
             weak_fields=[w.field for w in weak],
             missing_checks=[c for c in EXPECTED_CHECKS if c not in present],
             total_minor=inv.total_minor,

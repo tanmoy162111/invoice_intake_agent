@@ -5,6 +5,7 @@ from intake.core.routing import (
     RoutedException,
     RoutingInput,
     RoutingReason,
+    approval_limit_for,
     decide_route,
 )
 from intake.core.statuses import InvoiceStatus, Route
@@ -97,3 +98,61 @@ def test_every_reason_is_reported_in_a_fixed_order() -> None:
 def test_a_negative_total_is_never_cleared() -> None:
     d = decide_route(routing(total_minor=-100))
     assert d.status is InvoiceStatus.NEEDS_REVIEW and d.reasons == (RoutingReason.CREDIT_NOTE,)
+
+
+def test_a_bank_check_that_could_not_be_done_is_not_reported_as_a_change() -> None:
+    d = decide_route(
+        routing(
+            exceptions=(RoutedException(ExceptionCode.BANK_DETAILS_CHANGED, Severity.REVIEW, True),)
+        )
+    )
+    assert d.status is InvoiceStatus.NEEDS_REVIEW
+    assert d.reasons == (RoutingReason.OPEN_EXCEPTIONS,)
+
+
+def test_a_zero_total_is_never_cleared() -> None:
+    d = decide_route(routing(total_minor=0))
+    assert d.status is InvoiceStatus.NEEDS_REVIEW and d.reasons == (RoutingReason.ZERO_TOTAL,)
+
+
+# ---- the approval limit is per currency ---------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("settings", "currency", "expected"),
+    [
+        ({"approval_amount_limit_minor": 1_000_000}, "USD", 1_000_000),
+        (
+            {"approval_amount_limit_minor": 1_000_000},
+            "EUR",
+            None,
+        ),  # never compared across currencies
+        (
+            {"approval_amount_limit_minor": 1_000_000, "approval_limit_currency": "EUR"},
+            "EUR",
+            1_000_000,
+        ),
+        ({"approval_amount_limit_minor": 1_000_000, "approval_limit_currency": "EUR"}, "USD", None),
+        (
+            {
+                "approval_amount_limit_minor": 1_000_000,
+                "approval_amount_limits_minor": {"GBP": 800_000},
+            },
+            "GBP",
+            800_000,
+        ),
+        ({"approval_amount_limits_minor": {"GBP": 800_000}}, "USD", None),
+        ({"approval_amount_limits_minor": {"GBP": 0}}, "GBP", 0),
+        ({"approval_amount_limit_minor": 1_000_000}, None, None),
+        ({}, "USD", None),
+        ({"approval_amount_limit_minor": -1}, "USD", None),
+        ({"approval_amount_limit_minor": True}, "USD", None),
+        ({"approval_amount_limit_minor": "1000000"}, "USD", None),
+        ({"approval_amount_limits_minor": {"GBP": "x"}}, "GBP", None),
+        ({"approval_amount_limits_minor": ["GBP"]}, "GBP", None),
+    ],
+)
+def test_the_limit_is_only_ever_compared_in_its_own_currency(
+    settings: dict[str, object], currency: str | None, expected: int | None
+) -> None:
+    assert approval_limit_for(settings, currency) == expected
