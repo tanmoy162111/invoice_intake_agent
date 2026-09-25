@@ -579,20 +579,26 @@ orders that both fit) it says "could not check" rather than passing.
    price ±2%?  quantity ≤ ordered (counting earlier invoices)?  received ≥ billed?  PO total exceeded?
 ```
 
-1. **Finding the PO.** By number, ignoring case, spaces and dashes. A number that is not in the system, or
-   belongs to another supplier, is `PO_NOT_FOUND`. With no number, only the supplier's *open* POs in the same
-   currency are considered, and only if the subtotal is within 2% of the PO total; exactly one is used and
-   marked *inferred*, none is `NO_PO`, and several is "could not check" (never a guess).
-2. **Pairing lines.** SKU first, then description similarity (80 or more, so `Blue widgets - box of 10`
-   pairs with `Blue widget, box of 10`), then an identical amount. A PO line is used once. A line that could
-   equally be two PO lines stays unpaired, and an unpaired line is reported as not on the PO.
+1. **Finding the PO.** By number, ignoring case, spaces and dashes. A number that is not in the system,
+   belongs to another supplier, or names a PO that is not open (closed, cancelled) is `PO_NOT_FOUND`. If the
+   invoice's supplier is not known, or two of the supplier's POs share the number once punctuation is ignored,
+   the result is "could not check". With no number, only the supplier's *open* POs in the same currency are
+   considered, and only if the subtotal is within 2% of the PO total; exactly one is used for the other checks
+   but reported as "could not check" (`PO_INFERRED`, a person confirms the guess), none is `NO_PO`, and several is
+   "could not check" (never a guess).
+2. **Pairing lines.** SKU first (a SKU on several PO lines pairs nothing), then description similarity (80 or
+   more, so `Blue widgets - box of 10` pairs with `Blue widget, box of 10`), then an identical amount. A PO line
+   is used once, and a line whose SKU differs from the PO line's is never paired by description or amount. A
+   line that could equally be two PO lines stays unpaired, and an unpaired line is reported as not on the PO.
 3. **Price.** Each paired line's unit price must be within 2% of the PO price, above or below.
 4. **Quantity.** The billed quantity, plus what earlier invoices already billed on that PO line, may not
    exceed the ordered quantity. Billing less is a partial invoice and is fine.
 5. **Receipts.** No receipt at all is `RECEIPT_MISSING`. Otherwise billed quantity (plus earlier billing) may
    not exceed the total received across all receipts: `QTY_NOT_RECEIVED`.
 6. **Over-billing.** Earlier subtotals on the PO plus this one may not exceed the PO total (both before tax).
-7. **Order and waiting.** "Earlier" is received order, as in M5. The stage waits for earlier invoices that
+7. **Credit notes.** A negative quantity, amount or subtotal is "could not check" (`CREDIT_NOTE`) and is never
+   counted as reducing what has been billed, so a credit cannot make room for a later over-billing.
+8. **Order and waiting.** "Earlier" is received order, as in M5. The stage waits for earlier invoices that
    are unread or not matched yet, because they decide what has been billed. After five minutes a clean result
    that depends on earlier billing is reported as "could not check", never as a pass.
 
@@ -627,7 +633,15 @@ readable seed invoices.)
 | Missing receipt vs part-received | Told apart: `RECEIPT_MISSING` (no receipt) vs `QTY_NOT_RECEIVED` (part) |
 | Same invoice matched twice | Nothing added |
 | Invoice numbers in the audit log | None (ids, codes and outcomes only) |
-| Automated tests | 961 pass, decision-logic coverage 99.9% |
+| Automated tests | 972 pass, decision-logic coverage 99.9% |
+
+Two independent reviews (decision logic and security) ran. Security found no critical or high issues; fixed
+test-first or by test: oversized `IN` lists (now subqueries), the earlier-billing sum read row by row in Python
+(now summed in the database), an older rule version's billing being counted again, and missing explicit tenant
+filters. The decision-logic review found four ways an invoice could pass with a weak match, all fixed test-first:
+a named PO that is closed or cancelled, a named PO accepted while the supplier is unknown, two POs sharing a
+normalized number, and an inferred PO reported as a clean pass. It also led to credit-note handling, refusing to pair
+by a SKU shared by two PO lines, never overriding a conflicting SKU, and treating a NaN quantity as unreadable.
 
 **Left open.**
 - **Knock-ons.** The seed's `may_raise` does not list `PO_OVERBILLED` for four invoices whose planted line
@@ -642,7 +656,16 @@ readable seed invoices.)
 - Description matching uses similarity (`rapidfuzz`), not meaning; two very differently worded lines with
   different SKUs and amounts stay unpaired and go to a person. Safe, slightly noisy.
 - Like M5, received order is the database time the invoice row was created.
-- PO inference by total is deliberately narrow (open, same supplier, same currency, one candidate).
+- PO inference by total is deliberately narrow (open, same supplier, same currency, one candidate), and an
+  inferred PO is never a clean pass.
+- Line pairing is greedy in invoice order, so an earlier line can take a PO line that a later line fits better;
+  the later line then shows as not on the PO. Fail-safe, sometimes a spurious exception.
+- The PO number is normalized in the database with an ASCII rule and in Python with a Unicode rule; a PO number
+  with accented letters can be missed and reported as not found (toward review). A stored normalized key would fix it.
+- A description-only difference is not checked for meaning; `variance_bp` is empty when the PO price is zero, so
+  the M7 explanation must handle that.
+- M7 must treat every `skipped` match result as needs-review; the unit and acceptance tests only prove that none
+  is a pass.
 
 ---
 
@@ -673,7 +696,7 @@ or rule requires running the evaluation and reporting the result first.
 | M3 | 677 | 99.9% | Green | 59/59 clean invoices extracted end to end; cache and spend cap proved; no bank digits in clear |
 | M4 | 792 | 99.9% | Green | 21/21 planted problems caught, 0/60 clearable invoices flagged; look-alike suppliers rejected |
 | M5 | 885 | 99.9% | Green | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
-| M6 | 961 | 99.9% | Pending | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
+| M6 | 972 | 99.9% | Pending | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
 
 The build gates on decision-logic coverage of at least 90%.
 

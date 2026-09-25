@@ -133,7 +133,8 @@ def test_manual_explains_every_reason_a_match_check_is_skipped() -> None:
                    "NO_RECEIPT", "NO_MATCHED_LINES", "UNREADABLE_LINE",
                    "CURRENCY_DIFFERS_FROM_PO", "CURRENCY_UNKNOWN", "NO_SUBTOTAL",
                    "EARLIER_INVOICES_STILL_PENDING", "EARLIER_BILLING_UNKNOWN",
-                   "TOO_MANY_POS_TO_COMPARE"):  # fmt: skip
+                   "TOO_MANY_POS_TO_COMPARE", "PO_INFERRED", "SUPPLIER_UNKNOWN", "CREDIT_NOTE",
+                   "PO_NOT_OPEN"):  # fmt: skip
         assert f"`{reason}`" in section
 
 

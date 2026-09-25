@@ -18,7 +18,7 @@ from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
 
-from sqlalchemy import ColumnElement, func, or_, select
+from sqlalchemy import BigInteger, ColumnElement, cast, func, or_, select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from intake.audit.writer import record_event
@@ -101,16 +101,20 @@ def _po_refs(
     unknown (an earlier invoice matched to it whose quantity or amount could not be read)."""
     if not pos:
         return [], {}
+    tenant_id = inv.tenant_id
     po_ids = [p.id for p in pos]
     lines = session.execute(
-        select(PoLine).where(PoLine.po_id.in_(po_ids)).order_by(PoLine.po_id, PoLine.line_no)
+        select(PoLine)
+        .where(PoLine.tenant_id == tenant_id, PoLine.po_id.in_(po_ids))
+        .order_by(PoLine.po_id, PoLine.line_no)
     ).scalars().all()  # fmt: skip
-    line_ids = [ln.id for ln in lines]
+    # a subquery, not a list of ids: the number of bound parameters must not grow with the lines
+    line_ids = select(PoLine.id).where(PoLine.tenant_id == tenant_id, PoLine.po_id.in_(po_ids))
 
     received: dict[uuid.UUID, Decimal] = dict(
         session.execute(
             select(ReceiptLine.po_line_id, func.sum(ReceiptLine.qty_received))
-            .where(ReceiptLine.po_line_id.in_(line_ids))
+            .where(ReceiptLine.tenant_id == tenant_id, ReceiptLine.po_line_id.in_(line_ids))
             .group_by(ReceiptLine.po_line_id)
         )
         .tuples()
@@ -119,7 +123,7 @@ def _po_refs(
     receipts: dict[uuid.UUID, int] = dict(
         session.execute(
             select(GoodsReceipt.po_id, func.count())
-            .where(GoodsReceipt.po_id.in_(po_ids))
+            .where(GoodsReceipt.tenant_id == tenant_id, GoodsReceipt.po_id.in_(po_ids))
             .group_by(GoodsReceipt.po_id)
         )
         .tuples()
@@ -135,28 +139,35 @@ def _po_refs(
         select(InvoiceLine.matched_po_line_id, func.sum(InvoiceLine.qty),
                func.count().filter(InvoiceLine.qty.is_(None)))
         .join(Invoice, Invoice.id == InvoiceLine.invoice_id)
-        .where(earlier, counted, InvoiceLine.matched_po_line_id.in_(line_ids))
+        .where(
+            InvoiceLine.tenant_id == tenant_id, earlier, counted,
+            InvoiceLine.matched_po_line_id.in_(line_ids),
+        )
         .group_by(InvoiceLine.matched_po_line_id)
     ).tuples():  # fmt: skip
         if line_id is not None:
             billed_qty[line_id] = qty or Decimal(0)
             unknown[po_of_line[line_id]] += n_unreadable
 
+    # Summed in the database, current rule version only (an older version's row for the same
+    # invoice must not be counted again). A missing or null amount counts as unknown.
+    result_po = CheckResult.details["po_id"].astext
+    amount = CheckResult.details["billed_minor"].astext
     billed_minor: dict[str, int] = defaultdict(int)
-    for details in session.execute(
-        select(CheckResult.details)
+    for po_key, total, n_unknown in session.execute(
+        select(result_po, func.coalesce(func.sum(cast(amount, BigInteger)), 0),
+               func.count().filter(amount.is_(None)))
         .join(Invoice, Invoice.id == CheckResult.invoice_id)
         .where(
-            earlier, counted,
+            CheckResult.tenant_id == tenant_id, earlier, counted,
             CheckResult.check_code == MatchCode.PO_OVERBILLED.value,
-            CheckResult.details["po_id"].astext.in_([str(i) for i in po_ids]),
+            CheckResult.rule_version == RULE_VERSION,
+            result_po.in_([str(i) for i in po_ids]),
         )
-    ).scalars():  # fmt: skip
-        amount = details.get("billed_minor")
-        if isinstance(amount, int):
-            billed_minor[str(details["po_id"])] += amount
-        else:
-            unknown[str(details["po_id"])] += 1
+        .group_by(result_po)
+    ).tuples():  # fmt: skip
+        billed_minor[po_key] += int(total)
+        unknown[po_key] += n_unknown
 
     by_po: dict[uuid.UUID, list[PoLineRef]] = defaultdict(list)
     for ln in lines:
@@ -235,7 +246,9 @@ def match_invoice(
 
     earlier = _earlier(inv)
     matched = select(CheckResult.invoice_id).where(
-        CheckResult.check_code == _MARKER.value, CheckResult.rule_version == RULE_VERSION
+        CheckResult.tenant_id == tenant_id,
+        CheckResult.check_code == _MARKER.value,
+        CheckResult.rule_version == RULE_VERSION,
     )
     pending = session.scalar(
         select(func.count()).select_from(Invoice).where(
@@ -271,12 +284,11 @@ def match_invoice(
         checks = [_uncertain(c, reason) for c in checks]
 
     po_id = uuid.UUID(result.po_id) if result.po_id else None
-    subtotal = _billed_minor(result, inv, lines)
     for c in checks:
         details: dict[str, object] = {**c.details, "outcome": c.outcome.value}
         if c.code is MatchCode.PO_OVERBILLED:  # what later invoices need to see
             details["po_id"] = result.po_id
-            details["billed_minor"] = subtotal
+            details["billed_minor"] = result.billed_minor
         if c.code is _MARKER:
             details["inferred"] = result.inferred
         if pending:
@@ -303,17 +315,4 @@ def match_invoice(
             "pending_earlier": pending,
         },
     )  # fmt: skip
-    return None
-
-
-def _billed_minor(result: MatchResult, inv: Invoice, lines: list[InvoiceLine]) -> int | None:
-    """What this invoice bills against its PO: the subtotal, else the sum of readable line
-    amounts; None when neither is known (later invoices then cannot tell how much was billed)."""
-    if result.po_id is None:
-        return None
-    if inv.subtotal_minor is not None:
-        return inv.subtotal_minor
-    amounts = [ln.amount_minor for ln in lines]
-    if amounts and all(a is not None for a in amounts):
-        return sum(a for a in amounts if a is not None)
     return None

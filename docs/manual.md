@@ -340,8 +340,8 @@ docker compose exec db psql -U intake -c "
 
 | Code | `fail` means |
 |---|---|
-| `NO_PO` | The invoice names no PO and no open PO of that supplier, in the same currency, has a total within tolerance of the subtotal. If exactly one does it is used and marked `inferred` (its number is in `details`) |
-| `PO_NOT_FOUND` | The PO number is not in the system (`NOT_IN_SYSTEM`) or belongs to a different supplier (`PO_OF_OTHER_SUPPLIER`) |
+| `NO_PO` | The invoice names no PO and no open PO of that supplier, in the same currency, has a total within tolerance of the subtotal. If exactly one does, it is used for the other checks but the result is `skipped` (`PO_INFERRED`, its number in `details`): a PO guessed from the total is for a person to confirm |
+| `PO_NOT_FOUND` | The PO number is not in the system (`NOT_IN_SYSTEM`), belongs to a different supplier (`PO_OF_OTHER_SUPPLIER`), or the PO is not open, for example closed or cancelled (`PO_NOT_OPEN`). If the invoice's supplier is not known the result is `skipped` (`SUPPLIER_UNKNOWN`) |
 | `PRICE_VARIANCE` | A unit price is further from the PO price than the limit. `findings` lists each line, both prices, the variance and the limit |
 | `QTY_VARIANCE` | A line bills more than the PO ordered, counting what earlier invoices already billed (`OVER_PO_QTY`), or a line is not on the PO at all (`LINE_NOT_ON_PO`). Billing *less* than ordered is fine: it is a partial invoice |
 | `RECEIPT_MISSING` | Nothing has been received for the PO |
@@ -350,12 +350,16 @@ docker compose exec db psql -U intake -c "
 
 Invoice lines are matched to PO lines by SKU first, then by similar description, then by amount. A PO line is
 used once, and a line that could be either of two PO lines is left unmatched instead of guessed (it then
-shows as `LINE_NOT_ON_PO`). "Earlier" means received earlier. Which PO lines each invoice line matched is
+shows as `LINE_NOT_ON_PO`). A SKU shared by two PO lines does not pair by SKU, and a line whose SKU differs
+from the PO line's SKU is never paired by description or amount (that would hide a substitution). "Earlier" means received earlier. Which PO lines each invoice line matched is
 stored on the invoice line (`invoice_lines.matched_po_line_id`).
 
 `skipped` means the check could not be done, and **must never be read as a pass**. Reasons: `NO_PO`
 (no purchase order was found, so nothing else could be compared), `CANNOT_INFER_PO` (no PO number and the
-supplier, currency or subtotal is missing), `AMBIGUOUS_PO` (no number and more than one open PO fits),
+supplier, currency or subtotal is missing), `PO_INFERRED` (see `NO_PO` above), `SUPPLIER_UNKNOWN`,
+`AMBIGUOUS_PO` (no number and more than one open PO fits, or two POs of the supplier have the same number once
+punctuation is ignored), `CREDIT_NOTE` (a negative quantity, amount or subtotal: a person decides, and it is
+never counted as reducing what was billed),
 `NO_LINES` and `PO_HAS_NO_LINES`, `NO_RECEIPT` (the receipt check is already `RECEIPT_MISSING`),
 `NO_MATCHED_LINES`, `UNREADABLE_LINE` (a matched line has no readable price or quantity),
 `CURRENCY_DIFFERS_FROM_PO` and `CURRENCY_UNKNOWN` (amounts are not compared across currencies),

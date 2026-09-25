@@ -10,14 +10,17 @@ when an earlier invoice cannot be read.
 
 ## Decision
 1. **PO lookup.** By number (`A-Z0-9` only, case and punctuation ignored). A number that is missing from
-   the system, or belongs to another supplier, is `PO_NOT_FOUND`. With no number, only the supplier's *open*
-   POs in the invoice's currency whose total is within `match_po_total_tolerance_bp` (2%) of the subtotal
-   are candidates: one is used and marked *inferred*, none is `NO_PO`, several is `skipped`
-   (`AMBIGUOUS_PO`). The subtotal used to infer a PO is the printed one, never a sum of lines.
-2. **Line pairing.** SKU, then description similarity (token-sorted, at least 80), then an identical
+   the system, belongs to another supplier, or names a PO that is not open is `PO_NOT_FOUND`. If the invoice's
+   supplier is unknown the result is `skipped` (`SUPPLIER_UNKNOWN`); if two of the supplier's POs share the
+   normalized number it is `skipped` (`AMBIGUOUS_PO`). With no number, only the supplier's *open* POs in the
+   invoice's currency whose total is within `match_po_total_tolerance_bp` (2%) of the subtotal are
+   candidates: one is used for the other checks but the `NO_PO` result is `skipped` (`PO_INFERRED`), none is
+   `NO_PO`, several is `skipped` (`AMBIGUOUS_PO`). The subtotal used to infer a PO is the printed one, never a sum of lines.
+2. **Line pairing.** SKU (a SKU on several PO lines pairs nothing), then description similarity (token-sorted, at least 80), then an identical
    amount. A PO line is used at most once. A line that could be either of two PO lines (a description
    score within 5 points, or several PO lines with the same amount) is **not guessed**; it stays unpaired
-   and is reported as `LINE_NOT_ON_PO` under `QTY_VARIANCE`.
+   and is reported as `LINE_NOT_ON_PO` under `QTY_VARIANCE`. A line whose SKU differs from a PO line's SKU
+   is never paired with it by description or amount (a substitution, not a rewording).
 3. **Quantity.** Billed quantity plus what earlier invoices billed on that PO line may not exceed the PO
    quantity (tolerance `match_qty_tolerance_bp`, default 0). Billing less is a partial invoice and passes.
    Price may differ from the PO price by `match_price_tolerance_bp` (200) in either direction.
@@ -33,7 +36,10 @@ when an earlier invoice cannot be read.
    `MATCH_MAX_WAIT_S` (300 s) a check that depends on earlier billing and would have passed is `skipped`
    (`EARLIER_INVOICES_STILL_PENDING`). If an earlier invoice matched to the *same PO* has an unreadable
    quantity or amount, the same checks are `skipped` (`EARLIER_BILLING_UNKNOWN`), counted per PO.
-7. **Currency.** Amounts are never compared across currencies: price and over-billing checks are `skipped`.
+7. **Credit notes.** A negative quantity, amount or subtotal is `skipped` (`CREDIT_NOTE`) for every check
+   after the PO lookup, is not paired to PO lines, and is not counted in later invoices' billing (its billed
+   amount is unknown), so it can never make room for an over-billing.
+   **Currency.** Amounts are never compared across currencies: price and over-billing checks are `skipped`.
    `CURRENCY_MISMATCH` stays a validation check (M4).
 8. **Every code always writes a result**, so the audit trail shows what was compared; a check that cannot be
    done is `skipped` with a reason, never `pass`.

@@ -263,3 +263,37 @@ def test_the_stage_waits_for_earlier_invoices_that_are_not_matched_yet(env: Env)
         deferral = match_invoice(s, env.settings, invoice_id, tenant_id=TENANT)
         assert deferral is not None and deferral.reason == WAITING
         s.rollback()
+
+
+def test_billing_from_an_older_rule_version_is_not_counted_again(env: Env) -> None:
+    files = {t["id"]: t["file"] for t in TRUTHS}
+    later, earlier = env.ids[files["inv-095"]], env.ids[files["inv-006"]]
+    with Session(env.engine) as s:
+        rows = {
+            r.check_code: r
+            for r in s.execute(
+                select(CheckResult).where(CheckResult.invoice_id == earlier)
+            ).scalars()
+        }
+        stale = rows[MatchCode.PO_OVERBILLED.value]
+        s.add(
+            CheckResult(
+                tenant_id=TENANT, invoice_id=earlier, check_code=stale.check_code, passed=True,
+                details={**stale.details, "billed_minor": 10**9}, rule_version="v0",
+            )
+        )  # fmt: skip
+        s.execute(
+            text("delete from check_results where invoice_id = :i and check_code = any(:c)"),
+            {"i": str(later), "c": list(CODES)},
+        )
+        s.flush()
+        before = stale.details["billed_minor"]
+        assert match_invoice(s, env.settings, later, tenant_id=TENANT) is None
+        fresh = s.execute(
+            select(CheckResult).where(
+                CheckResult.invoice_id == later,
+                CheckResult.check_code == MatchCode.PO_OVERBILLED.value,
+            )
+        ).scalar_one()
+        assert fresh.details["billed_before_minor"] == before
+        s.rollback()

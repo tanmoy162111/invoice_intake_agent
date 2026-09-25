@@ -148,15 +148,36 @@ def test_po_of_another_supplier_is_not_found() -> None:
     assert details(r, MatchCode.PO_NOT_FOUND)["reason"] == "PO_OF_OTHER_SUPPLIER"
 
 
-def test_po_found_when_invoice_supplier_unknown() -> None:
+def test_named_po_with_an_unresolved_supplier_is_uncertain_not_matched() -> None:
     r = run(inv(supplier_id=None))
-    assert r.po_id == "po1"
+    assert r.po_id is None
+    assert out(r, MatchCode.PO_NOT_FOUND) is Outcome.SKIPPED
+    assert details(r, MatchCode.PO_NOT_FOUND)["reason"] == "SUPPLIER_UNKNOWN"
+    assert not r.passed
 
 
-def test_no_po_number_infers_single_open_po_by_total() -> None:
+@pytest.mark.parametrize("status", ["closed", "cancelled"])
+def test_named_po_that_is_not_open_fails_po_not_found(status: str) -> None:
+    r = run(pos=[replace(PO, status=status)])
+    assert r.po_id is None
+    assert out(r, MatchCode.PO_NOT_FOUND) is Outcome.FAIL
+    assert details(r, MatchCode.PO_NOT_FOUND)["reason"] == "PO_NOT_OPEN"
+    assert not r.passed
+
+
+def test_two_pos_with_the_same_normalized_number_are_not_guessed() -> None:
+    r = run(pos=[replace(PO, id="a", po_number="PO-7781"), replace(PO, id="b", po_number="PO7781")])
+    assert r.po_id is None
+    assert out(r, MatchCode.NO_PO) is Outcome.SKIPPED
+    assert details(r, MatchCode.NO_PO)["reason"] == "AMBIGUOUS_PO"
+
+
+def test_an_inferred_po_is_matched_but_never_passes_clean() -> None:
     r = run(inv(po_number=None, subtotal=20100))  # +0.5%
     assert r.po_id == "po1" and r.inferred
-    assert details(r, MatchCode.NO_PO)["inferred_po_number"] == "PO-7781"
+    assert out(r, MatchCode.NO_PO) is Outcome.SKIPPED
+    assert details(r, MatchCode.NO_PO) == {"reason": "PO_INFERRED", "inferred_po_number": "PO-7781"}
+    assert not r.passed
 
 
 def test_no_po_number_and_no_candidate_fails_no_po() -> None:
@@ -499,3 +520,65 @@ def test_two_po_lines_with_the_same_description_are_not_guessed() -> None:
     lines = (iline(1, None, "Cable tie pack 100", 7, 1100),)
     r = run(inv(lines=lines, subtotal=7700), pos=[replace(PO, lines=twins)])
     assert r.line_matches == ()
+
+
+# ---- credit notes, duplicate SKUs, SKU conflicts, bad numbers -------------------------------
+
+
+def test_billed_minor_is_what_later_invoices_will_count() -> None:
+    assert run().billed_minor == 20000
+    assert run(inv(po_number="PO-0", subtotal=5)).billed_minor is None  # no PO found
+
+
+@pytest.mark.parametrize(
+    "invoice",
+    [
+        inv(subtotal=-5000),
+        inv(lines=(iline(1, "A-100", None, -3, 1000), CLEAN_LINES[1]), subtotal=20000),
+    ],
+)
+def test_credit_notes_are_left_to_a_person_and_never_reduce_billing(invoice: MatchInvoice) -> None:
+    r = run(invoice)
+    assert r.line_matches == () and r.billed_minor is None and not r.passed
+    for code in (
+        MatchCode.PRICE_VARIANCE,
+        MatchCode.QTY_VARIANCE,
+        MatchCode.RECEIPT_MISSING,
+        MatchCode.QTY_NOT_RECEIVED,
+        MatchCode.PO_OVERBILLED,
+    ):
+        assert out(r, code) is Outcome.SKIPPED
+        assert details(r, code)["reason"] == "CREDIT_NOTE"
+
+
+def test_a_sku_shared_by_two_po_lines_is_not_paired_by_sku() -> None:
+    same = (
+        po_line(1, "X-1", "Alpha bracket", 10, 1000),
+        po_line(2, "X-1", "Beta bracket", 10, 1500),
+    )
+    r = run(
+        inv(lines=(iline(1, "X-1", "Beta bracket", 10, 1500),), subtotal=15000),
+        pos=[replace(PO, lines=same)],
+    )
+    assert [(m.po_line_id, m.method) for m in r.line_matches] == [("pl2", "description")]
+
+
+def test_a_conflicting_sku_is_not_overridden_by_a_matching_description() -> None:
+    lines = (iline(1, "Q-7", "Blue widget, box of 10", 10, 1000), CLEAN_LINES[1])
+    r = run(inv(lines=lines))
+    assert [m.invoice_line_no for m in r.line_matches] == [2]
+    assert out(r, MatchCode.QTY_VARIANCE) is Outcome.FAIL
+    assert details(r, MatchCode.QTY_VARIANCE)["findings"][0]["kind"] == "LINE_NOT_ON_PO"  # type: ignore[index]
+
+
+def test_a_conflicting_sku_is_not_overridden_by_a_matching_amount() -> None:
+    lines = (iline(1, "Z-9", "zzz", 10, 1000), CLEAN_LINES[1])
+    assert [m.invoice_line_no for m in run(inv(lines=lines)).line_matches] == [2]
+
+
+def test_a_quantity_that_is_not_a_number_is_unreadable_not_a_crash() -> None:
+    bad = replace(CLEAN_LINES[0], qty=D("NaN"))
+    r = run(inv(lines=(bad, CLEAN_LINES[1])))
+    assert out(r, MatchCode.QTY_VARIANCE) is Outcome.SKIPPED
+    assert details(r, MatchCode.QTY_VARIANCE)["reason"] == "UNREADABLE_LINE"
+    assert not r.passed

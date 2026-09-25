@@ -10,7 +10,7 @@ Money is integer minor units. Quantities are Decimal. Tolerances are basis point
 
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from enum import StrEnum
 
@@ -133,6 +133,9 @@ class MatchResult:
     inferred: bool
     line_matches: tuple[LineMatch, ...]
     version: str = RULE_VERSION
+    # What this invoice bills against its PO, for later invoices to count. None when it is unknown
+    # or must not be counted (no PO, another currency, a credit note).
+    billed_minor: int | None = None
 
     @property
     def passed(self) -> bool:
@@ -172,11 +175,27 @@ def _find_po(invoice: MatchInvoice, pos: Sequence[PoRef], settings: MatchSetting
     key = normalize_po_number(invoice.po_number)
     if key:
         named = [p for p in pos if normalize_po_number(p.po_number) == key]
-        mine = [p for p in named if invoice.supplier_id in (None, p.supplier_id)]
-        if mine:
+        mine = [p for p in named if p.supplier_id == invoice.supplier_id]
+        if named and not invoice.supplier_id:  # whose PO it is cannot be told: a person decides
+            unknown: dict[str, object] = {
+                "po_number": invoice.po_number,
+                "reason": "SUPPLIER_UNKNOWN",
+            }
+            skipped = MatchCheck(MatchCode.PO_NOT_FOUND, Outcome.SKIPPED, unknown)
+            return _found(None, ok_no_po, skipped, False)
+        if len(mine) > 1:  # punctuation is ignored, so "PO-12" and "PO12" can collide
+            both: dict[str, object] = {
+                "reason": "AMBIGUOUS_PO",
+                "candidates": sorted(p.po_number for p in mine),
+            }
+            ambiguous = MatchCheck(MatchCode.NO_PO, Outcome.SKIPPED, both)
+            return _found(None, ambiguous, ok_not_found, False)
+        if mine and mine[0].status == "open":
             return _found(mine[0], ok_no_po, ok_not_found, False)
-        reason = "PO_OF_OTHER_SUPPLIER" if named else "NOT_IN_SYSTEM"
+        reason = "PO_NOT_OPEN" if mine else "PO_OF_OTHER_SUPPLIER" if named else "NOT_IN_SYSTEM"
         detail: dict[str, object] = {"po_number": invoice.po_number, "reason": reason}
+        if mine:
+            detail["status"] = mine[0].status
         return _found(
             None, ok_no_po, MatchCheck(MatchCode.PO_NOT_FOUND, Outcome.FAIL, detail), False
         )
@@ -195,8 +214,11 @@ def _find_po(invoice: MatchInvoice, pos: Sequence[PoRef], settings: MatchSetting
     ]
     if len(candidates) == 1:
         only = candidates[0]
-        inferred = MatchCheck(MatchCode.NO_PO, Outcome.PASS, {"inferred_po_number": only.po_number})
-        return _found(only, inferred, ok_not_found, True)
+        # matched, but never clean: a PO guessed from the total alone is for a person to confirm
+        details: dict[str, object] = {"reason": "PO_INFERRED", "inferred_po_number": only.po_number}
+        return _found(
+            only, MatchCheck(MatchCode.NO_PO, Outcome.SKIPPED, details), ok_not_found, True
+        )
     if candidates:
         ambiguous = MatchCheck(
             MatchCode.NO_PO,
@@ -209,6 +231,12 @@ def _find_po(invoice: MatchInvoice, pos: Sequence[PoRef], settings: MatchSetting
 
 
 # ---- matching lines -------------------------------------------------------------------------
+
+
+def _sku_conflict(line: InvoiceLineFacts, po_line: PoLineRef) -> bool:
+    """Both sides name a SKU and the SKUs differ: a substitution, not a rewording."""
+    a, b = number_key(line.sku or ""), number_key(po_line.sku or "")
+    return bool(a) and bool(b) and a != b
 
 
 def match_lines(
@@ -230,7 +258,7 @@ def match_lines(
         if not sku:
             continue
         same = [p for p in po_lines if p.id not in used and number_key(p.sku or "") == sku]
-        if same:
+        if len(same) == 1:  # a SKU on several PO lines says nothing about which one
             take(line, same[0], "sku")
 
     for line in invoice_lines:
@@ -241,7 +269,7 @@ def match_lines(
             (
                 (fuzz.token_sort_ratio(text, _text_key(p.description)), p)
                 for p in po_lines
-                if p.id not in used
+                if p.id not in used and not _sku_conflict(line, p)
             ),
             key=lambda sp: -sp[0],
         )
@@ -257,7 +285,9 @@ def match_lines(
         same_amount = [
             p
             for p in po_lines
-            if p.id not in used and int(p.qty * p.unit_price_minor) == line.amount_minor
+            if p.id not in used
+            and not _sku_conflict(line, p)
+            and p.qty * p.unit_price_minor == line.amount_minor
         ]
         if len(same_amount) == 1:
             take(line, same_amount[0], "amount")
@@ -293,16 +323,38 @@ def _invoice_subtotal(invoice: MatchInvoice) -> int | None:
     return None
 
 
+def _sanitized(invoice: MatchInvoice) -> MatchInvoice:
+    """A quantity that is not a finite number (NaN, infinity) is unreadable, not a value."""
+    if all(ln.qty is None or ln.qty.is_finite() for ln in invoice.lines):
+        return invoice
+    lines = tuple(
+        replace(ln, qty=None) if ln.qty is not None and not ln.qty.is_finite() else ln
+        for ln in invoice.lines
+    )
+    return replace(invoice, lines=lines)
+
+
+def _is_credit(invoice: MatchInvoice) -> bool:
+    return (invoice.subtotal_minor is not None and invoice.subtotal_minor < 0) or any(
+        (ln.qty is not None and ln.qty < 0) or (ln.amount_minor is not None and ln.amount_minor < 0)
+        for ln in invoice.lines
+    )
+
+
 def check_match(
     invoice: MatchInvoice, pos: Sequence[PoRef], settings: MatchSettings
 ) -> MatchResult:
     """Compare `invoice` with its PO and the receipts and earlier billing recorded on that PO."""
+    invoice = _sanitized(invoice)
     found = _find_po(invoice, pos, settings)
     po = found.po
     head = (found.no_po, found.not_found)
     if po is None:
         rest = tuple(_skip(c, "NO_PO") for c in _AFTER_PO)
         return MatchResult(head + rest, None, False, ())
+    if _is_credit(invoice):  # negative amounts would lower what is counted as billed
+        rest = tuple(_skip(c, "CREDIT_NOTE") for c in _AFTER_PO)
+        return MatchResult(head + rest, po.id, found.inferred, ())
 
     lines_reason = "NO_LINES" if not invoice.lines else "PO_HAS_NO_LINES" if not po.lines else None
     matches = match_lines(invoice.lines, po.lines, settings) if lines_reason is None else ()
@@ -414,7 +466,8 @@ def check_match(
         )
 
     checks = head + (price, qty, receipt, not_received, overbilled)
-    return MatchResult(checks, po.id, found.inferred, matches)
+    billed_now = None if currency_reason else subtotal
+    return MatchResult(checks, po.id, found.inferred, matches, billed_minor=billed_now)
 
 
 _AFTER_PO = (
