@@ -5,6 +5,7 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from intake.audit.writer import record_event
+from intake.checks.duplicates import DEDUPE_JOB, detect_duplicates
 from intake.checks.pipeline import VALIDATE_JOB, validate_invoice
 from intake.config import Settings
 from intake.core.statuses import ActorType, InvoiceStatus
@@ -77,13 +78,29 @@ def make_extract_handler(client_factory: ClientFactory = build_client) -> Handle
 def _validate_invoice(
     session: Session, storage: LocalStorage, settings: Settings, job: Job
 ) -> None:
-    validate_invoice(
-        session, settings, uuid.UUID(job.payload["invoice_id"]), tenant_id=job.tenant_id
-    )
+    invoice_id = uuid.UUID(job.payload["invoice_id"])
+    validate_invoice(session, settings, invoice_id, tenant_id=job.tenant_id)
+    inv = session.get_one(Invoice, invoice_id)
+    if InvoiceStatus(inv.status) is InvoiceStatus.CHECKING:  # next stage: duplicates
+        queue.enqueue(
+            session, tenant_id=job.tenant_id, type=DEDUPE_JOB,
+            payload={"invoice_id": str(invoice_id)}, dedupe_key=f"{DEDUPE_JOB}:{invoice_id}",
+        )  # fmt: skip
+
+
+def _detect_duplicates(
+    session: Session, storage: LocalStorage, settings: Settings, job: Job
+) -> queue.Deferral | None:
+    waited = db_now(session) - job.created_at
+    return detect_duplicates(
+        session, settings, uuid.UUID(job.payload["invoice_id"]), tenant_id=job.tenant_id,
+        stop_waiting=waited > timedelta(seconds=settings.dedupe_max_wait_s),
+    )  # fmt: skip
 
 
 HANDLERS: dict[str, Handler] = {
     PROCESS_JOB: _process_document,
     EXTRACT_JOB: make_extract_handler(),
     VALIDATE_JOB: _validate_invoice,
+    DEDUPE_JOB: _detect_duplicates,
 }

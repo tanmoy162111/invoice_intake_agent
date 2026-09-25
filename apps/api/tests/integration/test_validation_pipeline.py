@@ -12,6 +12,7 @@ import pytest
 from sqlalchemy import Engine, create_engine, func, select, text
 from sqlalchemy.orm import Session
 
+from intake.checks.duplicates import DEDUPE_JOB
 from intake.checks.pipeline import VALIDATE_JOB, validate_invoice
 from intake.core.validate import CheckCode
 from intake.db.models import AuditEvent, CheckResult, Invoice, Tenant
@@ -69,6 +70,7 @@ def env(migrated_db_url: str, tmp_path_factory: pytest.TempPathFactory) -> Itera
         PROCESS_JOB: HANDLERS[PROCESS_JOB],
         EXTRACT_JOB: make_extract_handler(lambda _: client),
         VALIDATE_JOB: HANDLERS[VALIDATE_JOB],
+        DEDUPE_JOB: lambda *_: None,  # M4 tests stop after the checks; M5 has its own tests
     }
     while run_once(engine, storage, settings, handlers):
         pass

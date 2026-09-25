@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from intake.config import Settings
+from intake.core.dedupe import DedupeSettings
 from intake.core.exceptions import ExceptionCode
 from intake.core.extraction import NormalizeError
 from intake.core.ingest import IngestErrorCode
@@ -71,6 +72,7 @@ def test_manual_explains_every_reason_an_invoice_can_fail(code: str) -> None:
 
 EXTRACTION_SETTING_PREFIXES = (
     "llm_", "ollama_", "extraction_", "extract_", "daily_", "field_", "validation_", "app_",
+    "dedupe_",
 )  # fmt: skip
 
 
@@ -99,3 +101,20 @@ def test_manual_explains_every_validation_check(code: str) -> None:
 def test_manual_lists_every_tenant_validation_setting(name: str) -> None:
     section = MANUAL.split("### 4.11")[1].split("## 5. Reference")[0]
     assert f"`{name}`" in section, f"{name} is missing from manual section 4.11"
+
+
+@pytest.mark.parametrize("key", ["dedupe_window_days", "dedupe_number_similarity_min"])
+def test_manual_lists_the_tenant_duplicate_settings(key: str) -> None:
+    from dataclasses import fields
+
+    assert {f.name for f in fields(DedupeSettings)} == {"window_days", "number_similarity_min"}
+    section = MANUAL.split("### 4.11")[1].split("## 5. Reference")[0]
+    assert f"`{key}`" in section
+
+
+def test_manual_explains_every_reason_a_duplicate_check_is_skipped() -> None:
+    section = MANUAL.split("### 4.12")[1].split("## 5. Reference")[0]
+    for reason in ("NO_SUPPLIER", "NO_INVOICE_NUMBER", "INCOMPLETE_FOR_SOFT_MATCH",
+                   "EARLIER_INVOICES_STILL_PENDING", "SUPPLIER_UNCERTAIN",
+                   "TOO_MANY_TO_COMPARE"):  # fmt: skip
+        assert f"`{reason}`" in section

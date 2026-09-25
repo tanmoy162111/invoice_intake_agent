@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M4 (validation rules), 2026-09-25.
+> **Describes:** the system after M5 (duplicate detection), 2026-09-25.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -289,9 +289,35 @@ docker compose exec db psql -U intake -c "
 | `total_tolerance_minor` | 1 | Rounding allowed between subtotal plus tax and the total |
 | `tax_tolerance_per_line_minor` | 1 | Rounding allowed on tax (per line when line rates are used) |
 | `supplier_fuzzy_min` | 90 | A closest supplier at or above this similarity is *suggested* (never trusted) |
+| `dedupe_window_days` | 7 | Days apart two invoices can be and still be a soft duplicate |
+| `dedupe_number_similarity_min` | 85 | How similar two invoice numbers must be (0 to 100) for a soft duplicate |
 
 An invalid value is ignored and the default is used. Old invoices in the demo data will start to look
 "too old" a year after they are dated; set `VALIDATION_TODAY` (section 5.4) to keep a demo stable.
+
+### 4.12 See whether an invoice is a duplicate
+
+After the checks, each invoice is compared with what the same supplier sent earlier. The answer is one more
+row in `check_results`, with the check code `POSSIBLE_DUPLICATE`:
+
+```bash
+docker compose exec db psql -U intake -c "
+  select details->>'outcome' as outcome, details
+  from check_results
+  where invoice_id = '<invoice-id>' and check_code = 'POSSIBLE_DUPLICATE';"
+```
+
+| Outcome | Meaning |
+|---|---|
+| `pass` | No earlier invoice from this supplier matches |
+| `fail` | A match. `details.kind` is `hard` (same supplier and the same number, ignoring case, spaces, dashes and leading zeros) or `soft` (same total, currency and a date within the window, with a very similar number). `existing_invoice_id`, `existing_invoice_number`, `existing_invoice_date`, `similarity` and `days_apart` say which invoice and how close |
+| `skipped` | Could not check: `NO_SUPPLIER`, `NO_INVOICE_NUMBER`, `INCOMPLETE_FOR_SOFT_MATCH` (a similar earlier invoice, or this one, is missing its total, date or currency, or the total is zero), `SUPPLIER_UNCERTAIN` (a similar number from an invoice whose supplier is linked on one side and only printed on the other, under a name that could be the same company written another way), `EARLIER_INVOICES_STILL_PENDING` (the wait ran out) or `TOO_MANY_TO_COMPARE` (more than 2,000 earlier invoices to compare; refused rather than cut short). **Never read `skipped` as a pass** |
+
+Only the later invoice is flagged; the earlier one is never marked. While earlier invoices are still being
+read the check waits: the job shows under `paused` in `/jobs` with `last_error` `WAITING_FOR_EARLIER_INVOICES`.
+It checks again every 10 seconds and goes ahead after 5 minutes (`DEDUPE_POLL_S`, `DEDUPE_MAX_WAIT_S`).
+Two client settings tune it (section 4.11): `dedupe_window_days` (7) and `dedupe_number_similarity_min` (85).
+A file that is byte-for-byte the same is refused earlier, at upload (section 5.1).
 
 ---
 
@@ -360,6 +386,7 @@ login arrives in M8. If no token is configured the server refuses everything exc
 | `EXTRACT_MAX_INPUT_TOKENS` | 100000 | Largest estimated document; bigger is failed before any spend |
 | `APP_ENV` | `development` | `development`, `test` or `production`. Production refuses `VALIDATION_TODAY` |
 | `VALIDATION_TODAY` | empty | A fixed "as of" date (`YYYY-MM-DD`) for the date checks. Test and demo only |
+| `DEDUPE_POLL_S`, `DEDUPE_MAX_WAIT_S` | 10, 300 | How often the duplicate check re-tries while earlier invoices are unread, and when it stops waiting (seconds) |
 | `EXTRACT_TIMEOUT_S` | 120 | How long one model call may take before it counts as a failure to retry |
 | `EXTRACT_NOT_CONFIGURED_RETRY_S` | 300 | How often a paused job checks whether reading has been configured |
 | `FIELD_CONFIDENCE_MIN` | 0.8 | Below this a critical field counts as doubtful |
@@ -470,6 +497,7 @@ today and every one is planted in the demo data.** The exact wording comes from
   instructions is ignored.
 - **Bank details stay protected** in the extracted fields and in the saved model answers.
 - **Checks never pass on missing data.** A check that cannot be done says so, and later routing treats it as needing a person.
+- **Repeats are caught before approval:** a later invoice that matches an earlier one is flagged with a pointer to the match; "could not check" never counts as a pass.
 - **Look-alike suppliers are not trusted:** a supplier is known only by an exact tax ID or exact name, and the two must agree.
 - **Spending has a daily limit** and every model call is logged with its cost.
 - **What the model provider sees** and how long they keep it: [`data-handling.md`](data-handling.md).
@@ -494,6 +522,8 @@ hardening, the database password and encryption of stored files.
 | `extraction_paused` in an invoice's history | The daily limit was reached | It resumes at 00:00 UTC, or raise `DAILY_SPEND_CAP_USD` |
 | Invoice is `failed` | See the reason in section 5.6 | Fix the cause, then re-queue (runbook) |
 | Currency and amounts are empty for an invoice | A bare `$` the supplier's usual currency does not settle, or another reason in section 5.7 | Expected: a person confirms it (M8) |
+| Duplicate check keeps waiting (`WAITING_FOR_EARLIER_INVOICES`) | An earlier invoice is still being read (or its reading is paused) | It goes ahead by itself after 5 minutes; fix the paused reading (section 4.6) |
+| Two similar invoices, only one `POSSIBLE_DUPLICATE` | Only the later-received one is flagged | Expected (section 4.12) |
 | An invoice stays `checking` | Expected until routing exists (M7) | See the results (section 4.10) |
 | Every check is `skipped` | The invoice was read with empty fields (see section 5.7) | Fix the cause; a person confirms the fields (M8) |
 | Old demo invoices fail `INVALID_DATE` as `INVOICE_TOO_OLD` | The demo dates are more than a year old | Set `VALIDATION_TODAY` or raise `max_invoice_age_days` |
@@ -515,7 +545,7 @@ More on operations: [`runbook.md`](runbook.md). Design details: [`architecture.m
 | **Cache (saved answer)** | The model's answer for a file, kept so the same file is never paid for twice |
 | **Confidence** | How sure the system is about a value it read |
 | **Daily spend cap** | The most the system may spend on model calls in one UTC day; reading pauses when it is reached |
-| **Duplicate** | The same invoice received more than once |
+| **Duplicate** | The same invoice received more than once. *Hard*: same supplier and number. *Soft*: same supplier, total and currency, close dates and a very similar number |
 | **Check result** | One check's answer for an invoice: pass, fail or could not check (skipped), with the numbers behind it |
 | **Exception** | A problem the system found, with an explanation and a suggested fix |
 | **Extraction** | Reading an invoice into fields: supplier, dates, amounts, lines |

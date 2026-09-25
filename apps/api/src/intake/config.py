@@ -3,7 +3,7 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     # Validation (M4). The rule settings (tolerances, age limit) live in each tenant's settings.
     # A fixed "as of" date for the date checks; empty means today. Keeps tests and demos stable.
     validation_today: date | None = None
+
+    # Duplicate check (M5): wait for earlier invoices that are not read yet, then give up waiting.
+    dedupe_poll_s: int = Field(default=10, ge=1)
+    dedupe_max_wait_s: int = Field(default=300, ge=1)
 
     # Job queue
     job_max_attempts: int = 3

@@ -56,6 +56,16 @@ says why and how to fix it).
 - `checks_completed` in the invoice history records `as_of_overridden: true` when `VALIDATION_TODAY` was in
   effect. It must be empty in production (the API refuses to start with `APP_ENV=production` and it set).
 
+## Duplicate check
+- `POSSIBLE_DUPLICATE` rows are in `check_results` (see the manual, section 4.12). `fail` names the earlier
+  invoice in `details.existing_invoice_id`; compare the two documents side by side.
+- Jobs of type `detect_duplicates` with `last_error = WAITING_FOR_EARLIER_INVOICES` are waiting for an earlier
+  invoice that is still `received`, `extracting` or `extracted`. If it never moves (extraction paused or
+  failed), fix that first; the check gives up waiting after `DEDUPE_MAX_WAIT_S` and records `skipped`.
+- To re-run the check for one invoice, delete its `POSSIBLE_DUPLICATE` row and re-queue its job
+  (`update jobs set status='queued', attempts=0, run_after=now() where id='...'`); the invoice must still be
+  `checking`. Note the action in the ticket (a manual delete of a check row writes no audit event).
+
 ## Limits worth knowing
 - Uploads are capped by `MAX_UPLOAD_BYTES` (15 MB) and `MAX_PAGES` (10). The API refuses oversized
   files after reading at most limit+1 bytes, but the web server still receives the request body first.
