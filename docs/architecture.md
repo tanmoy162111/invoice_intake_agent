@@ -238,6 +238,28 @@ match_invoice ─▶ enqueue route_invoice ─▶ read check_results, field conf
 - **Not yet:** approving, rejecting and correcting (M8; correcting will re-run the checks and the routing),
   `auto_approve_cleared`, and the history view (M9).
 
+## The web app (M8b-1)
+
+```
+browser ── cookie ──▶ Next.js server ── Bearer <session> ──▶ API
+             (no token)   proxy.ts: CSP nonce + security headers + sign-in guard
+                          server components read; Server Actions sign in/out and upload
+                          /api/pages/[id]/[page]: page images passed through with the session
+```
+
+- **Files:** `src/app/(auth)/login` (sign-in page and actions), `src/app/(app)/...` (layout with the header,
+  `queue`, `invoices/[id]`, `upload`), `src/app/api/pages/...` (image route), `src/proxy.ts`.
+- **`lib/api/server.ts`** is the only code that calls the API (server-only). A missing session or a 401 redirects
+  to sign-in; a 404 is a not-found page; anything else raises an `ApiError`. Types come from `lib/api/schema.d.ts`,
+  generated from the committed `openapi.json`.
+- **`lib/`** holds the pure, tested logic: `format` (money in minor units, dates, ages), `labels` (plain-words
+  exception, status, routing-reason, check and field names, and the key-field set), `severity`, `queue-params`
+  (filters in the address), `safe-redirect`, `csp`, `cookie`, `public-paths`.
+- **Components** are small. Server components render the queue, the header and cards; client components exist
+  only where there is interaction (document viewer, workspace tabs and sheet, filter menu, theme, user menu,
+  upload form) and receive plain data as props.
+- **Not yet:** acting from the browser, the browser test in CI, and a recorded model provider for it (M8b-2).
+
 ## The review API (M8a)
 
 ```

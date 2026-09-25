@@ -9,6 +9,7 @@ import {
   ROUTING_REASON_LABELS,
   STATUS_LABELS,
   fieldLabel,
+  isKeyField,
 } from "./labels";
 import { SEVERITY_ORDER, severityRank, worstSeverity } from "./severity";
 
@@ -53,6 +54,17 @@ describe("status, routing and check labels", () => {
     expect(fieldLabel("invoice_date")).toBe("Invoice date");
     expect(fieldLabel("some_new_field")).toBe("Some new field");
     expect(FIELD_LABELS.total).toBe("Total");
+  });
+});
+
+describe("key fields", () => {
+  test("the five fields the API routes on are the key fields", () => {
+    for (const f of ["supplier_name", "invoice_number", "invoice_date", "total", "currency"]) {
+      expect(isKeyField(f)).toBe(true);
+    }
+    for (const f of ["due_date", "po_number", "line.1.description", "supplier_bank_account", "subtotal"]) {
+      expect(isKeyField(f)).toBe(false);
+    }
   });
 });
 

@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M8a (the review API: login, queue, corrections, decisions), 2026-09-26.
+> **Describes:** the system after M8b-1 (the review screens: sign in, queue, invoice, upload), 2026-09-26.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -28,13 +28,13 @@ anyone.**
 
 | Role | What they do | Available |
 |---|---|---|
-| **Reviewer** (AP clerk) | Works the queue of invoices that need a person; corrects, approves, rejects | Through the API today (section 4.15); the browser screen is [Coming in M8b] |
+| **Reviewer** (AP clerk) | Works the queue of invoices that need a person; corrects, approves, rejects | Reads the queue and every invoice in the browser today (section 4.16); acts through the API (section 4.15). Acting in the browser is [Coming in M8b-2] |
 | **Approver / manager** | Approves invoices above the limit | [Coming in M8] |
 | **Operator** (IT or support) | Starts the system, loads data, watches the background jobs | Today |
 | **Developer** | Builds and tests the system | Today |
 
 **Today, the only way in is the API** (a set of web addresses a program or the `curl` command can call).
-The reviewer screen arrives in M8b; the actions it will use already exist in the API (section 4.15). The web page you can open now only shows "API: healthy".
+The review screens (sign in, the queue, the invoice page and upload) are described in section 4.16. Correcting, closing exceptions and approving in the browser arrive in M8b-2; until then they are done through the API (section 4.15).
 
 ---
 
@@ -105,8 +105,9 @@ make dev
 ```
 
 This creates a private settings file (`.env`) with generated secrets the first time, then starts the
-database, the API, the worker and the web page. Open **http://localhost:3000**. Seeing
-**"API: healthy"** means the parts are talking.
+database, the API, the worker and the web page. Open **http://localhost:3000**. You land on the sign-in
+page. The user is `reviewer` and the password is `REVIEWER_PASSWORD` in `.env` (`make dev` generated one).
+After signing in you see the review queue (section 4.16).
 
 > **A port is already in use?** Add lines like `API_PORT=8001`, `WEB_PORT=3001`, `DB_PORT=5434` to the
 > `.env` file and run `make dev` again.
@@ -468,6 +469,44 @@ or note is missing or unreadable) with a `detail.code` such as `OPEN_EXCEPTIONS`
 read but not act. Every action is a row in `review_actions` and an audit event (field names and codes only,
 never values). Sign-ins are audited too (`login_succeeded`, and `login_failed` without the name typed).
 
+### 4.16 Use the review screens
+
+Open the web address (`http://localhost:3000` with `make dev`) and sign in as `reviewer`. There is no public
+access: every page but the sign-in redirects to it, and a session ends after `SESSION_TTL_S` (8 hours).
+
+**The queue** (`/queue`) lists what needs a person, worst problem first and then oldest. The tabs switch
+between *Needs review*, *Unreadable* (documents that could not be read) and *Cleared* (nothing in doubt,
+waiting for approval), each with its count. Filter by exception with the menu; "more from this supplier"
+narrows the list to one supplier. Each row shows a stamp for the worst open exception, the supplier and
+invoice number, the exception in plain words (and how many more), the total and how long it has waited. The
+address holds the filters, so a filtered queue can be bookmarked or shared.
+
+**An invoice** (`/invoices/<id>`) shows who it is from, the total and the key facts, and why it was sent to a
+person. Below is the document beside the findings (on a phone the document opens from *View the document*):
+
+- **The document**: the page images, with next and previous page (also the arrow keys), zoom, and a strip of pages.
+- **Exceptions**: one card per problem with a stamp for how serious it is (*Block*, *Review*), the explanation
+  with the real numbers, and the suggested fix. A possible duplicate shows the two invoices side by side with
+  what differs marked. Closed exceptions show who closed them and their note.
+- **Fields**: the *key fields* (supplier, invoice number, date, total, currency) first, each with a confidence
+  bar (the mark on the bar is the 80% minimum) and, when doubtful, the reason in plain words. The button on a
+  row (`p.1`) jumps the document to that page. Other fields follow. The bank account is only ever shown masked.
+- **Lines** and **Checks**: the invoice lines (and whether each matched a purchase order line) and the result of
+  every check (*Passed*, *Failed*, *Could not be checked*).
+
+A banner says whether the invoice is ready to approve or how many exceptions still stand in the way. In this
+release the invoice page is read-only: correcting, closing exceptions and approving are done through the API
+(section 4.15) until M8b-2.
+
+**Upload** (`/upload`) sends a PDF, PNG, JPEG or TIFF (up to 15 MB and 10 pages) for reading and checking. The
+result shows the file, its quality and a link to the invoice. Reading takes about a minute; an invoice that needs
+a person then appears in the queue.
+
+Good to know: the theme button switches light, dark or follow the device. The token that talks to the API never
+reaches the browser (the web server holds the session in a cookie that scripts cannot read). Text copied from a
+document is shown as plain text, never as markup. Amounts are shown from whole minor units (cents), so what is
+on screen is what the checks used.
+
 ---
 
 ## 5. Reference
@@ -552,6 +591,8 @@ refuses everything except `/health` and the login.
 | `REVIEWER_USERNAME`, `REVIEWER_PASSWORD` | `reviewer`, empty | The one demo reviewer. An empty password switches login off, and ends any session already issued. The password must be at least 8 characters and the name may not be `system`. `make dev` generates a password into `.env` |
 | `SESSION_SECRET`, `SESSION_TTL_S` | empty, 28800 | The key that signs reviewer sessions (at least 16 characters), and how long one lasts (seconds, at least 60). Changing it signs everyone out. `make dev` generates the secret |
 | `MATCH_POLL_S`, `MATCH_MAX_WAIT_S` | 10, 300 | The same, for the 3-way match: how often it re-tries while earlier invoices are unread or unmatched, and when it stops waiting (seconds) |
+| `API_URL` (web) | `http://localhost:8000` | Where the web server reaches the API (Compose sets `http://api:8000`) |
+| `COOKIE_INSECURE` (web) | unset | Set to `1` when the site is served over plain http (the Compose demo does). Leave unset behind https, so the session cookie is marked Secure |
 | `EXTRACT_TIMEOUT_S` | 120 | How long one model call may take before it counts as a failure to retry |
 | `EXTRACT_NOT_CONFIGURED_RETRY_S` | 300 | How often a paused job checks whether reading has been configured |
 | `FIELD_CONFIDENCE_MIN` | 0.8 | Below this a critical field counts as doubtful |
@@ -636,7 +677,7 @@ states the real numbers, and every one is planted in the demo data.** The exact 
 
 | When | You will be able to |
 |---|---|
-| M8b | Work the review queue in a browser, on a phone too (the actions already exist in the API, section 4.15) |
+| M8b-2 | Correct fields, close exceptions, approve, reject and ask for information from the browser, with a browser test in CI (the actions already exist in the API, section 4.15) |
 | M9 | Read the complete history of any invoice |
 | M10 | See measured accuracy per field and per document quality |
 | M11 | See a dashboard of volume, exceptions, cost and estimated savings |
@@ -692,6 +733,9 @@ hardening, the database password and encryption of stored files.
 | `POST /auth/login` says 429 | Five attempts in a minute from one address (or fifty from all addresses) lock the login; the `Retry-After` header says how long | Wait that long. Behind a proxy, the proxy must present the real client address |
 | A review action says 401 after a while | The session lasted `SESSION_TTL_S`, or the reviewer name or password setting changed | Sign in again |
 | A review action says 403 | It was sent with the static API token, which cannot act | Use a session token from `/auth/login` |
+| The web page sends you back to sign-in again and again | The session ended, or the API address is wrong | Sign in again; check `API_URL` and that the API is up |
+| Sign-in succeeds but the next page asks for sign-in | The site is on plain http but the cookie is marked Secure | Set `COOKIE_INSECURE=1` for the web service (Compose does) |
+| A page image does not appear | The document has no rendered pages yet, or the API is down | Wait for reading to finish; check `/jobs` |
 | An invoice stays `checking` | The routing job has not run: an earlier stage is waiting, or the worker is stopped | Look at `/jobs` for `route_invoice`, `match_invoice` and `detect_duplicates` (section 4.4) |
 | Almost every scanned or photographed invoice goes to review | Its invoice number has no text layer to confirm it, so confidence is 75%, below the 80% minimum | Expected with the current confidence rules; measured in M10, and a reviewer confirms the field (M8) |
 | Every check is `skipped` | The invoice was read with empty fields (see section 5.7) | Fix the cause; a person confirms the fields (M8) |

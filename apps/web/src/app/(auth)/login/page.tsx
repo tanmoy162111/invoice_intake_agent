@@ -17,7 +17,7 @@ export default async function LoginPage({
   return (
     <main id="main" className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
       <section className="relative hidden overflow-hidden bg-primary p-12 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
-        <Brand inverted />
+        <Brand inverted alwaysShowName />
         <div className="relative z-10 max-w-lg">
           <p className="display text-[3.6rem] font-medium leading-[1.02] tracking-tight">
             Exceptions,
@@ -42,7 +42,7 @@ export default async function LoginPage({
       </section>
       <section className="flex flex-col justify-center px-6 py-10 sm:px-12">
         <div className="mx-auto w-full max-w-sm">
-          <Brand className="mb-10 lg:hidden" />
+          <Brand className="mb-10 lg:hidden" alwaysShowName />
           <h1 className="display text-4xl font-medium leading-tight">Sign in</h1>
           <p className="mb-8 mt-2 text-sm text-muted-foreground">Reviewers only. There is no public access.</p>
           <LoginForm next={next} expired={sp.expired === "1"} />

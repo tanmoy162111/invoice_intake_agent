@@ -1,7 +1,15 @@
 import { cn } from "@/lib/utils";
 
 /** The wordmark: a small vermilion stamp beside the name. */
-export function Brand({ className, inverted = false }: { className?: string; inverted?: boolean }) {
+export function Brand({
+  className,
+  inverted = false,
+  alwaysShowName = false,
+}: {
+  className?: string;
+  inverted?: boolean;
+  alwaysShowName?: boolean;
+}) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <span
@@ -13,6 +21,7 @@ export function Brand({ className, inverted = false }: { className?: string; inv
       <span
         className={cn(
           "display text-[1.35rem] font-medium leading-none tracking-tight",
+          !alwaysShowName && "hidden min-[440px]:inline",
           inverted ? "text-primary-foreground" : "text-foreground",
         )}
       >

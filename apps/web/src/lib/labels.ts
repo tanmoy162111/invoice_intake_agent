@@ -88,6 +88,13 @@ export const FIELD_LABELS: Record<string, string> = {
   payment_terms: "Payment terms",
 };
 
+/** The fields that decide where an invoice goes: if one is doubtful, a person must look. */
+export const KEY_FIELDS: readonly string[] = ["supplier_name", "invoice_number", "invoice_date", "total", "currency"];
+
+export function isKeyField(name: string): boolean {
+  return KEY_FIELDS.includes(name);
+}
+
 export function fieldLabel(name: string): string {
   const known = FIELD_LABELS[name];
   if (known) return known;

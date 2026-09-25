@@ -14,13 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { InvoiceDetail } from "@/lib/api/types";
+import { isKeyField } from "@/lib/labels";
 
 /** The document beside the findings. On a phone the document opens from a button instead. */
 export function InvoiceWorkspace({ detail }: { detail: InvoiceDetail }) {
   const [page, setPage] = React.useState(1);
   const [sheet, setSheet] = React.useState(false);
   const open = detail.exceptions.filter((e) => e.status === "open").length;
-  const weak = detail.fields.filter((f) => f.weak).length;
+  const weak = detail.fields.filter((f) => f.weak && isKeyField(f.field)).length;
   const [tab, setTab] = React.useState(detail.exceptions.length > 0 ? "exceptions" : "fields");
 
   function jump(to: number) {

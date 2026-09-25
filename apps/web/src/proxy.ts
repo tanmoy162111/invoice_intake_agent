@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { buildCsp, newNonce } from "./lib/csp";
 import { SESSION_COOKIE } from "./lib/cookie";
+import { isPublicPath } from "./lib/public-paths";
 
 /**
  * Runs before every page: gives each response its own CSP nonce and security headers, and sends a
@@ -13,7 +14,7 @@ export function proxy(request: NextRequest) {
   const csp = buildCsp(nonce, { dev: process.env.NODE_ENV === "development" });
   const { pathname, search } = request.nextUrl;
 
-  if (pathname !== "/login" && !request.cookies.has(SESSION_COOKIE)) {
+  if (!isPublicPath(pathname) && !request.cookies.has(SESSION_COOKIE)) {
     const to = new URL("/login", request.url);
     if (request.method === "GET" && pathname !== "/") to.searchParams.set("next", pathname + search);
     const redirect = NextResponse.redirect(to);

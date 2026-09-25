@@ -107,6 +107,18 @@ says why and how to fix it).
 - Do not edit `exceptions`, `check_results` or `invoices.status` by hand after a reviewer has acted: the history
   and the data would disagree. Approve and reject are final.
 
+## The web app
+- The web server needs `API_URL` (Compose sets it) and, on plain http, `COOKIE_INSECURE=1` (Compose sets it) so the
+  session cookie is accepted; behind https leave it unset.
+- Signing in repeatedly fails with "not set up": the API has no `REVIEWER_PASSWORD` or `SESSION_SECRET`.
+- Sent back to sign-in on every page: the session cookie is missing (a Secure cookie on http; set
+  `COOKIE_INSECURE=1`), the session ended, or the API returned 401 (changed secret, name or password).
+- A page image is blank: the document's pages are rendered by the worker after upload; check `/jobs`.
+- After changing the API, run `make gen-api` and commit `apps/web/src/lib/api/`; the API test suite fails otherwise.
+- To look at the screens with realistic data without a model: create a scratch database, migrate it, then
+  `DATABASE_URL=... STORAGE_DIR=... make demo-pipeline` (uses recorded answers; never calls a model) and start the
+  API with the same values and `BANK_ENCRYPTION_KEY` from the script's output and `VALIDATION_TODAY=2026-09-25`.
+
 ## Limits worth knowing
 - Uploads are capped by `MAX_UPLOAD_BYTES` (15 MB) and `MAX_PAGES` (10). The API refuses oversized
   files after reading at most limit+1 bytes, but the web server still receives the request body first.

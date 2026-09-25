@@ -44,9 +44,9 @@ export function InvoiceHeader({ detail }: { detail: InvoiceDetail }) {
             {h.invoice_number ?? "no invoice number read"}
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-left sm:text-right">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Total</p>
-          <Money minor={h.total_minor} currency={h.currency} className="text-[2.2rem] font-medium leading-none sm:text-5xl" />
+          <Money display minor={h.total_minor} currency={h.currency} className="text-[2.2rem] font-medium leading-none sm:text-5xl" />
         </div>
       </div>
 

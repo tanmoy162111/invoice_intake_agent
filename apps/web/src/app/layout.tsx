@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
-import { Toaster } from "@/components/ui/sonner";
+import { StyleNonce } from "@/components/nonce";
 
 import "./globals.css";
 
@@ -21,10 +21,12 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const theme = (await cookies()).get("theme")?.value;
+  const nonce = (await headers()).get("x-nonce");
   const cls = theme === "dark" ? "dark" : theme === "light" ? "light" : "";
   return (
     <html lang="en" className={cls} suppressHydrationWarning>
       <body>
+        <StyleNonce nonce={nonce} />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
@@ -32,7 +34,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           Skip to content
         </a>
         {children}
-        <Toaster />
       </body>
     </html>
   );

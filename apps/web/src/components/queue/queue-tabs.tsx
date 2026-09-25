@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 
 const TABS: { status: QueueStatus; label: string }[] = [
   { status: "needs_review", label: "Needs review" },
-  { status: "failed", label: "Could not read" },
+  { status: "failed", label: "Unreadable" },
   { status: "cleared", label: "Cleared" },
 ];
 
 export function QueueTabs({ params, totals }: { params: QueueParams; totals: Record<QueueStatus, number> }) {
   return (
-    <nav aria-label="Queue" className="flex gap-1 overflow-x-auto border-b scroll-thin">
+    <nav aria-label="Queue" className="flex gap-1 overflow-x-auto overflow-y-hidden border-b scroll-thin">
       {TABS.map(({ status, label }) => {
         const active = params.status === status;
         return (
@@ -20,7 +20,7 @@ export function QueueTabs({ params, totals }: { params: QueueParams; totals: Rec
             href={queueHref({ ...params, status, page: 1 })}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "-mb-px inline-flex h-12 shrink-0 items-center gap-2.5 border-b-2 px-4 text-sm font-medium transition-colors",
+              "-mb-px inline-flex h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-medium transition-colors sm:px-4",
               active
                 ? "border-brand text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",

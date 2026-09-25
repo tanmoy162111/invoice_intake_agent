@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M8a (the review API), 2026-09-26.
+> **Last updated:** after M8b-1 (the review screens), 2026-09-26.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -27,11 +27,11 @@ You can read only the first layer of each chapter and still understand the whole
 - **Why.** Accounts-payable teams do not lose time typing. They lose it on *exceptions*: an amount
   that does not match the purchase order, a duplicate, goods that never arrived, a supplier whose
   bank account suddenly changed. The product is built around explaining and routing those.
-- **Where we are.** Eight of fourteen milestones are built (M0 to M7 are merged) and M8 is half built: the review API is in review, the browser screen is next.
+- **Where we are.** Eight of fourteen milestones are built (M0 to M7 are merged) and M8 is well under way: the review API is merged and the review screens (sign in, queue, invoice, upload) are in review; acting from the browser is next.
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
   *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change, and has this invoice been received before. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** The reviewer screen (M8b), audit timeline (M9),
+- **What is not built yet.** Acting from the browser (M8b-2), audit timeline (M9),
   accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
   proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
 - **Health.** 885 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
@@ -49,7 +49,7 @@ You can read only the first layer of each chapter and still understand the whole
 | M5 | Duplicate detection | Repeats caught before approval | Built, merged (PR #6) |
 | M6 | 3-way matching | Invoice compared with PO and receipt | Built, merged (PR #7) |
 | M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Built, merged (PR #8) |
-| M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) built, in review; M8b (the screen) planned |
+| M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) merged (PR #9); M8b-1 (the screens) built, in review; M8b-2 (the actions and browser test) planned |
 | M9 | Audit timeline | Full readable history per invoice | Planned |
 | M10 | Evaluation harness | Honest, published accuracy numbers | Planned |
 | M11 | Metrics dashboard | Business value at a glance | Planned |
@@ -869,11 +869,91 @@ readable seed invoices.)
 
 ---
 
+### M8b-1: The review screens
+
+*Goal (second half of M8, first part): a reviewer opens a browser, signs in, and sees the queue and every invoice with its document. Acting from the browser is M8b-2.*
+
+**In plain words.** The review API now has a face. A reviewer signs in and lands on the queue: the invoices that
+need a person, worst problem first, each with a red or amber stamp, the supplier, the total, and the problem in
+plain words. Opening one shows the document next to the findings: every problem explained with its real
+numbers and the suggested fix; the fields with how sure the system is and *why* it is unsure; the lines; every
+check; and, for a possible duplicate, the two invoices side by side with what differs marked. It works on a
+phone, in light or dark, and the document is one tap away. A page for uploading a new invoice is there too.
+This release is read-only on purpose: deciding from the browser (correct, close, approve, reject) follows in
+M8b-2, so it can be reviewed and tested as its own piece.
+
+**How it works.**
+
+```
+ browser ─▶ web server (Next.js) ─▶ API
+   cookie only       holds the session, calls the API as the reviewer
+   (no token)
+```
+
+1. **Signing in.** The sign-in page posts to the web server, which asks the API to log the reviewer in and
+   keeps the returned session in a cookie that scripts cannot read and other sites never receive. The API token
+   never reaches the browser. Every page but sign-in redirects there when there is no session; a stale session
+   is caught by the API and lands on sign-in again.
+2. **The queue.** Three tabs (needs review, unreadable, cleared) with counts; a filter by exception; a link to
+   narrow to one supplier; paging. Filters live in the address, so a queue can be bookmarked. Anything invalid in
+   the address is ignored, never passed on.
+3. **The invoice.** Document viewer (pages, zoom, arrow keys, jump-to-page from a field), then tabs for
+   exceptions, fields, lines and checks. The five *key fields* (supplier, invoice number, date, total,
+   currency) are shown first, because they are what decides where an invoice goes; the others follow.
+4. **Upload.** A drop zone; the file goes through the web server to the same API upload as before.
+5. **Look and feel.** A ledger: warm paper, ink, and the vermilion of a rubber stamp; a serif for names and
+   headings, a clean sans for reading, a mono for amounts; severity shown as pressed stamps; light and dark.
+
+**Under the hood.**
+- **Next.js 16 (App Router).** Pages are server components that call the API through one server-only module
+  (`lib/api/server.ts`); Server Actions handle sign-in, sign-out and upload (they carry Next's own origin
+  check). Interactive parts (document viewer, tabs, menus) are small client components that receive plain data.
+- **Proxy** (`proxy.ts`): a per-request nonce for a strict Content Security Policy (`script-src` by nonce,
+  `frame-ancestors 'none'`, `form-action 'self'`, own-site images and fonts only), security headers, and a quick
+  redirect to sign-in when there is no cookie (the API is what really decides). Page images are fetched through a
+  route that adds the session, so the browser never talks to the API directly.
+- **Components**: shadcn/ui patterns on Radix primitives with Tailwind 4; icons from lucide; fonts self-hosted
+  through npm (Newsreader, Instrument Sans, IBM Plex Mono), so a build needs no network and no font CDN.
+  Radix's scroll lock needs the nonce, which is handed to it once; the toast library was dropped because it
+  cannot take one.
+- **Types** come from `openapi.json`, a committed snapshot of the API schema (`make gen-api`, no server needed).
+  A test fails if the API changes without regenerating. To make them precise the API's invoice header became a
+  typed model and its two `DocumentOut` models were renamed.
+- **Pure helpers** with tests: money, dates and ages, exception and status labels, queue filters, safe redirect,
+  CSP, cookie options, public paths.
+- ADR 0009 records the decisions. No migration; no new API behaviour beyond the typed header.
+
+**What we proved.** (Real API, worker and database with the seed invoices run through the pipeline on recorded
+answers; a real browser.)
+
+| Check | Result |
+|---|---|
+| Sign in, queue, invoice (with document), upload on real data | Work end to end, in light and dark |
+| Browser console under the strict CSP | Clean (two library style injections were found and removed or given the nonce) |
+| Horizontal scroll at 375 px on the queue and the invoice | None (a header overflow was found and fixed) |
+| Page image, zoom, jump to a field's page, document sheet on a phone | Work |
+| An invoice number or PO shown as printed (not the lower-cased matching form) | Yes |
+| Upload through the browser | Stored, with a link to the invoice |
+| Dependencies | `pnpm audit` clean; every licence permissive (MIT, ISC, Apache-2.0, OFL for the fonts) |
+| Automated tests | 1322 API tests and 40 web tests pass; lint, types and a production build are clean |
+
+**Left open.**
+- **M8b-2**: correcting a field, closing exceptions, approve, reject, request information and the bank reveal
+  from the browser; the browser test (upload, review, approve, and no horizontal scroll at 375 px) with a recorded
+  model provider, running in CI. Until then the screens are read-only.
+- The queue counts use one small request per tab; a single summary endpoint would be cheaper for a large queue.
+- The document viewer shows pages and jumps to a field's page, but cannot highlight where a field sits: the
+  reader records a page, not a position.
+- No automated accessibility audit yet (axe); keyboard, contrast and labels were checked by hand.
+- Component-level tests are not written; the pure logic is tested, and the browser test in M8b-2 covers the flow.
+
+---
+
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
 |---|---|---|
-| **M8b Reviewer screen** | A browser queue: document on one side, fields on the other, actions to correct, approve, reject (the actions already exist in the API, M8a). Bank details masked. Works on a phone. | Clear the review queue |
+| **M8b-2 Reviewer actions** | Correct a field, close exceptions, approve, reject and ask for information from the browser, with a browser test (upload, review, approve) that runs in CI. | Clear the review queue |
 | **M9 Audit timeline** | A readable history of everything that happened to an invoice. | Answer "what happened to this invoice?" |
 | **M10 Accuracy report** | Measured accuracy per field and per document quality on the fixed golden set. | Publish honest numbers; false clear rate 0% |
 | **M11 Dashboard** | Invoices processed, touchless rate, exceptions by reason, cost per invoice, estimated savings (assumptions labelled). | Show business value |
@@ -897,7 +977,8 @@ or rule requires running the evaluation and reporting the result first.
 | M5 | 885 | 99.9% | Green | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
 | M6 | 972 | 99.9% | Green | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
 | M7 | 1104 | 99.9% | Green | 58/58 planted problems raised as exceptions; 0 false clears; every explanation carries its real numbers (23/23 checked) |
-| M8a | 1320 | 99.9% | Pending | Correcting a field re-runs the checks and routing; approval blocked while any exception is open; every action audited without values |
+| M8a | 1320 | 99.9% | Green | Correcting a field re-runs the checks and routing; approval blocked while any exception is open; every action audited without values |
+| M8b-1 | 1322 (+ 40 web) | 99.9% | Pending | Sign-in, queue and invoice screens on real data; no horizontal scroll at 375 px; clean browser console under a strict CSP |
 
 The build gates on decision-logic coverage of at least 90%.
 
@@ -941,6 +1022,10 @@ The build gates on decision-logic coverage of at least 90%.
 | Routing clears only if nothing is in doubt: exceptions, confidence, limit, and every check present | Uncertain means human; false clear rate must stay 0% | M7, ADR 0007 |
 | The approval limit is compared in the invoice's own currency | There is no exchange-rate data; a limit not set means review | M7, ADR 0007 |
 | A blank document stays `failed` and carries an `UNREADABLE_DOCUMENT` exception | Playbook 5.2 allows only a retry from `failed` | M7, ADR 0007 |
+| The web server holds the session in an httpOnly, SameSite=Strict cookie and calls the API itself; the API token never reaches the browser | A script in the page (or a browser extension) cannot read the session | M8b-1, ADR 0009 |
+| A strict Content Security Policy with a per-request nonce; a library that cannot take a nonce (toasts) was dropped rather than the policy loosened | An injected script or style must not run | M8b-1, ADR 0009 |
+| shadcn/ui on Radix, hand-styled with Tailwind, with self-hosted fonts and an editorial "ledger" look | Accessible dialogs and menus, a polished look for clients, no font CDN | M8b-1, ADR 0009 |
+| The web app's API types come from a committed schema snapshot, and a test fails if the API changes without regenerating | The screen must never talk to an API it has stale types for | M8b-1, ADR 0009 |
 | One demo reviewer signs in with a password; the API issues a short-lived signed session (HMAC, 8 hours) | A real user system is out of scope for the demo; the history still names who acted | M8a, ADR 0008 |
 | The static API token can read the queue but not act; every action needs a reviewer session | Every decision must name a person | M8a, ADR 0008 |
 | Approval needs every exception resolved or dismissed; a block exception needs a written note | No approval "over" an unread warning | M8a, ADR 0008 |

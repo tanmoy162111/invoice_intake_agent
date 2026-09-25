@@ -1,4 +1,4 @@
-.PHONY: dev seed ingest-inbox docs-page generate check check-api check-web eval demo-reset gen-api
+.PHONY: dev seed ingest-inbox docs-page generate check check-api check-web eval demo-reset gen-api demo-pipeline
 
 dev:            ## start everything (db, api, worker, web)
 	./scripts/ensure-env.sh
@@ -24,8 +24,11 @@ check-api:
 check-web:
 	cd apps/web && pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
-gen-api:        ## regenerate web API types (API must be running at API_OPENAPI_URL)
+gen-api:        ## regenerate the web app's API types from the code (or from a running API: API_OPENAPI_URL=...)
 	./scripts/gen-api.sh
+
+demo-pipeline:  ## run the seed invoices through the real pipeline with recorded answers (needs DATABASE_URL, STORAGE_DIR)
+	uv run --project apps/api python scripts/load-demo-pipeline.py
 
 eval:           ## full evaluation (costs money; arrives in M10)
 	@echo "eval: not implemented yet (M10)"

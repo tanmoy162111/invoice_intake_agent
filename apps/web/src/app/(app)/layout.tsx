@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex h-16 max-w-[88rem] items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="flex items-center gap-4 sm:gap-8">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-8">
             <Link href="/queue" aria-label="Invoice Intake, home">
               <Brand />
             </Link>

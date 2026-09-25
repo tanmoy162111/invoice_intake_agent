@@ -12,7 +12,7 @@ function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
-      className={cn("flex items-end gap-1 overflow-x-auto border-b scroll-thin", className)}
+      className={cn("flex items-end gap-1 overflow-x-auto overflow-y-hidden border-b scroll-thin", className)}
       {...props}
     />
   );

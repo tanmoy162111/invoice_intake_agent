@@ -56,6 +56,7 @@ services:
     build: ./apps/web
     environment:
       API_URL: http://api:8000
+      COOKIE_INSECURE: "1"  # the demo is served over plain http; remove behind https so the cookie is Secure
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
