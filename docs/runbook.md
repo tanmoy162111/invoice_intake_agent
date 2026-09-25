@@ -79,6 +79,17 @@ says why and how to fix it).
   the invoice must still be `checking`. Later invoices on the same PO were matched with the old numbers, so
   re-run them too, in received order. Note the action in the ticket (a manual delete writes no audit event).
 
+## Exceptions and routing
+- `exceptions` rows and the route are in the database (manual, section 4.14). The reasons an invoice went to
+  review are on its `status_changed` and `routing_decided` history events.
+- Jobs of type `route_invoice` run right after `match_invoice`. An invoice that stays `checking` after its match
+  rows exist means the route job did not run: check `/jobs`.
+- Do not edit `exceptions`, `route` or `status` by hand to "fix" a routing decision: it would leave the history
+  disagreeing with the data. Correcting a field and re-running the checks arrives in M8.
+- `MISSING_CHECKS` on an invoice means a check result is absent (an earlier stage did not finish or a row was
+  deleted). Re-run the missing stage's job before trusting the route.
+- A failed invoice with an `UNREADABLE_DOCUMENT` exception is a blank document; ask the supplier for a new copy.
+
 ## Limits worth knowing
 - Uploads are capped by `MAX_UPLOAD_BYTES` (15 MB) and `MAX_PAGES` (10). The API refuses oversized
   files after reading at most limit+1 bytes, but the web server still receives the request body first.

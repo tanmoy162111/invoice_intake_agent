@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M6 (3-way matching), 2026-09-25.
+> **Last updated:** after M7 (exceptions and routing), 2026-09-25.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -27,11 +27,11 @@ You can read only the first layer of each chapter and still understand the whole
 - **Why.** Accounts-payable teams do not lose time typing. They lose it on *exceptions*: an amount
   that does not match the purchase order, a duplicate, goods that never arrived, a supplier whose
   bank account suddenly changed. The product is built around explaining and routing those.
-- **Where we are.** Six of fourteen milestones are built (M0 to M4 are merged; M5 is in review).
+- **Where we are.** Eight of fourteen milestones are built (M0 to M6 are merged; M7 is in review).
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
   *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change, and has this invoice been received before. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** Matching and routing (M6 and M7), the reviewer screen (M8), audit timeline (M9),
+- **What is not built yet.** The reviewer screen (M8), audit timeline (M9),
   accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
   proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
 - **Health.** 885 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
@@ -47,8 +47,8 @@ You can read only the first layer of each chapter and still understand the whole
 | M3 | Extraction | Fields read from the invoice, with confidence | Built, in review (PR #4) |
 | M4 | Validation rules | Math, dates, supplier and bank details checked | Built, in review |
 | M5 | Duplicate detection | Repeats caught before approval | Built, merged (PR #6) |
-| M6 | 3-way matching | Invoice compared with PO and receipt | Built, in review |
-| M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Planned |
+| M6 | 3-way matching | Invoice compared with PO and receipt | Built, merged (PR #7) |
+| M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Built, in review |
 | M8 | Review queue UI | A reviewer clears the queue in a browser | Planned |
 | M9 | Audit timeline | Full readable history per invoice | Planned |
 | M10 | Evaluation harness | Honest, published accuracy numbers | Planned |
@@ -669,11 +669,99 @@ by a SKU shared by two PO lines, never overriding a conflicting SKU, and treatin
 
 ---
 
+### M7: Exceptions and routing
+
+*Goal: every problem has a plain-language explanation and a suggested fix, and every invoice is routed.*
+
+**In plain words.** The earlier steps find problems; this one says what they mean and what to do. Each
+problem becomes a card: what is wrong, in words, with the actual numbers ("Line 2 is billed at USD 48.00 per
+unit, but the PO says USD 45.00 (+6.7%, limit 2%)"), and what a person should do about it. The system then
+decides where the invoice goes. It is *cleared* only when nothing at all is in doubt: no open problem, every
+important field read with confidence, the total within the approval limit, and every check done. Anything
+uncertain goes to a person. A check that could not be done gets a card too, worded "could not be checked", so
+nothing is ever waved through because it was skipped.
+
+**How it works.**
+
+```
+ match done ─▶ read every check result ─▶ one card per failed check, one per "could not be checked"
+                     │                       + doubtful important fields + total above the limit
+                     ▼
+     any open problem? doubtful field? total over the limit or negative? a check missing?  ──▶ needs review
+     bank account changed (always)                                                          ──▶ needs review
+     none of these                                                                          ──▶ cleared
+```
+
+1. **One card per check.** A check with several findings lists each line with its numbers in one card.
+2. **The words are fixed.** Every explanation is a template filled with the numbers from the check, never free
+   text, so it is accurate and consistent. Where the playbook's example did not fit the facts, the template
+   was extended (see ADR 0007).
+3. **Could not be checked.** A skipped check is raised under its own code at review severity ("The tax could
+   not be checked (there is no tax rate on file...), so a person needs to look at it."). One that was skipped
+   only because of another problem (an unknown supplier explains its skipped currency and bank checks) is not
+   repeated, and a credit note is one card.
+4. **Three cards have no check behind them:** a doubtful important field (each named with its percentage), a
+   total above the approval limit, and a blank document.
+5. **The route.** Cleared (straight through) or needs review, with the reasons recorded: a changed bank account,
+   open exceptions, a doubtful field, a missing or negative total, no limit configured, a total above the
+   limit, or a missing check.
+6. **Blank documents** never reach the checks: they fail at reading, stay `failed`, and carry a block-severity
+   `UNREADABLE_DOCUMENT` card.
+
+**Under the hood.**
+- **Pure rules** in `core/classify.py` and `core/routing.py`, test-first, both 100% covered, mypy strict.
+  `core/exceptions.py` gained variants and the "could not be checked" wording; the taxonomy doc table is
+  generated from it and a test keeps them in step.
+- **Stage** `checks/routing.py::route_invoice`, chained after the match as a `route_invoice` job. Exceptions,
+  route and status commit together; the status change is the idempotency marker. Audit events:
+  `exception_raised`, `status_changed` (with the reasons) and `routing_decided`, all codes and ids only.
+- **Tenant setting** `approval_amount_limit_minor`, compared with the invoice total in its own currency (no
+  exchange rates). No migration and no new environment settings.
+- `db/invoices.fail_extraction` raises the `UNREADABLE_DOCUMENT` exception. ADR 0007 records the decisions.
+
+**What we proved.** (Recorded answers built from the answer key; real PDFs, worker and database; all 118
+readable seed invoices.)
+
+| Check | Result |
+|---|---|
+| Every readable invoice is routed | 118 of 118 (34 cleared, 84 needs review) |
+| Planted problems raised as exceptions | 58 of 58 |
+| An invoice with a planted problem is cleared | Never (false clear rate 0%) |
+| Explanations carrying the planted numbers (price, quantity, receipts, PO number, approval limit) | 23 of 23 |
+| Explanations with a placeholder, or without a fix | None |
+| Cleared invoices with an open exception | None |
+| Changed bank account | Block exception; invoice needs review |
+| A missing check result | Invoice goes to review |
+| Same invoice routed twice | Nothing added |
+| Invoice numbers in the audit log | None |
+| Automated tests | 1072 pass, decision-logic coverage 99.9% |
+
+**The finding to plan around.** Of the 60 invoices the seed marks as clearable, 34 clear and 26 are held.
+Two are held because a similar earlier invoice has no readable currency, so the duplicate check could not be
+completed. The other 24 are scans and photos whose *invoice number* scores 75%, below the 80% minimum:
+without a text layer nothing confirms it. That is the M3 confidence model and the playbook rule working as
+written, not a defect in routing, and no threshold was changed (a change needs `make eval` first). It means
+the touchless rate on scanned documents is low until confidence is measured and tuned in M10 (with a real
+model the scores may differ).
+
+**Left open.**
+- **Confidence on scans and photos** (above): decide after the real-model evaluation.
+- **Approval limit currency.** One number is compared in each invoice's own currency; per-currency limits, if
+  a client needs them.
+- **Correcting a field** must re-run the checks and the routing and reopen exceptions that no longer apply
+  (M8). Until then a routed invoice is not re-routed.
+- The M8 queue must list `failed` invoices (a blank document) as well as `needs_review`.
+- `auto_approve_cleared` is not implemented; approval is a person's action (M8).
+- The four extra `PO_OVERBILLED` exceptions (M6 knock-ons) and the `inv-095` golden label are unchanged, for M10.
+- `LOW_CONFIDENCE_FIELD` and the duplicate cards appear on invoices the seed calls clearable; the acceptance
+  test names exactly which and why.
+
+---
+
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
 |---|---|---|
-| **M7 Explanations and routing** | Every problem gets a plain-language explanation with the real numbers and a suggested fix; each invoice is routed to "cleared" or "needs a person". | Read exactly what is wrong and what to do |
 | **M8 Reviewer screen** | A browser queue: document on one side, fields on the other, actions to correct, approve, reject. Bank details masked. Works on a phone. | Clear the review queue |
 | **M9 Audit timeline** | A readable history of everything that happened to an invoice. | Answer "what happened to this invoice?" |
 | **M10 Accuracy report** | Measured accuracy per field and per document quality on the fixed golden set. | Publish honest numbers; false clear rate 0% |
@@ -696,7 +784,8 @@ or rule requires running the evaluation and reporting the result first.
 | M3 | 677 | 99.9% | Green | 59/59 clean invoices extracted end to end; cache and spend cap proved; no bank digits in clear |
 | M4 | 792 | 99.9% | Green | 21/21 planted problems caught, 0/60 clearable invoices flagged; look-alike suppliers rejected |
 | M5 | 885 | 99.9% | Green | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
-| M6 | 972 | 99.9% | Pending | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
+| M6 | 972 | 99.9% | Green | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
+| M7 | 1072 | 99.9% | Pending | 58/58 planted problems raised as exceptions; 0 false clears; every explanation carries its real numbers (23/23 checked) |
 
 The build gates on decision-logic coverage of at least 90%.
 
@@ -735,6 +824,11 @@ The build gates on decision-logic coverage of at least 90%.
 | Line pairing is SKU, then similar description, then amount; a line that fits two PO lines is not guessed | A wrong pairing would compare the wrong prices and could clear a bad invoice | M6, ADR 0006 |
 | Billing more than ordered is a variance; billing less is a partial invoice | Invoices are often split across deliveries | M6, ADR 0006 |
 | Over-billing is counted across invoices in received order, and the check waits for earlier ones | The total on one invoice cannot show an over-billed PO | M6, ADR 0006 |
+| A skipped check is raised under its own code as "could not be checked", at review severity | A check that could not be done must never clear an invoice, and the taxonomy stays fixed | M7, ADR 0007 |
+| One exception per failed check, listing every affected line | Keeps the queue short; matches playbook 6.7 | M7, ADR 0007 |
+| Routing clears only if nothing is in doubt: exceptions, confidence, limit, and every check present | Uncertain means human; false clear rate must stay 0% | M7, ADR 0007 |
+| The approval limit is compared in the invoice's own currency | There is no exchange-rate data; a limit not set means review | M7, ADR 0007 |
+| A blank document stays `failed` and carries an `UNREADABLE_DOCUMENT` exception | Playbook 5.2 allows only a retry from `failed` | M7, ADR 0007 |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
 
 ## 7. Risks and open questions
@@ -744,7 +838,7 @@ The build gates on decision-logic coverage of at least 90%.
 | No sandboxed parsing process with a time limit | A crafted file could still slow the worker | Before any real-data use |
 | Permanently failed job leaves invoice as "received" | Reviewer may not see it | Handled in M3: it becomes `failed` with a reason (see the M3 chapter) |
 | Default database password, root containers, unpinned base image | Weak for shared deployments | Harden before hosting |
-| Routing (M7) must treat could-not-check and failures on money, identity and duplicates as review | A skipped check must never clear an invoice | Build and test in M7 |
+| Almost every scanned or photographed invoice is routed to review (invoice number scores 75%, below the 80% minimum) | Low touchless rate on scans; the real-model score may differ | Measure with `make eval` (M10) before touching any threshold |
 | Real-model accuracy and cost unmeasured; model choice is provisional | Numbers could be worse than hoped | Run `make eval` (M10) with approval before quoting any figure |
 | Hosting, login method, target currencies and languages, licensed real samples | Open decisions in the playbook (section 15) | Settle before M8 and M10 |
 | Fresh-clone run on another machine not yet done | M0 acceptance criterion | Ask a teammate to follow the manual |

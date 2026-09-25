@@ -30,5 +30,20 @@ Severity:
 | `CURRENCY_MISMATCH` | review | The invoice is in EUR, but the PO is in USD. | Confirm the currency with the supplier |
 | `ABOVE_APPROVAL_LIMIT` | review | The total of USD 25,000.00 is above the USD 10,000.00 auto-approval limit. | Needs manager approval |
 
+## How exceptions are raised (M7)
+
+- **One exception per failed check.** Its explanation lists every affected line, each with the real numbers
+  from the check. Explanations come only from the templates above.
+- **A check that could not be done** is raised under the same code at `review` severity (never `block`, even for
+  `BANK_DETAILS_CHANGED` and `POSSIBLE_DUPLICATE`, since nothing was proved), worded
+  "*The tax* could not be checked (*plain-language reason*), so a person needs to look at it."
+- **Repeats are suppressed.** A check skipped only because another exception already explains it
+  (unknown supplier, no PO, no receipt) is not raised again; a credit note is one card, not five.
+- **Second wordings** for the same code (`QTY_VARIANCE` / `line_not_on_po`: "Line 3 could not be matched to any
+  line on the PO.") are in `VARIANTS` in `core/exceptions.py`.
+- **Not from a check:** `LOW_CONFIDENCE_FIELD` (a critical field below `field_confidence_min`),
+  `ABOVE_APPROVAL_LIMIT` (total above the tenant limit, in the invoice's own currency) and
+  `UNREADABLE_DOCUMENT` (a blank document, raised when extraction fails).
+
 To add a code, use the `add-exception-code` skill: enum + spec + test + this table + a planted
 example in the synthetic dataset.

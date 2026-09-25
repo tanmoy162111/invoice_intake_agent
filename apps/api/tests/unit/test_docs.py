@@ -7,11 +7,12 @@ import pytest
 
 from intake.config import Settings
 from intake.core.dedupe import DedupeSettings
-from intake.core.exceptions import ExceptionCode
+from intake.core.exceptions import VARIANTS, ExceptionCode
 from intake.core.extraction import NormalizeError
 from intake.core.ingest import IngestErrorCode
 from intake.core.llm_budget import ExtractionFailure
 from intake.core.match import MatchCode, MatchSettings
+from intake.core.routing import RoutingReason
 from intake.core.validate import CheckCode, ValidationSettings
 from intake.main import create_app
 
@@ -142,3 +143,22 @@ def test_manual_explains_every_reason_a_match_check_is_skipped() -> None:
 def test_manual_lists_every_tenant_match_setting(name: str) -> None:
     section = MANUAL.split("### 4.11")[1].split("## 5. Reference")[0]
     assert f"`match_{name}`" in section, f"match_{name} is missing from manual section 4.11"
+
+
+def test_manual_explains_every_reason_an_invoice_is_routed_to_review() -> None:
+    section = MANUAL.split("### 4.14")[1].split("## 5. Reference")[0]
+    for reason in RoutingReason:
+        assert f"`{reason.value}`" in section
+    for word in ("cleared", "needs_review", "straight_through", "could not be checked"):
+        assert word in section
+
+
+def test_manual_lists_the_approval_limit_setting() -> None:
+    section = MANUAL.split("### 4.11")[1].split("## 5. Reference")[0]
+    assert "`approval_amount_limit_minor`" in section
+
+
+def test_taxonomy_doc_names_every_second_wording() -> None:
+    doc = (DOCS / "exception-taxonomy.md").read_text()
+    for code, name in VARIANTS:
+        assert f"`{code.value}` / `{name}`" in doc
