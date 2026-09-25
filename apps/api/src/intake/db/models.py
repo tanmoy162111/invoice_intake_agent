@@ -143,6 +143,7 @@ class Invoice(Base):
     __table_args__ = (
         one_of("status", InvoiceStatus, "status"),
         one_of("route", Route, "route"),
+        Index("ix_invoices_tenant_supplier", "tenant_id", "supplier_id"),
     )
     id: Mapped[uuid.UUID] = uuid_pk()
     tenant_id: Mapped[uuid.UUID] = tenant_fk()

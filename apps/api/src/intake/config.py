@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     # A fixed "as of" date for the date checks; empty means today. Keeps tests and demos stable.
     validation_today: date | None = None
 
+    # Duplicate check (M5): wait for earlier invoices that are not read yet, then give up waiting.
+    dedupe_poll_s: int = 10
+    dedupe_max_wait_s: int = 300
+
     # Job queue
     job_max_attempts: int = 3
     job_backoff_base_s: int = 10

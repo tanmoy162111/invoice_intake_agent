@@ -17,7 +17,11 @@ from intake.db.models import Job
 
 MAX_ERROR_CHARS = 500
 # Reasons a job is paused on purpose (not failed). Deferring does not use up an attempt.
-PAUSE_REASONS = ("SPEND_CAP_REACHED", "EXTRACTION_NOT_CONFIGURED")
+PAUSE_REASONS = (
+    "SPEND_CAP_REACHED",
+    "EXTRACTION_NOT_CONFIGURED",
+    "WAITING_FOR_EARLIER_INVOICES",
+)
 
 
 @dataclass(frozen=True)
