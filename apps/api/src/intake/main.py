@@ -1,11 +1,12 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from intake.api import documents, extraction, jobs
+from intake.api import documents, extraction, invoices, jobs, login
 from intake.api.deps import require_token
 from intake.api.guard import UploadGuard
 from intake.api.health import router as health_router
 from intake.config import Settings, get_settings
+from intake.core.session import LoginThrottle
 from intake.db.session import make_engine
 from intake.ingest.service import UploadIngestor
 from intake.ingest.storage import LocalStorage
@@ -26,6 +27,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.engine = make_engine(settings.database_url)
     app.state.storage = storage
     app.state.ingestor = UploadIngestor(settings, storage)
+    app.state.throttle = LoginThrottle()
     app.add_middleware(UploadGuard, settings=settings)
     app.add_middleware(
         CORSMiddleware,
@@ -33,11 +35,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "POST"],
         allow_headers=["Authorization", "Content-Type"],
     )
-    app.include_router(health_router)  # the only public route
+    app.include_router(health_router)  # public, with the login below
+    app.include_router(login.router)  # /auth/login is public; /auth/me needs a token
     protected = [Depends(require_token)]
     app.include_router(documents.router, dependencies=protected)
     app.include_router(jobs.router, dependencies=protected)
     app.include_router(extraction.router, dependencies=protected)
+    app.include_router(invoices.router, dependencies=protected)
+    app.include_router(invoices.exceptions_router, dependencies=protected)
 
     @app.get("/openapi.json", include_in_schema=False, dependencies=protected)
     def openapi_schema() -> dict[str, object]:

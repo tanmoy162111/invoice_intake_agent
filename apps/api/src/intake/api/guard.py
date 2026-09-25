@@ -4,10 +4,12 @@ FastAPI reads the body before it runs route dependencies, so without this an una
 client could make the server buffer a huge upload only to get a 401.
 """
 
+import time
+
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from intake.api.auth import token_problem
+from intake.api.auth import Caller, resolve_caller
 from intake.config import Settings
 
 MULTIPART_OVERHEAD = 64 * 1024
@@ -21,9 +23,9 @@ class UploadGuard:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] == "http" and scope["method"] == "POST" and scope["path"] == "/documents":
             headers = {k.decode().lower(): v.decode("latin-1") for k, v in scope["headers"]}
-            problem = token_problem(self.settings, headers.get("authorization"))
-            if problem:
-                status, message = problem
+            caller = resolve_caller(self.settings, headers.get("authorization"), int(time.time()))
+            if not isinstance(caller, Caller):
+                status, message = caller
                 extra = {"WWW-Authenticate": "Bearer"} if status == 401 else None
                 await JSONResponse({"detail": message}, status, extra)(scope, receive, send)
                 return

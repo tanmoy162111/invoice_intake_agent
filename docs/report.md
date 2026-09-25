@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M7 (exceptions and routing), 2026-09-25.
+> **Last updated:** after M8a (the review API), 2026-09-26.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -27,11 +27,11 @@ You can read only the first layer of each chapter and still understand the whole
 - **Why.** Accounts-payable teams do not lose time typing. They lose it on *exceptions*: an amount
   that does not match the purchase order, a duplicate, goods that never arrived, a supplier whose
   bank account suddenly changed. The product is built around explaining and routing those.
-- **Where we are.** Eight of fourteen milestones are built (M0 to M6 are merged; M7 is in review).
+- **Where we are.** Eight of fourteen milestones are built (M0 to M7 are merged) and M8 is half built: the review API is in review, the browser screen is next.
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
   *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change, and has this invoice been received before. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** The reviewer screen (M8), audit timeline (M9),
+- **What is not built yet.** The reviewer screen (M8b), audit timeline (M9),
   accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
   proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
 - **Health.** 885 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
@@ -48,8 +48,8 @@ You can read only the first layer of each chapter and still understand the whole
 | M4 | Validation rules | Math, dates, supplier and bank details checked | Built, in review |
 | M5 | Duplicate detection | Repeats caught before approval | Built, merged (PR #6) |
 | M6 | 3-way matching | Invoice compared with PO and receipt | Built, merged (PR #7) |
-| M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Built, in review |
-| M8 | Review queue UI | A reviewer clears the queue in a browser | Planned |
+| M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Built, merged (PR #8) |
+| M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) built, in review; M8b (the screen) planned |
 | M9 | Audit timeline | Full readable history per invoice | Planned |
 | M10 | Evaluation harness | Honest, published accuracy numbers | Planned |
 | M11 | Metrics dashboard | Business value at a glance | Planned |
@@ -769,11 +769,111 @@ model the scores may differ).
 
 ---
 
+### M8a: The review API
+
+*Goal (first half of M8): a reviewer can act on every seed exception, with the checks re-run on a correction. The browser screen is M8b.*
+
+**In plain words.** Until now the system found problems and explained them, but nobody could do anything about
+them. This step adds everything a reviewer needs, as an API that the screen will sit on. A reviewer signs in,
+sees the queue (worst problem first), opens an invoice, and can read every field with how sure the system is and
+*why* it is unsure, see the exceptions with their explanations, and act: correct a field, resolve or dismiss an
+exception, approve, reject, or note that information was requested. Correcting a field is the important one: the
+system immediately runs every check again with the new value and shows the new result, closing problems that
+went away. Approval is only possible once every exception is closed, and the riskiest ones (a changed bank
+account, a duplicate, an over-billed order) need a written note. Everything a person does is recorded under
+their name.
+
+**How it works.**
+
+```
+ sign in ─▶ queue ─▶ open invoice ─▶ correct a field ─▶ checks + routing run again ─▶ updated invoice
+                                 └─▶ close exceptions (block needs a note) ─▶ approve / reject
+```
+
+1. **Signing in.** One demo reviewer. The password is in `.env`; the API returns a signed session that expires
+   (8 hours). Five wrong passwords in a minute lock the login for that minute. With no password configured
+   nobody can log in.
+2. **The queue.** Invoices needing a person (`needs_review`, and `failed` ones, which include a blank document
+   with its `UNREADABLE_DOCUMENT` card), worst open exception first and then oldest; filter by exception, supplier
+   and status.
+3. **One invoice.** Fields with confidence and a plain-words reason when doubtful (for example "nothing
+   confirms it: no text layer, rule or supplier record supports it"), the lines, exceptions with explanation and
+   fix, the checks, why it was routed, and whether it can be approved. A duplicate exception carries the other
+   invoice for a side-by-side view. Bank accounts are masked, and pages are served as images.
+4. **Correcting a field.** Header fields only. The value is read with the same parsers that read the document
+   (so `1,234.50` means the same thing), stored beside the original, and the checks and routing run again in the
+   same moment. Exceptions that no longer apply are closed by the system; one a person already closed, with the
+   same words and numbers, stays closed.
+5. **Deciding.** Approve (only when every exception is closed, from `cleared` or `needs_review`), reject (a
+   reason is required), request information (logged, the status does not change), reveal a bank account (logged).
+   Approve and reject are final.
+
+**Under the hood.**
+- **Pure rules** in `core/review.py` (approval, notes, corrections, plain-words confidence reasons, carry-over of
+  a reviewer's decision) and `core/session.py` (signed sessions, login throttle), test-first, both 100% covered,
+  mypy strict.
+- **Service** `review/service.py`: each action is one transaction with a `review_actions` row and audit events
+  (field names and codes, never values). A correction sets the corrected value beside the original, clears the
+  old results and matches, and runs validation, duplicates, the match and routing again, never waiting for other
+  invoices (a person is at the screen).
+- **API** `api/login.py` and `api/invoices.py`; `require_user` guards actions. The static token can read but not
+  act. The upload guard accepts either kind of token.
+- **Status flow.** Two edges added to the playbook diagram: an open invoice can return to `extracted` for a
+  re-check, and a cleared invoice can be rejected. No migration.
+- ADR 0008 records the decisions.
+
+Two independent reviews (decision logic and security) ran; neither found a critical or high security issue.
+Fixed test-first: a reviewer's dismissal of a changed bank account being carried over (its words name no account,
+so it is now raised again after every re-check and always needs a fresh decision), a currency change that would
+have left amounts in the wrong scale, amounts too large for the database, control and invisible characters in
+corrections and notes (an invisible or punctuation-only note no longer counts as the note a block needs), a login
+throttle that a burst of parallel guesses could beat and that locked the real reviewer out for everyone (now
+atomic, per client and overall, with `Retry-After` and audited sign-ins), sessions that outlived the login being
+switched off, a stale read of an exception after waiting for the invoice lock (two reviewers could both close it),
+an unreadable bank account causing a crash, and page images and reveals being cached by the browser.
+
+**What we proved.** (Recorded answers built from the answer key; real PDFs, worker, database and HTTP; all 118
+readable seed invoices.)
+
+| Check | Result |
+|---|---|
+| Correcting the total that does not add up removes that exception and re-routes | Yes: one fresh result, the old exception closed by the system, the checks run again |
+| A reviewer's dismissal survives a re-check of an unrelated field | Yes |
+| Approval while an exception is open | Refused (409 `OPEN_EXCEPTIONS`) |
+| Closing a block exception without a note | Refused (422 `NOTE_REQUIRED`) |
+| Approved or rejected invoice corrected, approved or rejected again | Refused (409 `WRONG_STATUS`) |
+| Unreadable or unknown corrections (`abc` as a total, the bank account, a line field) | Refused, nothing changed |
+| Action with the static API token | Refused (403) |
+| Another tenant's invoice or exception | Not found, for every action |
+| Bank account in any response or audit event | Never in full; a reveal is logged without it |
+| Queue order | Worst open exception first, then oldest; filters and paging work |
+| Automated tests | 1320 pass, decision-logic coverage 99.9% |
+
+**Left open.**
+- **The screen** (M8b): queue, invoice page with the document, cards and actions, 375 px layout, and the
+  Playwright smoke test (upload, review, approve) with recorded model answers in CI.
+- **Line corrections.** Only header fields can be corrected; fixing a line quantity or price (for a
+  `LINE_MATH_MISMATCH`) is not yet possible.
+- **Later invoices are not re-matched.** Correcting an invoice changes what it bills against its PO, but invoices
+  already matched after it keep their old result until they are corrected (runbook).
+- **Request information** is a log entry; there is no "waiting" status and nothing is sent to the supplier.
+- The demo login is one shared identity; a real user system is needed before real data. Sessions cannot be
+  revoked one by one (only by changing `SESSION_SECRET`, the reviewer name or emptying the password).
+- `auto_approve_cleared` is still not implemented; a person approves every invoice.
+- No partial unique index on open exceptions per (invoice, code); the row lock on an invoice in the review
+  service and the routing stage covers concurrent actions.
+- A currency can only be corrected while no amounts were read; a wrong currency on an invoice with amounts is
+  rejected and re-requested, because amounts cannot be re-read from here.
+- `review_actions` holds invoice values (before and after a correction) and free-text notes; its retention and
+  access are recorded in `data-handling.md`.
+
+---
+
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
 |---|---|---|
-| **M8 Reviewer screen** | A browser queue: document on one side, fields on the other, actions to correct, approve, reject. Bank details masked. Works on a phone. | Clear the review queue |
+| **M8b Reviewer screen** | A browser queue: document on one side, fields on the other, actions to correct, approve, reject (the actions already exist in the API, M8a). Bank details masked. Works on a phone. | Clear the review queue |
 | **M9 Audit timeline** | A readable history of everything that happened to an invoice. | Answer "what happened to this invoice?" |
 | **M10 Accuracy report** | Measured accuracy per field and per document quality on the fixed golden set. | Publish honest numbers; false clear rate 0% |
 | **M11 Dashboard** | Invoices processed, touchless rate, exceptions by reason, cost per invoice, estimated savings (assumptions labelled). | Show business value |
@@ -796,7 +896,8 @@ or rule requires running the evaluation and reporting the result first.
 | M4 | 792 | 99.9% | Green | 21/21 planted problems caught, 0/60 clearable invoices flagged; look-alike suppliers rejected |
 | M5 | 885 | 99.9% | Green | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
 | M6 | 972 | 99.9% | Green | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
-| M7 | 1104 | 99.9% | Pending | 58/58 planted problems raised as exceptions; 0 false clears; every explanation carries its real numbers (23/23 checked) |
+| M7 | 1104 | 99.9% | Green | 58/58 planted problems raised as exceptions; 0 false clears; every explanation carries its real numbers (23/23 checked) |
+| M8a | 1320 | 99.9% | Pending | Correcting a field re-runs the checks and routing; approval blocked while any exception is open; every action audited without values |
 
 The build gates on decision-logic coverage of at least 90%.
 
@@ -840,6 +941,12 @@ The build gates on decision-logic coverage of at least 90%.
 | Routing clears only if nothing is in doubt: exceptions, confidence, limit, and every check present | Uncertain means human; false clear rate must stay 0% | M7, ADR 0007 |
 | The approval limit is compared in the invoice's own currency | There is no exchange-rate data; a limit not set means review | M7, ADR 0007 |
 | A blank document stays `failed` and carries an `UNREADABLE_DOCUMENT` exception | Playbook 5.2 allows only a retry from `failed` | M7, ADR 0007 |
+| One demo reviewer signs in with a password; the API issues a short-lived signed session (HMAC, 8 hours) | A real user system is out of scope for the demo; the history still names who acted | M8a, ADR 0008 |
+| The static API token can read the queue but not act; every action needs a reviewer session | Every decision must name a person | M8a, ADR 0008 |
+| Approval needs every exception resolved or dismissed; a block exception needs a written note | No approval "over" an unread warning | M8a, ADR 0008 |
+| A correction re-runs the checks and routing at once; the reviewer's earlier decisions on identical exceptions are kept | A person should not have to dismiss the same thing twice | M8a, ADR 0008 |
+| An open invoice can go back to `extracted` (re-check) and a cleared one can be rejected | The playbook diagram had no way to act on a correction | M8a, ADR 0008 |
+| Bank accounts are shown masked; revealing one is a logged action | Playbook section 10 | M8a |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
 
 ## 7. Risks and open questions
@@ -851,6 +958,7 @@ The build gates on decision-logic coverage of at least 90%.
 | Default database password, root containers, unpinned base image | Weak for shared deployments | Harden before hosting |
 | Almost every scanned or photographed invoice is routed to review (invoice number scores 75%, below the 80% minimum) | Low touchless rate on scans; the real-model score may differ | Measure with `make eval` (M10) before touching any threshold |
 | Real-model accuracy and cost unmeasured; model choice is provisional | Numbers could be worse than hoped | Run `make eval` (M10) with approval before quoting any figure |
+| The login route is public (it has to be) and the demo has one shared reviewer identity | A weak password or a leaked session gives a reviewer's powers | Throttled (5 wrong tries a minute), passwords generated, sessions expire; a real user system before any real data |
 | Hosting, login method, target currencies and languages, licensed real samples | Open decisions in the playbook (section 15) | Settle before M8 and M10 |
 | Fresh-clone run on another machine not yet done | M0 acceptance criterion | Ask a teammate to follow the manual |
 

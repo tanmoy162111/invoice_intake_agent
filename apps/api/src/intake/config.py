@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     api_token: str = ""
     default_tenant_id: str = "00000000-0000-4000-8000-00000000d3a0"
 
+    # Reviewer login (M8): one demo user. Empty password or secret means nobody can log in.
+    reviewer_username: str = "reviewer"
+    reviewer_password: str = ""
+    session_secret: str = ""
+    session_ttl_s: int = Field(default=8 * 3600, ge=60)
+
     # Ingestion limits (playbook §6.1)
     max_upload_bytes: int = 15 * 1024 * 1024
     max_pages: int = 10
@@ -64,6 +70,17 @@ class Settings(BaseSettings):
     job_backoff_cap_s: int = 600
     job_visibility_timeout_s: int = 300
     worker_poll_interval_s: float = 2.0
+
+    @model_validator(mode="after")
+    def _reviewer_login_is_sound(self) -> "Settings":
+        name = self.reviewer_username.strip()
+        if not name or name.lower() == "system":  # "system" is who the pipeline acts as
+            raise ValueError("REVIEWER_USERNAME must be a real name and not 'system'")
+        if self.reviewer_password and len(self.reviewer_password) < 8:
+            raise ValueError("REVIEWER_PASSWORD must be at least 8 characters")
+        if self.session_secret and len(self.session_secret) < 16:
+            raise ValueError("SESSION_SECRET must be at least 16 characters")
+        return self
 
     @model_validator(mode="after")
     def _no_date_override_in_production(self) -> "Settings":

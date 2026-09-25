@@ -15,6 +15,14 @@ This page grows as features land.
 - Rendered page images and the extracted text layer are stored under `storage/<tenant>/pages/<doc>/`.
   Document text is never written to logs; errors log only an exception class or short message.
 
+## Review actions (M8)
+- `review_actions` holds what a person decided: the notes they wrote, the reason for a rejection, and for a
+  corrected field the value before and after (invoice values, so treat the table like the invoices themselves).
+  The audit log holds only field names and codes, never these values.
+- A bank account is masked (last four characters) in every response. Revealing one is a reviewer-only action,
+  never cached, and is logged as an event that does not contain the account.
+- Sign-ins are audited without the name that was typed and never with a password or token.
+
 ## Bank details (M1)
 Encrypted at rest (Fernet, `BANK_ENCRYPTION_KEY`); comparisons use a keyed hash; masked in the UI.
 

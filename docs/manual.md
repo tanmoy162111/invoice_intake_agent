@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M7 (exceptions and routing), 2026-09-25.
+> **Describes:** the system after M8a (the review API: login, queue, corrections, decisions), 2026-09-26.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -28,13 +28,13 @@ anyone.**
 
 | Role | What they do | Available |
 |---|---|---|
-| **Reviewer** (AP clerk) | Works the queue of invoices that need a person; corrects, approves, rejects | [Coming in M8] |
+| **Reviewer** (AP clerk) | Works the queue of invoices that need a person; corrects, approves, rejects | Through the API today (section 4.15); the browser screen is [Coming in M8b] |
 | **Approver / manager** | Approves invoices above the limit | [Coming in M8] |
 | **Operator** (IT or support) | Starts the system, loads data, watches the background jobs | Today |
 | **Developer** | Builds and tests the system | Today |
 
 **Today, the only way in is the API** (a set of web addresses a program or the `curl` command can call).
-The reviewer screen arrives in M8. The web page you can open now only shows "API: healthy".
+The reviewer screen arrives in M8b; the actions it will use already exist in the API (section 4.15). The web page you can open now only shows "API: healthy".
 
 ---
 
@@ -51,7 +51,7 @@ Every invoice moves through these steps. Each change is written to a permanent h
 | `checking` | The checks have run and their results are saved; the router decides next (a few seconds) | Today (M4 to M6) |
 | `cleared` | Nothing is in doubt: no open exception, every important field confident, every check ran, total within the approval limit. Waits for a person to approve | Today (M7) |
 | `needs_review` | A person must look. The reasons are in the history (section 4.14) | Today (M7) |
-| `approved` / `rejected` | A person decided | [M8] |
+| `approved` / `rejected` | A person decided (section 4.15). Both are final; a correction or a re-check is no longer possible | Today (M8a, through the API) |
 | `exported` | Handed to the accounting system | [M12] |
 | `failed` | Reading failed, with a reason (section 5.6); can be retried | Today (M3) |
 
@@ -217,7 +217,7 @@ it can be overshot by about one call each.
 
 ### 4.8 See what was read
 
-There is no reviewer screen yet (M8). To look at one invoice, ask the database:
+There is no reviewer screen yet (M8b). To look at one invoice, use the API (section 4.15) or ask the database:
 
 ```bash
 docker compose exec db psql -U intake -c "
@@ -427,6 +427,47 @@ Good to know:
   open `UNREADABLE_DOCUMENT` exception so a reviewer sees it.
 - Every exception, and the routing decision, is written to the history with codes only, never invoice text.
 
+### 4.15 Review an invoice through the API
+
+The browser screen is M8b. Everything it will do already works over the API, so a script or a tool such as
+`curl` can do it today. First sign in (the password is `REVIEWER_PASSWORD` in `.env`):
+
+```bash
+TOKEN=$(curl -s localhost:8000/auth/login -H 'Content-Type: application/json' \
+  -d '{"username":"reviewer","password":"<REVIEWER_PASSWORD>"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
+AUTH="Authorization: Bearer $TOKEN"
+curl -s -H "$AUTH" 'localhost:8000/invoices?limit=10'            # the queue, worst first
+curl -s -H "$AUTH" localhost:8000/invoices/<invoice-id>            # one invoice in full
+```
+
+**The queue** (`GET /invoices`) lists `needs_review` and `failed` invoices (a blank document is `failed` with an
+`UNREADABLE_DOCUMENT` exception). Repeat `status=` to change that, add `code=` to keep invoices with that
+exception open, `supplier_id=` for one supplier, and `limit=` / `offset=` to page. Worst open exception first,
+then oldest.
+
+**One invoice** (`GET /invoices/<id>`) returns every field with its confidence and, for a doubtful one, the
+reason in plain words ("nothing confirms it: no text layer, rule or supplier record supports it"), the lines,
+the exceptions with their explanation and fix, the checks, why it was routed, and whether it can be approved.
+A duplicate exception carries the other invoice for a side-by-side view. The bank account is only ever shown
+masked (`••••••••6016`). Pages of the document are at `/invoices/<id>/pages/1`.
+
+**Actions** all return the invoice as it now stands:
+
+| Action | How | Rules |
+|---|---|---|
+| Correct a field | `POST /invoices/<id>/corrections` `{"field":"total","value":"1,234.50"}` | Header fields only (not the bank account, not lines yet). Amounts are read in the invoice currency (up to 10 trillion units), dates as `2026-05-31` (years 2000 to 2100). The currency itself can only be changed while no amounts have been read (`CURRENCY_HAS_AMOUNTS` otherwise: reject the invoice and ask for a corrected copy). Text must have a letter or digit and may not contain control or invisible characters. Optional fields (PO number, due date, payment terms, tax ID) may be emptied. The checks and routing run again at once; exceptions that no longer apply are closed by the system, and one a person already closed, unchanged, stays closed |
+| Close an exception | `POST /exceptions/<id>/close` `{"resolution":"resolved","note":"..."}` | `resolved` (dealt with) or `dismissed` (not a problem). A `block` exception needs a note with at least a letter or digit. Notes are stored without control or invisible characters. A changed bank account is raised again after every re-check, so a person decides again |
+| Approve | `POST /invoices/<id>/approve` | Only when every exception is closed, and only from `cleared` or `needs_review`. Final |
+| Reject | `POST /invoices/<id>/reject` `{"reason":"..."}` | A reason is required. Final |
+| Request information | `POST /invoices/<id>/request-info` `{"note":"..."}` | Logged only; the status does not change |
+| Reveal the bank account | `POST /invoices/<id>/bank/reveal` | Returns the account (never cached); the reveal is written to the history (without the account). If the stored value cannot be read with the configured key the answer is 409 `BANK_UNREADABLE` and the attempt is logged |
+
+A refused action answers 409 (the invoice is in the wrong state, or exceptions are still open) or 422 (a value
+or note is missing or unreadable) with a `detail.code` such as `OPEN_EXCEPTIONS`, `NOTE_REQUIRED`,
+`INVALID_VALUE`, `UNKNOWN_FIELD`, `CURRENCY_HAS_AMOUNTS` or `WRONG_STATUS`. Actions need a reviewer session; the static API token can
+read but not act. Every action is a row in `review_actions` and an audit event (field names and codes only,
+never values). Sign-ins are audited too (`login_succeeded`, and `login_failed` without the name typed).
+
 ---
 
 ## 5. Reference
@@ -453,10 +494,23 @@ invoice exception (section 6).
 | `GET /documents/{document_id}` | Look up a document | Yes |
 | `GET /jobs` | Queue health, including jobs paused on purpose | Yes |
 | `GET /extraction/status` | Model spend against the daily limit, and whether reading is paused | Yes |
+| `POST /auth/login` | The reviewer signs in; returns a session token | No (the one route besides `/health`) |
+| `GET /auth/me` | Who the token belongs to | Yes |
+| `GET /invoices` | The queue: invoices that need a person, worst exception first | Yes |
+| `GET /invoices/{invoice_id}` | One invoice: fields with confidence, lines, exceptions, checks, masked bank | Yes |
+| `GET /invoices/{invoice_id}/pages/{page}` | A page of the document as a PNG | Yes |
+| `POST /invoices/{invoice_id}/corrections` | Correct a field; the checks run again | Reviewer session |
+| `POST /exceptions/{exception_id}/close` | Resolve or dismiss an exception | Reviewer session |
+| `POST /invoices/{invoice_id}/approve` | Approve (every exception must be closed) | Reviewer session |
+| `POST /invoices/{invoice_id}/reject` | Reject, with a reason | Reviewer session |
+| `POST /invoices/{invoice_id}/request-info` | Record that information was requested | Reviewer session |
+| `POST /invoices/{invoice_id}/bank/reveal` | Show the bank account (logged) | Reviewer session |
 | `GET /openapi.json` | Machine-readable description of the API | Yes |
 
-Send the token as `Authorization: Bearer <token>`. The token is a temporary arrangement until real
-login arrives in M8. If no token is configured the server refuses everything except `/health`.
+Send the token as `Authorization: Bearer <token>`. Two kinds are accepted: the static `API_TOKEN` (for
+scripts: it can upload, read the queue and read invoices) and a reviewer's session token from
+`/auth/login` (needed for every action, so the history names who acted). If neither is configured the server
+refuses everything except `/health` and the login.
 
 ### 5.3 Commands
 
@@ -495,6 +549,8 @@ login arrives in M8. If no token is configured the server refuses everything exc
 | `APP_ENV` | `development` | `development`, `test` or `production`. Production refuses `VALIDATION_TODAY` |
 | `VALIDATION_TODAY` | empty | A fixed "as of" date (`YYYY-MM-DD`) for the date checks. Test and demo only |
 | `DEDUPE_POLL_S`, `DEDUPE_MAX_WAIT_S` | 10, 300 | How often the duplicate check re-tries while earlier invoices are unread, and when it stops waiting (seconds) |
+| `REVIEWER_USERNAME`, `REVIEWER_PASSWORD` | `reviewer`, empty | The one demo reviewer. An empty password switches login off, and ends any session already issued. The password must be at least 8 characters and the name may not be `system`. `make dev` generates a password into `.env` |
+| `SESSION_SECRET`, `SESSION_TTL_S` | empty, 28800 | The key that signs reviewer sessions (at least 16 characters), and how long one lasts (seconds, at least 60). Changing it signs everyone out. `make dev` generates the secret |
 | `MATCH_POLL_S`, `MATCH_MAX_WAIT_S` | 10, 300 | The same, for the 3-way match: how often it re-tries while earlier invoices are unread or unmatched, and when it stops waiting (seconds) |
 | `EXTRACT_TIMEOUT_S` | 120 | How long one model call may take before it counts as a failure to retry |
 | `EXTRACT_NOT_CONFIGURED_RETRY_S` | 300 | How often a paused job checks whether reading has been configured |
@@ -580,7 +636,7 @@ states the real numbers, and every one is planted in the demo data.** The exact 
 
 | When | You will be able to |
 |---|---|
-| M8 | Work the review queue in a browser, on a phone too; correct fields; approve or reject |
+| M8b | Work the review queue in a browser, on a phone too (the actions already exist in the API, section 4.15) |
 | M9 | Read the complete history of any invoice |
 | M10 | See measured accuracy per field and per document quality |
 | M11 | See a dashboard of volume, exceptions, cost and estimated savings |
@@ -632,6 +688,10 @@ hardening, the database password and encryption of stored files.
 | Currency and amounts are empty for an invoice | A bare `$` the supplier's usual currency does not settle, or another reason in section 5.7 | Expected: a person confirms it (M8) |
 | Duplicate check keeps waiting (`WAITING_FOR_EARLIER_INVOICES`) | An earlier invoice is still being read (or its reading is paused) | It goes ahead by itself after 5 minutes; fix the paused reading (section 4.6) |
 | Two similar invoices, only one `POSSIBLE_DUPLICATE` | Only the later-received one is flagged | Expected (section 4.12) |
+| `POST /auth/login` says 503 | No `REVIEWER_PASSWORD` or `SESSION_SECRET` is set | Set both in `.env` (`make dev` does), restart the API |
+| `POST /auth/login` says 429 | Five attempts in a minute from one address (or fifty from all addresses) lock the login; the `Retry-After` header says how long | Wait that long. Behind a proxy, the proxy must present the real client address |
+| A review action says 401 after a while | The session lasted `SESSION_TTL_S`, or the reviewer name or password setting changed | Sign in again |
+| A review action says 403 | It was sent with the static API token, which cannot act | Use a session token from `/auth/login` |
 | An invoice stays `checking` | The routing job has not run: an earlier stage is waiting, or the worker is stopped | Look at `/jobs` for `route_invoice`, `match_invoice` and `detect_duplicates` (section 4.4) |
 | Almost every scanned or photographed invoice goes to review | Its invoice number has no text layer to confirm it, so confidence is 75%, below the 80% minimum | Expected with the current confidence rules; measured in M10, and a reviewer confirms the field (M8) |
 | Every check is `skipped` | The invoice was read with empty fields (see section 5.7) | Fix the cause; a person confirms the fields (M8) |

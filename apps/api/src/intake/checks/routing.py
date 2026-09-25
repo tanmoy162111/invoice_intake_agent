@@ -22,9 +22,11 @@ from intake.checks.pipeline import WrongTenant
 from intake.config import Settings
 from intake.core.classify import CheckRow, ClassifyContext, WeakField, classify
 from intake.core.confidence import CRITICAL_FIELDS, fields_below_threshold
+from intake.core.exceptions import ExceptionCode
 from intake.core.match import MatchCode
+from intake.core.review import PriorDecision, is_carried_over
 from intake.core.routing import RoutedException, RoutingInput, approval_limit_for, decide_route
-from intake.core.statuses import ActorType, InvoiceStatus
+from intake.core.statuses import ActorType, ExceptionStatus, InvoiceStatus
 from intake.core.validate import CheckCode, Outcome
 from intake.db.invoices import set_invoice_status
 from intake.db.models import (
@@ -121,7 +123,18 @@ def route_invoice(
         approval_limit_minor=limit,
         weak_fields=weak,
     )
-    drafts = classify(rows, ctx)
+    priors = [
+        PriorDecision(
+            ExceptionCode(e.code), e.explanation, ExceptionStatus(e.status), e.resolved_by
+        )
+        for e in session.execute(
+            select(InvoiceException).where(
+                InvoiceException.tenant_id == inv.tenant_id, InvoiceException.invoice_id == inv.id
+            )
+        ).scalars()
+    ]
+    # An exception a person already closed, identical in words and numbers, is not raised again.
+    drafts = [d for d in classify(rows, ctx) if not is_carried_over(priors, d.code, d.explanation)]
     for d in drafts:
         session.add(
             InvoiceException(
