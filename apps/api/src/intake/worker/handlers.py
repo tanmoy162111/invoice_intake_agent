@@ -8,6 +8,7 @@ from intake.audit.writer import record_event
 from intake.checks.duplicates import DEDUPE_JOB, detect_duplicates
 from intake.checks.matching import MATCH_JOB, match_invoice
 from intake.checks.pipeline import VALIDATE_JOB, validate_invoice
+from intake.checks.routing import ROUTE_JOB, route_invoice
 from intake.config import Settings
 from intake.core.statuses import ActorType, InvoiceStatus
 from intake.db.models import Invoice, Job
@@ -110,10 +111,21 @@ def _match_invoice(
     session: Session, storage: LocalStorage, settings: Settings, job: Job
 ) -> queue.Deferral | None:
     waited = db_now(session) - job.created_at
-    return match_invoice(
-        session, settings, uuid.UUID(job.payload["invoice_id"]), tenant_id=job.tenant_id,
+    invoice_id = uuid.UUID(job.payload["invoice_id"])
+    deferral = match_invoice(
+        session, settings, invoice_id, tenant_id=job.tenant_id,
         stop_waiting=waited > timedelta(seconds=settings.match_max_wait_s),
     )  # fmt: skip
+    if deferral is None:  # next stage: exceptions and routing
+        queue.enqueue(
+            session, tenant_id=job.tenant_id, type=ROUTE_JOB,
+            payload={"invoice_id": str(invoice_id)}, dedupe_key=f"{ROUTE_JOB}:{invoice_id}",
+        )  # fmt: skip
+    return deferral
+
+
+def _route_invoice(session: Session, storage: LocalStorage, settings: Settings, job: Job) -> None:
+    route_invoice(session, settings, uuid.UUID(job.payload["invoice_id"]), tenant_id=job.tenant_id)
 
 
 HANDLERS: dict[str, Handler] = {
@@ -122,4 +134,5 @@ HANDLERS: dict[str, Handler] = {
     VALIDATE_JOB: _validate_invoice,
     DEDUPE_JOB: _detect_duplicates,
     MATCH_JOB: _match_invoice,
+    ROUTE_JOB: _route_invoice,
 }
