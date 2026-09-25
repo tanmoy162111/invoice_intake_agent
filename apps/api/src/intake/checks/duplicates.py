@@ -24,7 +24,6 @@ from intake.core.dedupe import (
     DedupeSettings,
     InvoiceRef,
     check_duplicate,
-    supplier_key,
 )
 from intake.core.statuses import ActorType, InvoiceStatus
 from intake.core.validate import Outcome
@@ -33,6 +32,7 @@ from intake.extract.service import db_now
 from intake.worker import queue
 
 DEDUPE_JOB = "detect_duplicates"
+MAX_CANDIDATES = 2000  # beyond this the comparison is refused, never silently truncated
 WAITING = "WAITING_FOR_EARLIER_INVOICES"
 # Not yet read (or not yet checked): their supplier and fields cannot be compared reliably.
 _PENDING = (InvoiceStatus.RECEIVED, InvoiceStatus.EXTRACTING, InvoiceStatus.EXTRACTED)
@@ -42,8 +42,9 @@ _NOT_COMPARABLE = (*_PENDING, InvoiceStatus.FAILED)
 def _ref(inv: Invoice) -> InvoiceRef:
     return InvoiceRef(
         id=str(inv.id),
-        supplier=supplier_key(str(inv.supplier_id) if inv.supplier_id else None, inv.supplier_name),
-        invoice_number=inv.invoice_number, invoice_date=inv.invoice_date,
+        supplier_id=str(inv.supplier_id) if inv.supplier_id else None,
+        supplier_name=inv.supplier_name, invoice_number=inv.invoice_number,
+        invoice_date=inv.invoice_date,
         total_minor=inv.total_minor, currency=inv.currency,
     )  # fmt: skip
 
@@ -75,7 +76,9 @@ def detect_duplicates(
         return None  # the checks have not run, or the invoice is further along
     done = session.execute(
         select(CheckResult.id).where(
-            CheckResult.invoice_id == inv.id, CheckResult.check_code == POSSIBLE_DUPLICATE
+            CheckResult.tenant_id == tenant_id,
+            CheckResult.invoice_id == inv.id,
+            CheckResult.check_code == POSSIBLE_DUPLICATE,
         )
     ).first()
     if done is not None:
@@ -91,18 +94,32 @@ def detect_duplicates(
         until = db_now(session) + timedelta(seconds=settings.dedupe_poll_s)
         return queue.Deferral(until, WAITING)
 
-    same_supplier = (
-        Invoice.supplier_id == inv.supplier_id if inv.supplier_id else Invoice.supplier_id.is_(None)
-    )
-    rows = session.execute(
+    # A superset of the same supplier: the linked record, or invoices not linked (which are told
+    # apart by printed name), or, for an unlinked invoice, linked ones with the same printed name.
+    if inv.supplier_id:
+        same_supplier = or_(Invoice.supplier_id == inv.supplier_id, Invoice.supplier_id.is_(None))
+    else:
+        same_supplier = or_(
+            Invoice.supplier_id.is_(None),
+            func.lower(func.coalesce(Invoice.supplier_name, ""))
+            == (inv.supplier_name or "").lower(),
+        )
+    candidates = (
         select(Invoice)
         .where(earlier, same_supplier, Invoice.status.not_in([s.value for s in _NOT_COMPARABLE]))
         .order_by(Invoice.created_at, Invoice.id)
-    ).scalars()
-    tenant = session.get_one(Tenant, inv.tenant_id)
-    result = check_duplicate(
-        _ref(inv), [_ref(r) for r in rows], DedupeSettings.from_tenant(tenant.settings or {})
     )
+    n_candidates = session.scalar(select(func.count()).select_from(candidates.subquery())) or 0
+    tenant = session.get_one(Tenant, inv.tenant_id)
+    if n_candidates > MAX_CANDIDATES:
+        result = DedupeResult(
+            Outcome.SKIPPED, None, {"reason": "TOO_MANY_TO_COMPARE", "compared": n_candidates}
+        )
+    else:
+        rows = session.execute(candidates).scalars()
+        result = check_duplicate(
+            _ref(inv), [_ref(r) for r in rows], DedupeSettings.from_tenant(tenant.settings or {})
+        )
     if pending and result.outcome is Outcome.PASS:  # cannot be sure with invoices still unread
         result = DedupeResult(
             Outcome.SKIPPED, None, {"reason": "EARLIER_INVOICES_STILL_PENDING", **result.details}

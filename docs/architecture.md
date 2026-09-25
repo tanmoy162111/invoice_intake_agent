@@ -158,3 +158,30 @@ extract_invoice ─▶ (status extracted) ─▶ enqueue validate_invoice ─▶
 - **Known limits:** tolerances of one minor unit also apply to zero-decimal currencies (JPY); two
   suppliers sharing an identifier would resolve to the first in list order; the bank hash is over the
   printed text, so formatting differences give a false "changed" (the safe direction).
+
+## Duplicate detection (M5)
+
+```
+validate_invoice ─▶ (status checking) ─▶ enqueue detect_duplicates ─▶ earlier invoices pending? ─ yes ─▶ defer (WAITING_FOR_EARLIER_INVOICES)
+                                                                              │ no (or wait expired)
+                                                                              ▼
+                                            core/dedupe.check_duplicate ─▶ check_results (POSSIBLE_DUPLICATE) + audit
+```
+
+- **Pure rules** in `core/dedupe.py`: `check_duplicate(new, earlier, settings)`. Hard: same supplier and the
+  same `number_key` (letters and digits, upper case). Soft: same supplier, same signed total and currency,
+  invoice dates within `dedupe_window_days` (7), and `number_similarity` >= `dedupe_number_similarity_min`
+  (85). `number_similarity` is the larger of the full-key ratio and the digits-only ratio (digits count
+  only when both numbers have at least four). Outcomes reuse `pass` / `fail` / `skipped`.
+- **Supplier identity:** `supplier_key` is the linked supplier id when there is one, else the printed
+  name. This is why the stage waits until earlier invoices are past validation (where the link is set).
+- **Stage** (`checks/duplicates.py`): only an invoice in `checking` is worked on; one `POSSIBLE_DUPLICATE`
+  row per invoice (unique with the rule version), so a re-run does nothing. The job payload's tenant must
+  match. Earlier means received earlier (`created_at`, then id). Candidates exclude `failed` invoices.
+- **Waiting:** a `Deferral(WAITING_FOR_EARLIER_INVOICES)` re-queues the job every `DEDUPE_POLL_S` (10 s)
+  without using an attempt, until `DEDUPE_MAX_WAIT_S` (300 s) after the job was created.
+- **Audit:** `duplicate_check_completed` carries the outcome, kind, earlier invoice id and pending count.
+  Never invoice numbers. `check_results.details` holds the earlier number (clipped to 100 characters).
+- **Migration** `0008`: index on `invoices (tenant_id, supplier_id)`.
+- **Not yet:** turning a duplicate result into an exception and routing (M7). File-level duplicates
+  (same SHA-256) stay a separate M2 check.

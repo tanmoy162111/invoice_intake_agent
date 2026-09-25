@@ -11,7 +11,7 @@ from intake.core.dedupe import (
     check_duplicate,
     number_key,
     number_similarity,
-    supplier_key,
+    supplier_name_key,
 )
 from intake.core.validate import Outcome
 
@@ -24,9 +24,10 @@ def ref(
     day: date | None = date(2026, 5, 1),
     total: int | None = 50000,
     currency: str | None = "USD",
-    supplier: str | None = S,
+    supplier_id: str | None = S,
+    name: str | None = "Acme Ltd",
 ) -> InvoiceRef:
-    return InvoiceRef(id_, supplier, number, day, total, currency)
+    return InvoiceRef(id_, supplier_id, name, number, day, total, currency)
 
 
 NEW = ref("new")
@@ -58,11 +59,11 @@ def test_number_key_keeps_only_letters_and_digits_in_upper_case(raw: str, key: s
     assert number_key(raw) == key
 
 
-def test_supplier_key_prefers_the_linked_supplier_over_the_printed_name() -> None:
-    assert supplier_key("abc-123", "Acme Ltd.") == "id:abc-123"
-    assert supplier_key(None, "  ACME,  Ltd. ") == "name:acme ltd"
-    assert supplier_key(None, None) is None
-    assert supplier_key(None, "---") is None
+def test_supplier_name_key_ignores_case_punctuation_and_spacing() -> None:
+    assert supplier_name_key("  ACME,  Ltd. ") == "acme ltd"
+    assert supplier_name_key(None) is None
+    assert supplier_name_key("---") is None
+    assert supplier_name_key("   ") is None
 
 
 def test_similarity_of_the_three_ways_to_write_a_number_is_high() -> None:
@@ -106,7 +107,9 @@ def test_a_hard_duplicate_works_even_when_the_total_or_date_is_missing() -> None
 
 
 def test_another_suppliers_invoice_with_the_same_number_is_not_a_duplicate() -> None:
-    assert check(earlier=[ref("old", supplier="sup-2")]).outcome is Outcome.PASS
+    assert (
+        check(earlier=[ref("old", supplier_id="sup-2", name="Other Ltd")]).outcome is Outcome.PASS
+    )
 
 
 def test_an_invoice_is_never_a_duplicate_of_itself() -> None:
@@ -211,8 +214,10 @@ def test_a_plain_non_match_passes_and_says_how_many_were_compared() -> None:
 
 
 def test_no_supplier_means_the_check_cannot_be_done() -> None:
-    r = check(ref("new", supplier=None))
-    assert r.outcome is Outcome.SKIPPED and r.details["reason"] == "NO_SUPPLIER"
+    for gone in ({"supplier_id": None, "name": None}, {"supplier_id": "", "name": "  "},
+                 {"supplier_id": None, "name": "---"}):  # fmt: skip
+        r = check(ref("new", **gone))  # type: ignore[arg-type]
+        assert r.outcome is Outcome.SKIPPED and r.details["reason"] == "NO_SUPPLIER"
 
 
 def test_no_invoice_number_means_the_check_cannot_be_done() -> None:
@@ -287,9 +292,131 @@ def test_settings_come_from_the_tenant_with_safe_fallbacks() -> None:
 def test_passed_is_true_only_for_a_pass() -> None:
     assert check(earlier=[]).passed is True
     assert check().passed is False
-    assert check(ref("new", supplier=None)).passed is False
+    assert check(ref("new", supplier_id=None, name=None)).passed is False
 
 
 def test_an_earlier_invoice_without_a_number_is_ignored() -> None:
     nameless = ref("old", number=None)
     assert check(soft(), earlier=[nameless]).outcome is Outcome.PASS
+
+
+# ---- who the supplier is: linked id and printed name ------------------------------------------
+
+
+def test_a_linked_and_an_unlinked_invoice_of_the_same_printed_name_are_compared() -> None:
+    unlinked_new = ref("new", supplier_id=None, name="ACME, Ltd.")
+    assert (
+        check(unlinked_new, earlier=[ref("old", supplier_id="s1", name="Acme Ltd")]).outcome
+        is Outcome.FAIL
+    )
+    linked_new = ref("new", supplier_id="s1", name="Acme Ltd")
+    assert (
+        check(linked_new, earlier=[ref("old", supplier_id=None, name="acme ltd")]).outcome
+        is Outcome.FAIL
+    )
+
+
+def test_two_unlinked_invoices_are_the_same_supplier_only_by_the_printed_name() -> None:
+    same = check(ref("new", supplier_id=None), earlier=[ref("old", supplier_id=None)])
+    assert same.outcome is Outcome.FAIL
+    other = check(
+        ref("new", supplier_id=None, name="Other Ltd"), earlier=[ref("old", supplier_id=None)]
+    )
+    assert other.outcome is Outcome.PASS
+
+
+def test_two_different_linked_suppliers_are_never_the_same() -> None:
+    other = ref("old", supplier_id="s2", name="Acme Ltd")  # same printed name, different records
+    assert check(earlier=[other]).outcome is Outcome.PASS
+
+
+def test_linked_versus_unlinked_with_different_names_and_the_same_number_is_uncertain() -> None:
+    r = check(ref("new", supplier_id=None, name="Acme Limited"), earlier=[ORIGINAL])
+    assert r.outcome is Outcome.SKIPPED and r.details["reason"] == "SUPPLIER_UNCERTAIN"
+
+
+def test_that_uncertainty_needs_a_similar_number() -> None:
+    r = check(ref("new", supplier_id=None, name="Acme Limited", number="ZZZ-9"), earlier=[ORIGINAL])
+    assert r.outcome is Outcome.PASS
+
+
+def test_a_confirmed_duplicate_wins_over_an_uncertain_supplier() -> None:
+    uncertain = ref("u", supplier_id="s9", name="Something Else")
+    r = check(ref("new", supplier_id=None), earlier=[uncertain, ref("hit", supplier_id=None)])
+    assert r.outcome is Outcome.FAIL and r.match.existing.id == "hit"  # type: ignore[union-attr]
+
+
+# ---- number shapes -------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("a", "b"), [("INV-0043", "INV-43"), ("0043", "43"), ("INV-01043", "INV-1043")]
+)
+def test_leading_zeros_do_not_hide_a_hard_duplicate(a: str, b: str) -> None:
+    r = check(ref("new", number=a), earlier=[ref("old", number=b)])
+    assert r.outcome is Outcome.FAIL and r.match.kind is DuplicateKind.HARD  # type: ignore[union-attr]
+
+
+def test_zero_only_runs_stay_zero() -> None:
+    assert number_key("INV-000") == "INV000"
+    assert (
+        check(ref("new", number="A-000"), earlier=[ref("old", number="A-0")]).outcome
+        is Outcome.FAIL
+    )
+
+
+def test_a_number_that_differs_in_value_is_not_hidden_by_zero_handling() -> None:
+    assert (
+        check(
+            ref("new", number="INV-0043", total=1), earlier=[ref("old", number="INV-0430", total=2)]
+        ).outcome
+        is Outcome.PASS
+    )
+
+
+# ---- currency, zero totals, ties, windows ---------------------------------------------------
+
+
+def test_currency_case_does_not_matter() -> None:
+    assert check(soft(currency="usd")).outcome is Outcome.FAIL
+
+
+def test_a_zero_total_is_not_evidence_of_a_soft_duplicate() -> None:
+    zero = check(soft(total_minor=0), earlier=[ref("old", total=0)])
+    assert zero.outcome is Outcome.SKIPPED and zero.details["reason"] == "INCOMPLETE_FOR_SOFT_MATCH"
+
+
+def test_a_hard_duplicate_with_a_zero_total_is_still_a_duplicate() -> None:
+    assert check(ref("new", total=0), earlier=[ref("old", total=0)]).outcome is Outcome.FAIL
+
+
+def test_equal_similarity_keeps_the_first_earlier_invoice() -> None:
+    a, b = ref("a", number="INV-1045"), ref("b", number="INV-1043".replace("3", "5") + "")
+    assert check(soft(), earlier=[a, b]).match.existing.id == "a"  # type: ignore[union-attr]
+
+
+def test_a_zero_day_window_means_the_same_day_only() -> None:
+    same_day = DedupeSettings(window_days=0)
+    assert check(soft(), settings=same_day).outcome is Outcome.FAIL
+    assert check(soft(invoice_date=date(2026, 5, 2)), settings=same_day).outcome is Outcome.PASS
+
+
+def test_a_missing_name_on_an_unlinked_invoice_is_uncertain_not_a_pass() -> None:
+    nameless = ref("new", supplier_id="s1", name=None)
+    unlinked = ref("old", supplier_id=None, name="Acme Ltd")
+    r = check(nameless, earlier=[unlinked])
+    assert r.outcome is Outcome.SKIPPED and r.details["reason"] == "SUPPLIER_UNCERTAIN"
+
+
+def test_clearly_different_company_names_are_different_suppliers_not_uncertain() -> None:
+    # year-style numbers ("2026-0413" vs "2026-0415") are close across unrelated companies
+    other = ref("new", supplier_id=None, name="Zenith Novelty Traders", number="ZN-2026-0413")
+    known = ref("old", supplier_id="s1", name="Summit IT Hardware Corp.", number="SIT-2026-0415")
+    assert check(other, earlier=[known]).outcome is Outcome.PASS
+
+
+def test_plausible_name_variants_stay_uncertain() -> None:
+    variant = ref("new", supplier_id=None, name="Acme Ltd.")  # same number, linked earlier
+    assert check(variant, earlier=[ref("old", name="Acme Limited")]).outcome is Outcome.SKIPPED
+    other_spelling = ref("new", supplier_id=None, name="Acme Limited")
+    assert check(other_spelling, earlier=[ORIGINAL]).outcome is Outcome.SKIPPED

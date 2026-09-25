@@ -52,7 +52,11 @@ def run_once(
                     session, job, until=outcome.until, reason=outcome.reason, attempt=attempt
                 ):
                     session.commit()
-                    log.warning("job %s (%s) paused: %s", job_id, job_type, outcome.reason)
+                    # Routine waiting is not a warning; a spend cap or missing setup is.
+                    level = (
+                        logging.INFO if outcome.reason.startswith("WAITING") else logging.WARNING
+                    )
+                    log.log(level, "job %s (%s) paused: %s", job_id, job_type, outcome.reason)
                 else:
                     session.rollback()
                     log.warning("job %s paused after losing its lock; ignored", job_id)

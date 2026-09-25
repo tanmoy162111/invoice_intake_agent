@@ -165,8 +165,8 @@ def test_a_result_is_skipped_only_when_a_similar_invoice_lacks_what_the_soft_rul
     # either the invoice itself, or an earlier one from the same supplier with a similar number,
     # is missing a total, date or currency
     supplier = {t["id"]: t["header"]["supplier_name"] for t in TRUTHS}
-    assert {supplier[i] for i in skipped} <= {supplier[i] for i in incomplete}
-    assert set(skipped.values()) == {"INCOMPLETE_FOR_SOFT_MATCH"}
+    assert {supplier[i] for i in skipped} <= {supplier[i] for i in incomplete}, skipped
+    assert set(skipped.values()) == {"INCOMPLETE_FOR_SOFT_MATCH"}, skipped
 
 
 def test_the_audit_trail_names_ids_only_never_invoice_numbers(env: Env) -> None:
@@ -336,3 +336,48 @@ def test_waiting_jobs_show_as_paused_not_failed(env: Env) -> None:
             )
             == 0
         )
+
+
+def test_too_many_candidates_is_could_not_check_never_a_truncated_comparison(
+    env: Env, two_invoices: tuple[uuid.UUID, uuid.UUID, Engine], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from intake.checks import duplicates
+
+    earlier, later, engine = two_invoices
+    monkeypatch.setattr(duplicates, "MAX_CANDIDATES", 0)
+    with Session(engine) as s:
+        s.execute(update(Invoice).where(Invoice.id == earlier).values(status="checking"))
+        assert detect_duplicates(s, env.settings, later, tenant_id=tenant_of(engine, later)) is None
+        row = dict(
+            s.execute(select(CheckResult).where(CheckResult.invoice_id == later))
+            .scalar_one()
+            .details
+        )
+        s.rollback()
+    assert (row["outcome"], row["reason"]) == ("skipped", "TOO_MANY_TO_COMPARE")
+
+
+def test_a_linked_earlier_invoice_and_an_unlinked_later_one_of_the_same_name_are_compared(
+    env: Env, two_invoices: tuple[uuid.UUID, uuid.UUID, Engine]
+) -> None:
+    from intake.db.models import Supplier
+
+    earlier, later, engine = two_invoices
+    with Session(engine) as s:
+        tenant_id = tenant_of(engine, later)
+        sup = Supplier(tenant_id=tenant_id, name="Acme Ltd", aliases=[], default_currency="USD")
+        s.add(sup)
+        s.flush()
+        s.execute(
+            update(Invoice)
+            .where(Invoice.id == earlier)
+            .values(status="checking", supplier_id=sup.id)
+        )
+        assert detect_duplicates(s, env.settings, later, tenant_id=tenant_id) is None
+        details = dict(
+            s.execute(select(CheckResult).where(CheckResult.invoice_id == later))
+            .scalar_one()
+            .details
+        )
+        s.rollback()
+    assert (details["outcome"], details["kind"]) == ("fail", "hard")

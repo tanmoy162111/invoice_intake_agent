@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M4 (validation rules), 2026-09-25.
+> **Last updated:** after M5 (duplicate detection), 2026-09-25.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -27,14 +27,14 @@ You can read only the first layer of each chapter and still understand the whole
 - **Why.** Accounts-payable teams do not lose time typing. They lose it on *exceptions*: an amount
   that does not match the purchase order, a duplicate, goods that never arrived, a supplier whose
   bank account suddenly changed. The product is built around explaining and routing those.
-- **Where we are.** Five of fourteen milestones are built (M0 to M3 are merged; M4 is in review).
+- **Where we are.** Six of fourteen milestones are built (M0 to M4 are merged; M5 is in review).
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
-  *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change. A realistic
+  *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change, and has this invoice been received before. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** Duplicates, matching and routing (M5 to M7), the reviewer screen (M8), audit timeline (M9),
+- **What is not built yet.** Matching and routing (M6 and M7), the reviewer screen (M8), audit timeline (M9),
   accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
   proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
-- **Health.** 792 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
+- **Health.** 885 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
   checks (CI) pass on the earlier pull requests.
 
 ### Status board
@@ -46,7 +46,7 @@ You can read only the first layer of each chapter and still understand the whole
 | M2 | Ingestion and job queue | Upload a file; it is stored and prepared | Built, in review (PR #3) |
 | M3 | Extraction | Fields read from the invoice, with confidence | Built, in review (PR #4) |
 | M4 | Validation rules | Math, dates, supplier and bank details checked | Built, in review |
-| M5 | Duplicate detection | Repeats caught before approval | Planned |
+| M5 | Duplicate detection | Repeats caught before approval | Built, in review |
 | M6 | 3-way matching | Invoice compared with PO and receipt | Planned |
 | M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Planned |
 | M8 | Review queue UI | A reviewer clears the queue in a browser | Planned |
@@ -460,13 +460,103 @@ constraint on results.
 - A validation job that fails permanently leaves its invoice in `checking` with a failed job (visible in
   `/jobs`); routing (M7) will own that case.
 
+### M5: Duplicate detection
+
+*Goal: likely duplicates are caught before approval.*
+
+**In plain words.** Suppliers sometimes send the same invoice twice, and sometimes retype it slightly
+differently (`INV-1043`, then `INV1043`, then `1043`). Paying both is expensive and embarrassing. Each
+new invoice is now compared with what the same supplier sent before. If it looks like a repeat, the
+result says *which earlier invoice it matches and how*, so a person can put the two side by side. The
+earlier invoice is never blamed; only the later one is flagged. If the system cannot tell (a total or
+currency could not be read on a similar earlier invoice) it says "could not check" rather than passing.
+
+**How it works.**
+
+```
+ Checked invoice ──▶ Earlier ones still being read? ──yes──▶ wait a few seconds (up to 5 minutes)
+                              │ no
+                              ▼
+        same supplier, same number (ignoring case, spaces, dashes)?  ──▶ hard duplicate
+        same supplier, same total and currency, dates within 7 days,
+        number almost the same (85%+)?                               ──▶ soft duplicate
+        otherwise                                                    ──▶ pass (or "could not check")
+```
+
+1. **Hard duplicate.** Same supplier and the same invoice number once punctuation, spaces and letter case
+   and leading zeros are ignored. `rfm-2026-0504` equals `RFM-2026-0504`, `INV-0043` equals `INV-43`; `TVS20260675` equals `TVS-2026-0675`. Total and
+   date do not have to agree: a re-issued invoice with the same number is still suspicious.
+2. **Soft duplicate.** Same supplier, exactly the same total and currency, invoice dates within seven days,
+   and a very similar number: one digit different, or a bare `1043` against `INV-1043`. A credit note is
+   not a duplicate of its invoice (the amounts have opposite signs).
+3. **Order.** Only invoices received earlier are compared, so the original is never flagged.
+4. **Waiting.** If an earlier invoice is still being read or checked, its details are not final, so the
+   check waits (the job shows as paused, nothing fails). After five minutes it goes ahead; a clean result is
+   then reported as "could not check", never as a pass.
+5. **Could not check.** No supplier, no invoice number, a similar invoice missing its total, date or
+   currency (a zero total counts as missing), or a similar number whose supplier is linked on one invoice
+   and only printed on the other under a different name.
+
+**Under the hood.**
+- **Pure rules** in `core/dedupe.py` (`check_duplicate`, `number_key`, `number_similarity`,
+  `supplier_key`, `DedupeSettings`), test-first, 100% covered, mypy strict.
+- **Stage** `checks/duplicates.py::detect_duplicates`, chained after validation as a `detect_duplicates`
+  job. It records one `POSSIBLE_DUPLICATE` row in `check_results` (unique per invoice and rule version) whose
+  `details` name the earlier invoice (id, number, date, kind, similarity, days apart, invoices compared),
+  and audits `duplicate_check_completed` (ids and codes only). The job payload's tenant must match.
+- **Waiting** is a `Deferral` (`WAITING_FOR_EARLIER_INVOICES`): it uses no attempt and shows under `paused`
+  in `GET /jobs`. Settings `DEDUPE_POLL_S` (10) and `DEDUPE_MAX_WAIT_S` (300).
+- **Per-client settings** in `tenants.settings`: `dedupe_window_days` (7), `dedupe_number_similarity_min` (85).
+- Migration `0008`: index on `invoices (tenant_id, supplier_id)`. ADR 0005 records the decisions. A supplier with more than 2,000 earlier invoices gets `skipped` (`TOO_MANY_TO_COMPARE`), never a truncated comparison.
+
+**What we proved.** (Recorded answers built from the answer key; real PDFs, worker and database; all 118
+readable seed invoices.)
+
+| Check | Result |
+|---|---|
+| Planted duplicates detected, including number-format variants | 5 of 5 (4 hard: exact repeat, lower case, no hyphens; 1 soft: one digit different) |
+| Each duplicate names the earlier invoice it matches | Yes, all |
+| The original is flagged | Never |
+| False duplicates elsewhere in the seed set | None, except one pair the seed labels as PO over-billing (`inv-095` repeats `inv-006` in every field but one digit of the number, so it is a real soft duplicate; see below) |
+| Invoices "could not check" | 3 of 118, all beside an earlier invoice from the same supplier whose currency could not be read |
+| Waiting for an earlier invoice; wait that runs out; earlier invoice failed | Waits; reports "could not check", never a pass; ignored |
+| Same invoice checked twice | Nothing added |
+| Invoice numbers in the audit log | None (ids and codes only) |
+| Automated tests | 885 pass |
+
+Two independent reviews (decision logic and security) ran. Security found no critical or high issues. The
+decision-logic review found one way a real duplicate could pass: a supplier linked on one invoice and only
+printed on the other got two different keys, so the two were never compared. Supplier identity is now
+compared by record and by printed name, and an irreconcilable pair with close numbers is "could not check".
+Also fixed test-first: leading zeros (`INV-0043` vs `INV-43`), blank suppliers, currency case, zero totals as
+non-evidence, over-eager "uncertain" between clearly different companies, a bounded candidate set
+(refused, never truncated), a uniform tenant filter, a quieter waiting log, and a positive-only wait setting.
+
+**Left open.**
+- **Golden label.** The fixed golden set labels the `inv-095` / `inv-006` pair as PO over-billing only. It
+  is a genuine soft duplicate and is flagged. The golden set is protected and was not edited; decide in
+  M10 whether to widen that label. The M5 acceptance test carries one explicit allowance for it.
+- Sequential numbers from one supplier are at least 85% similar, so an invoice with an unreadable total
+  or currency beside such an invoice becomes "could not check" (a person looks). Safe, slightly noisy.
+- If the five-minute wait expires while an earlier invoice is still unread, a duplicate could hide behind it;
+  the result says how many were pending.
+- M7 must treat a failed or "could not check" `POSSIBLE_DUPLICATE` as needs-review.
+- Received order is the database time the invoice row was created (transaction start). An invoice whose
+  transaction started earlier but committed later could be missed by a check that ran in between; ingestion
+  commits immediately, so the window is tiny.
+- A duplicate result is kept if an invoice is later re-read or corrected; refreshing it belongs with the review
+  screen (M8).
+- A supplier linked on one invoice and only printed on another is compared by printed name; if the names
+  differ and the numbers are close the result is "could not check".
+- Digit-only matching also links numbers with different prefixes (`PO-1043` and `INV-1043`) and year-prefixed
+  sequences (`2024-0001`, `2025-0001`) when total, currency and date also agree. That errs towards review.
+
 ---
 
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
 |---|---|---|
-| **M5 Duplicates** | Same invoice sent twice, even with the number typed differently. | Catch repeats before approval |
 | **M6 Matching** | Compare against the purchase order and delivery receipt; price, quantity, missing delivery, over-billing. | See the three-way comparison |
 | **M7 Explanations and routing** | Every problem gets a plain-language explanation with the real numbers and a suggested fix; each invoice is routed to "cleared" or "needs a person". | Read exactly what is wrong and what to do |
 | **M8 Reviewer screen** | A browser queue: document on one side, fields on the other, actions to correct, approve, reject. Bank details masked. Works on a phone. | Clear the review queue |
@@ -489,7 +579,8 @@ or rule requires running the evaluation and reporting the result first.
 | M1 | 119 | 100% | Green | All 18 exception codes planted; audit log immutable |
 | M2 | 277 | 100% | Green on #1 and #2; #3 pending | 120/120 quality classification; hostile-upload guard |
 | M3 | 677 | 99.9% | Green | 59/59 clean invoices extracted end to end; cache and spend cap proved; no bank digits in clear |
-| M4 | 792 | 99.9% | Pending | 21/21 planted problems caught, 0/60 clearable invoices flagged; look-alike suppliers rejected |
+| M4 | 792 | 99.9% | Green | 21/21 planted problems caught, 0/60 clearable invoices flagged; look-alike suppliers rejected |
+| M5 | 885 | 99.9% | Pending | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
 
 The build gates on decision-logic coverage of at least 90%.
 
@@ -523,6 +614,8 @@ The build gates on decision-logic coverage of at least 90%.
 | A total only passes when subtotal plus tax was compared with it | Matching lines alone must not clear a wrong total | M4 |
 | Supplier tax rate kept in master data | Tax can be checked without a prompt change | M4 |
 | As-of date override is refused in production and audited | It could silently disable the date checks | M4 |
+| Only the later invoice is flagged; the check waits for earlier invoices to be read | The original must not be blamed, and a copy must not be checked before its original is readable | M5, ADR 0005 |
+| Sequential numbers rely on matching total, date and currency; missing data is "could not check" | A near number alone is not evidence | M5 |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
 
 ## 7. Risks and open questions
@@ -532,7 +625,7 @@ The build gates on decision-logic coverage of at least 90%.
 | No sandboxed parsing process with a time limit | A crafted file could still slow the worker | Before any real-data use |
 | Permanently failed job leaves invoice as "received" | Reviewer may not see it | Handled in M3: it becomes `failed` with a reason (see the M3 chapter) |
 | Default database password, root containers, unpinned base image | Weak for shared deployments | Harden before hosting |
-| Routing (M7) must treat could-not-check and failures on money and identity as review | A skipped check must never clear an invoice | Build and test in M7 |
+| Routing (M7) must treat could-not-check and failures on money, identity and duplicates as review | A skipped check must never clear an invoice | Build and test in M7 |
 | Real-model accuracy and cost unmeasured; model choice is provisional | Numbers could be worse than hoped | Run `make eval` (M10) with approval before quoting any figure |
 | Hosting, login method, target currencies and languages, licensed real samples | Open decisions in the playbook (section 15) | Settle before M8 and M10 |
 | Fresh-clone run on another machine not yet done | M0 acceptance criterion | Ask a teammate to follow the manual |

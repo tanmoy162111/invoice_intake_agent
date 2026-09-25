@@ -22,3 +22,9 @@ def test_production_without_the_override_is_fine() -> None:
 
 def test_the_default_environment_is_development() -> None:
     assert Settings().app_env == "development"
+
+
+@pytest.mark.parametrize("name", ["dedupe_poll_s", "dedupe_max_wait_s"])
+def test_duplicate_wait_settings_must_be_positive(name: str) -> None:
+    with pytest.raises(ValidationError):
+        Settings(**{name: 0})  # type: ignore[arg-type]
