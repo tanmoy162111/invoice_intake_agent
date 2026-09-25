@@ -62,9 +62,9 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.UNREADABLE_DOCUMENT,
             _S.BLOCK,
-            "The file couldn't be read clearly (page {page} is blank or too blurry).",
+            "The file couldn't be read clearly ({reason}).",
             "Ask the supplier for a clearer copy",
-            {"page": "2"},
+            {"reason": "page 2 is blank or too blurry"},
         ),
         _spec(
             _C.LOW_CONFIDENCE_FIELD,
@@ -90,19 +90,23 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.TOTAL_MISMATCH,
             _S.REVIEW,
-            "The lines add up to {expected}, but the invoice total is {actual}.",
+            "{basis} {expected}, but the invoice {field} is {actual}.",
             "Ask the supplier for a corrected invoice",
-            {"expected": "USD 2,140.00", "actual": "USD 2,410.00"},
+            {
+                "basis": "The lines add up to",
+                "expected": "USD 2,140.00",
+                "field": "total",
+                "actual": "USD 2,410.00",
+            },
         ),
         _spec(
             _C.TAX_MISMATCH,
             _S.REVIEW,
-            "Tax is {actual}, but {rate} of {base} is {expected}.",
+            "Tax is {actual}, but {basis} is {expected}.",
             "Check the tax rate for this supplier",
             {
                 "actual": "USD 318.00",
-                "rate": "15%",
-                "base": "USD 2,140.00",
+                "basis": "15% of USD 2,140.00",
                 "expected": "USD 321.00",
             },
         ),
@@ -116,9 +120,12 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.UNKNOWN_SUPPLIER,
             _S.REVIEW,
-            "'{name}' doesn't match any known supplier. Closest match: '{closest}' ({score}%).",
+            "'{name}' doesn't match any known supplier.{closest_note}",
             "Link to an existing supplier or create a new one",
-            {"name": "Acme Supplies Ltd", "closest": "ACME Supply Co.", "score": "82"},
+            {
+                "name": "Acme Supplies Ltd",
+                "closest_note": " Closest match: 'ACME Supply Co.' (82%).",
+            },
         ),
         _spec(
             _C.BANK_DETAILS_CHANGED,
@@ -131,10 +138,14 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.POSSIBLE_DUPLICATE,
             _S.BLOCK,
-            "This looks like invoice {other} from the same supplier, "
-            "received {days} days ago, for the same amount.",
+            "This looks like invoice {other} from the same supplier: {match}, "
+            "with invoice dates {days} days apart.",
             "Compare them side by side; reject if duplicate",
-            {"other": "INV-1043", "days": "4"},
+            {
+                "other": "INV-1043",
+                "match": "the same amount and a very similar number",
+                "days": "4",
+            },
         ),
         _spec(
             _C.NO_PO,
@@ -146,9 +157,9 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.PO_NOT_FOUND,
             _S.REVIEW,
-            "{po} isn't in the system.",
+            "{po} {problem}.",
             "Check for a typo or ask purchasing",
-            {"po": "PO-7781"},
+            {"po": "PO-7781", "problem": "isn't in the system"},
         ),
         _spec(
             _C.PRICE_VARIANCE,
@@ -167,9 +178,9 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.QTY_VARIANCE,
             _S.REVIEW,
-            "Line {line} bills {actual} units, but the PO line is for {expected}.",
+            "Line {line} bills {actual} units{earlier}, but the PO line is for {expected}.",
             "Ask the supplier or purchasing",
-            {"line": "1", "actual": "120", "expected": "100"},
+            {"line": "1", "actual": "120", "earlier": "", "expected": "100"},
         ),
         _spec(
             _C.RECEIPT_MISSING,
@@ -181,9 +192,9 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.QTY_NOT_RECEIVED,
             _S.REVIEW,
-            "Invoice bills {billed} units; only {received} have been received.",
+            "Line {line} bills {billed} units{earlier}, but only {received} have been received.",
             "Hold, or pay partially once the rest arrives",
-            {"billed": "100", "received": "80"},
+            {"line": "1", "billed": "100", "earlier": "", "received": "80"},
         ),
         _spec(
             _C.PO_OVERBILLED,
@@ -195,9 +206,9 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
         _spec(
             _C.CURRENCY_MISMATCH,
             _S.REVIEW,
-            "The invoice is in {invoice_currency}, but the PO is in {po_currency}.",
+            "The invoice is in {invoice_currency}, but {against} is in {expected_currency}.",
             "Confirm the currency with the supplier",
-            {"invoice_currency": "EUR", "po_currency": "USD"},
+            {"invoice_currency": "EUR", "against": "the PO", "expected_currency": "USD"},
         ),
         _spec(
             _C.ABOVE_APPROVAL_LIMIT,
@@ -210,9 +221,57 @@ SPECS: dict[ExceptionCode, ExceptionSpec] = {
 }
 
 
-def explain(code: ExceptionCode, **params: str) -> str:
-    """Render the explanation for a code. A missing parameter raises KeyError."""
-    return SPECS[code].explanation_template.format(**params)
+@dataclass(frozen=True)
+class Variant:
+    """A second wording for a code when the usual sentence does not fit the facts."""
+
+    template: str
+    sample_params: dict[str, str]
+
+
+VARIANTS: dict[tuple[ExceptionCode, str], Variant] = {
+    (ExceptionCode.QTY_VARIANCE, "line_not_on_po"): Variant(
+        "Line {line} could not be matched to any line on the PO.", {"line": "3"}
+    ),
+}
+
+# What each check looks at, for "could not be checked" (a check that was skipped is never a pass).
+CHECK_SUBJECTS: dict[ExceptionCode, str] = {
+    _C.UNREADABLE_DOCUMENT: "the document",
+    _C.LOW_CONFIDENCE_FIELD: "the field confidence",
+    _C.LINE_MATH_MISMATCH: "the line arithmetic",
+    _C.TOTAL_MISMATCH: "the totals",
+    _C.TAX_MISMATCH: "the tax",
+    _C.INVALID_DATE: "the dates",
+    _C.UNKNOWN_SUPPLIER: "the supplier",
+    _C.BANK_DETAILS_CHANGED: "the bank account",
+    _C.POSSIBLE_DUPLICATE: "the duplicate check",
+    _C.NO_PO: "the purchase order lookup",
+    _C.PO_NOT_FOUND: "the purchase order lookup",
+    _C.PRICE_VARIANCE: "the price comparison with the PO",
+    _C.QTY_VARIANCE: "the quantity comparison with the PO",
+    _C.RECEIPT_MISSING: "the goods receipt check",
+    _C.QTY_NOT_RECEIVED: "the received quantity comparison",
+    _C.PO_OVERBILLED: "the PO billing total",
+    _C.CURRENCY_MISMATCH: "the currency",
+    _C.ABOVE_APPROVAL_LIMIT: "the approval limit",
+}
+
+UNCHECKED_TEMPLATE = "{subject} could not be checked ({reason}), so a person needs to look at it."
+
+
+def explain(code: ExceptionCode, variant: str | None = None, **params: str) -> str:
+    """Render the explanation for a code. A missing parameter or unknown variant raises KeyError."""
+    template = (
+        SPECS[code].explanation_template if variant is None else VARIANTS[(code, variant)].template
+    )
+    return template.format(**params)
+
+
+def explain_unchecked(code: ExceptionCode, reason: str) -> str:
+    """The sentence for a check that could not be done. `reason` is plain words, not a code."""
+    subject = CHECK_SUBJECTS[code]
+    return UNCHECKED_TEMPLATE.format(subject=subject[0].upper() + subject[1:], reason=reason)
 
 
 def sample_params(code: ExceptionCode) -> dict[str, str]:
