@@ -302,7 +302,7 @@ Deterministic rules in `core/validate.py`. Each rule has a code, a version, and 
 - The invoice date is not in the future and not older than `max_invoice_age_days`.
 - The due date is on or after the invoice date.
 - The currency is valid and matches the supplier's default or the PO.
-- The supplier is known (exact tax ID match, else a fuzzy name/alias match ≥ 90).
+- The supplier is known (exact tax ID match, else a fuzzy name/alias match ≥ 90). *Implemented more strictly: see `docs/decisions/0004-validation-rules-and-supplier-identity.md`. An exact tax ID or exact name/alias makes a supplier known; a fuzzy match only suggests one.*
 - **The bank account differs from the supplier master.** This is a fraud signal and always goes to review, whatever the confidence.
 
 ### 6.5 Detect duplicates

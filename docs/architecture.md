@@ -125,3 +125,36 @@ process_document ─▶ enqueue extract_invoice ─▶ blank? ─▶ over budget
 - **Known limits of the text-layer check:** it asks whether a value appears anywhere in the document
   text, not where. A swapped invoice and due date, or a total equal to a line amount, still agrees.
   Position-aware checks come with validation (M4).
+
+## Validation (M4)
+
+```
+extract_invoice ─▶ (status extracted) ─▶ enqueue validate_invoice ─▶ core/validate.validate ─▶ check_results (7 rows)
+                                                                          │                      + supplier link
+                                                                          └─▶ status: checking, audit `checks_completed`
+```
+
+- **Pure rules** in `core/validate.py`: `validate(facts, suppliers, settings, today)` returns the
+  supplier match and seven results, one per `CheckCode` (`LINE_MATH_MISMATCH`, `TOTAL_MISMATCH`,
+  `TAX_MISMATCH`, `INVALID_DATE`, `CURRENCY_MISMATCH`, `UNKNOWN_SUPPLIER`, `BANK_DETAILS_CHANGED`). Each
+  is named after the exception it will raise in M7. `today` is passed in, so nothing reads a clock.
+- **Outcomes:** `pass`, `fail`, `skipped`. `check_results.passed` is true only for `pass`; the outcome
+  is also in `details.outcome`. `details` carries the real numbers an explanation needs (expected and
+  actual amounts, the offending lines, the closest supplier and its score) and never a bank hash.
+  Printed text stored in details is clipped to 100 characters.
+- **Stage** (`checks/pipeline.py`): only an `extracted` invoice is worked on. The results, the supplier
+  link (`invoices.supplier_id` for a known supplier) and the move to `checking` commit together, so a
+  re-run does nothing. The job payload's tenant must match the invoice's tenant (`WrongTenant`).
+  `checks_completed` records the codes that failed or were skipped, the rule version and the as-of date.
+- **Settings:** tolerances and limits are read from `tenants.settings` (invalid values fall back to
+  the defaults). `VALIDATION_TODAY` pins the as-of date for tests and demos and is refused when
+  `APP_ENV=production`; its use is recorded in `checks_completed`.
+- **Supplier identity:** exact tax id or exact name/alias, with all printed identifiers agreeing
+  (ADR 0004). The keyed bank-account hash from extraction is compared with `suppliers.bank_account_hash`.
+- **Migrations:** `0006` adds `suppliers.tax_rate_bp`; `0007` makes a check result unique per invoice,
+  check and rule version.
+- **Not yet:** the invoice stays in `checking`. Turning results into exception rows, explanations and
+  routing is M7.
+- **Known limits:** tolerances of one minor unit also apply to zero-decimal currencies (JPY); two
+  suppliers sharing an identifier would resolve to the first in list order; the bank hash is over the
+  printed text, so formatting differences give a false "changed" (the safe direction).
