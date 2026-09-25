@@ -63,6 +63,8 @@ class Supplier(Base):
     bank_account_hash: Mapped[str | None] = mapped_column(Text)
     bank_account_encrypted: Mapped[str | None] = mapped_column(Text)
     default_currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    # The supplier's usual tax rate in basis points (1500 = 15%); null when not known.
+    tax_rate_bp: Mapped[int | None] = mapped_column(Integer)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
 
 
@@ -207,6 +209,7 @@ class FieldExtraction(Base):
 
 class CheckResult(Base):
     __tablename__ = "check_results"
+    __table_args__ = (UniqueConstraint("invoice_id", "check_code", "rule_version"),)
     id: Mapped[uuid.UUID] = uuid_pk()
     tenant_id: Mapped[uuid.UUID] = tenant_fk()
     invoice_id: Mapped[uuid.UUID] = mapped_column(

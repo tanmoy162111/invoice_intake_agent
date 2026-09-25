@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M3 (extraction), 2026-09-25.
+> **Last updated:** after M4 (validation rules), 2026-09-25.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -27,14 +27,14 @@ You can read only the first layer of each chapter and still understand the whole
 - **Why.** Accounts-payable teams do not lose time typing. They lose it on *exceptions*: an amount
   that does not match the purchase order, a duplicate, goods that never arrived, a supplier whose
   bank account suddenly changed. The product is built around explaining and routing those.
-- **Where we are.** Four of fourteen milestones are built and open for review (pull requests #1 to #4).
+- **Where we are.** Five of fourteen milestones are built (M0 to M3 are merged; M4 is in review).
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
-  *read into fields*: supplier, dates, amounts and lines, each with a confidence score. A realistic
+  *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** The checks (M4 to M7), the reviewer screen (M8), audit timeline (M9),
+- **What is not built yet.** Duplicates, matching and routing (M5 to M7), the reviewer screen (M8), audit timeline (M9),
   accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
   proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
-- **Health.** 677 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
+- **Health.** 792 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
   checks (CI) pass on the earlier pull requests.
 
 ### Status board
@@ -45,7 +45,7 @@ You can read only the first layer of each chapter and still understand the whole
 | M1 | Data model and synthetic data | A database and a messy, realistic demo world | Built, in review (PR #2) |
 | M2 | Ingestion and job queue | Upload a file; it is stored and prepared | Built, in review (PR #3) |
 | M3 | Extraction | Fields read from the invoice, with confidence | Built, in review (PR #4) |
-| M4 | Validation rules | Math, dates, supplier and bank details checked | Planned |
+| M4 | Validation rules | Math, dates, supplier and bank details checked | Built, in review |
 | M5 | Duplicate detection | Repeats caught before approval | Planned |
 | M6 | 3-way matching | Invoice compared with PO and receipt | Planned |
 | M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Planned |
@@ -367,8 +367,8 @@ job gave up. The remaining review notes are under "Left open".
 - **Text-layer check is not position-aware.** It asks whether a value appears anywhere in the document
   text. A swapped invoice date and due date, or a total equal to a line amount, still agrees. Position-aware
   checks come with the validation rules (M4).
-- **M4 must not rely on the parsed currency alone.** When the currency is left empty (bare `$`), a
-  currency-mismatch check has to compare the printed symbol with the supplier's usual currency.
+- *(Closed in M4.)* When the currency is left empty (bare `$`), the currency check compares the
+  printed symbol with the supplier's usual currency.
 - **The daily limit is a check, not a reservation.** With several workers each can overshoot by about one
   call. Failed database writes after a paid call are not counted.
 - The API container receives the model key (it only needs to know whether one is set); a later hardening
@@ -377,13 +377,95 @@ job gave up. The remaining review notes are under "Left open".
 - Still open from M2: sandboxed parsing, deployment hardening. (The M2 item "a failed job leaves the
   invoice in received" is closed: it becomes `failed` with a reason.)
 
+### M4: Validation rules
+
+*Goal: the maths, dates, supplier and bank details are checked.*
+
+**In plain words.** After an invoice is read, the system now checks it the way a careful clerk would.
+Do the lines add up to the subtotal, and does subtotal plus tax equal the total? Is the tax what this
+supplier normally charges? Is the invoice date sensible (not in the future, not years old), and is the
+due date after it? Is the invoice in the supplier's usual currency? Do we know this supplier? Has the
+bank account changed? Every check ends in one of three answers: *pass*, *fail* (with the real numbers),
+or *could not check*. "Could not check" is never treated as a pass. Nothing is decided yet: the invoice
+just carries its results, ready for the explanation and routing step (M7).
+
+**How it works.**
+
+```
+ Invoice read (M3) ──▶ Seven checks ──▶ Results saved (pass / fail / could not check) ──▶ status: checking
+                        maths, totals, tax, dates,          with the real numbers
+                        currency, supplier, bank
+```
+
+1. **Line maths.** Quantity times price must equal the line amount (one cent of rounding allowed per line).
+2. **Totals.** The lines must add up to the subtotal, and subtotal plus tax must equal the total. The
+   total only passes if it was actually compared: matching lines alone never stand in for it.
+3. **Tax.** Compared with the supplier's usual rate kept in master data; if unknown, with the rates
+   printed on the lines.
+4. **Dates.** The invoice date may not be in the future or older than a year (both adjustable), and the
+   due date may not be before the invoice date.
+5. **Currency.** Must match the supplier's usual currency. If the currency could not be settled on its
+   own (a bare `$`), the printed symbol is compared with the supplier's currency instead.
+6. **Supplier.** Known only by an exact tax ID, or an exact name or alias. A near-identical name is
+   *not* enough: it is shown as "closest match" for a person to judge. If a tax ID and a name point at
+   different suppliers, that is a conflict and the supplier is not trusted.
+7. **Bank account.** Compared as a one-way fingerprint with the account on file. A different account
+   fails; an account that may simply not have been read is "could not check", never a pass.
+
+**Under the hood.**
+- **Pure rules** in `core/validate.py` (100% covered, mypy strict, written test-first): `validate()`,
+  `match_supplier()`, `ValidationSettings`. Each check is named after the exception it will raise
+  (`LINE_MATH_MISMATCH`, `TOTAL_MISMATCH`, `TAX_MISMATCH`, `INVALID_DATE`, `CURRENCY_MISMATCH`,
+  `UNKNOWN_SUPPLIER`, `BANK_DETAILS_CHANGED`) and carries a rule version (`v1`).
+- **Stage** `checks/pipeline.py::validate_invoice`, chained after extraction as a `validate_invoice`
+  job. Results go to `check_results` (unique per invoice, check and version; migration `0007`),
+  the known supplier is linked on the invoice, and `checks_completed` is audited (codes and counts
+  only, plus the as-of date). A re-run does nothing.
+- **Master data:** `suppliers.tax_rate_bp` (migration `0006`, generator and `master.json`, seed loader).
+- **Settings** per client in `tenants.settings`: `max_invoice_age_days` (365), `future_date_tolerance_days`
+  (0), `line_tolerance_minor` (1), `total_tolerance_minor` (1), `tax_tolerance_per_line_minor` (1),
+  `supplier_fuzzy_min` (90). `VALIDATION_TODAY` pins the as-of date for tests and demos and is refused
+  when `APP_ENV=production`.
+
+**What we proved.** (Recorded answers built from the answer key; real PDFs, worker and database.)
+
+| Check | Result |
+|---|---|
+| Planted math, tax, date, currency, supplier and bank problems in the seed data | 21 of 21 caught, across all 118 readable invoices (clean, scanned and photo) |
+| Invoices that should clear, and get any failed check | 0 of 60 |
+| Failed checks beyond what the seed expects (either planted or an allowed knock-on) | None |
+| Look-alike supplier names ("Coastal Packing Ltd." vs "Coastal Packaging Ltd.", 95% similar) | All 3 decoys rejected; the closest match is reported |
+| Bank account digits found in results or audit log | None |
+| Same invoice checked twice | Nothing added |
+| Automated tests | 792 pass |
+
+Two independent reviews (decision logic and security) ran. Security found no critical or high issues.
+The decision-logic review found two ways a wrong invoice could pass (a total that "passed" on the lines
+alone when tax was missing, and a known name accepted next to a conflicting tax ID); both were fixed
+test-first, together with the bank-not-read case, a tolerance that grew with line count, bounds on stored
+document text, a tenant check in the stage, an audited and production-guarded as-of date, and a unique
+constraint on results.
+
+**Left open.**
+- **Deliberate deviation from the playbook:** a fuzzy name match of 90 or more does not make a supplier
+  known (ADR 0004). Real supplier names misread by the model will go to a person.
+- **M7 must treat `could not check` on currency, bank and supplier, and every failure, as needs-review.**
+  The invoice stays in `checking` until then.
+- Tax rates come from master data, not from the printed rate. Reading the printed rate would need a
+  prompt change and an evaluation (M10).
+- Tolerances of one minor unit also apply to zero-decimal currencies (yen); the bank fingerprint is over
+  the printed text, so formatting differences give a false "changed" (the safe direction); two suppliers
+  sharing an identifier would resolve to the first.
+- Check results for an unreadable document (2 seed files) do not exist: they are never extracted.
+- A validation job that fails permanently leaves its invoice in `checking` with a failed job (visible in
+  `/jobs`); routing (M7) will own that case.
+
 ---
 
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
 |---|---|---|
-| **M4 Validation** | Does the math add up? Are dates sensible? Is the supplier known? Did the bank account change? | See which checks passed or failed and why |
 | **M5 Duplicates** | Same invoice sent twice, even with the number typed differently. | Catch repeats before approval |
 | **M6 Matching** | Compare against the purchase order and delivery receipt; price, quantity, missing delivery, over-billing. | See the three-way comparison |
 | **M7 Explanations and routing** | Every problem gets a plain-language explanation with the real numbers and a suggested fix; each invoice is routed to "cleared" or "needs a person". | Read exactly what is wrong and what to do |
@@ -406,7 +488,8 @@ or rule requires running the evaluation and reporting the result first.
 | M0 | 1 (plus 2 web) | n/a | Green | Stack starts; "API: healthy" |
 | M1 | 119 | 100% | Green | All 18 exception codes planted; audit log immutable |
 | M2 | 277 | 100% | Green on #1 and #2; #3 pending | 120/120 quality classification; hostile-upload guard |
-| M3 | 677 | 99.9% | Pending | 59/59 clean invoices extracted end to end; cache and spend cap proved; no bank digits in clear |
+| M3 | 677 | 99.9% | Green | 59/59 clean invoices extracted end to end; cache and spend cap proved; no bank digits in clear |
+| M4 | 792 | 99.9% | Pending | 21/21 planted problems caught, 0/60 clearable invoices flagged; look-alike suppliers rejected |
 
 The build gates on decision-logic coverage of at least 90%.
 
@@ -435,6 +518,11 @@ The build gates on decision-logic coverage of at least 90%.
 | Bank account encrypted in the saved answers and the field table | Playbook section 10 | M3 |
 | A job that runs out of attempts marks its invoice `failed` with a reason (`JOB_FAILED:<Class>`) | An invoice must never sit unseen in `received` | M3 |
 | Bare `$` and `¥` are settled only by the supplier's usual currency | `$` is also CAD and AUD; a guess would pass a wrong currency | M3 |
+| A supplier is known only by exact identifiers that agree; a fuzzy name only suggests | Look-alike names are an impersonation pattern; deviates from playbook 6.4 | M4, ADR 0004 |
+| "Could not check" is its own outcome and never a pass | Uncertain means human | M4 |
+| A total only passes when subtotal plus tax was compared with it | Matching lines alone must not clear a wrong total | M4 |
+| Supplier tax rate kept in master data | Tax can be checked without a prompt change | M4 |
+| As-of date override is refused in production and audited | It could silently disable the date checks | M4 |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
 
 ## 7. Risks and open questions
@@ -444,6 +532,7 @@ The build gates on decision-logic coverage of at least 90%.
 | No sandboxed parsing process with a time limit | A crafted file could still slow the worker | Before any real-data use |
 | Permanently failed job leaves invoice as "received" | Reviewer may not see it | Handled in M3: it becomes `failed` with a reason (see the M3 chapter) |
 | Default database password, root containers, unpinned base image | Weak for shared deployments | Harden before hosting |
+| Routing (M7) must treat could-not-check and failures on money and identity as review | A skipped check must never clear an invoice | Build and test in M7 |
 | Real-model accuracy and cost unmeasured; model choice is provisional | Numbers could be worse than hoped | Run `make eval` (M10) with approval before quoting any figure |
 | Hosting, login method, target currencies and languages, licensed real samples | Open decisions in the playbook (section 15) | Settle before M8 and M10 |
 | Fresh-clone run on another machine not yet done | M0 acceptance criterion | Ask a teammate to follow the manual |

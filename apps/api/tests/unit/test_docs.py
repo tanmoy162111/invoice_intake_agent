@@ -10,6 +10,7 @@ from intake.core.exceptions import ExceptionCode
 from intake.core.extraction import NormalizeError
 from intake.core.ingest import IngestErrorCode
 from intake.core.llm_budget import ExtractionFailure
+from intake.core.validate import CheckCode, ValidationSettings
 from intake.main import create_app
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -68,7 +69,9 @@ def test_manual_explains_every_reason_an_invoice_can_fail(code: str) -> None:
     assert f"`{code}" in MANUAL  # JOB_FAILED is written `JOB_FAILED:<Class>`
 
 
-EXTRACTION_SETTING_PREFIXES = ("llm_", "ollama_", "extraction_", "extract_", "daily_", "field_")
+EXTRACTION_SETTING_PREFIXES = (
+    "llm_", "ollama_", "extraction_", "extract_", "daily_", "field_", "validation_", "app_",
+)  # fmt: skip
 
 
 @pytest.mark.parametrize(
@@ -84,3 +87,15 @@ def test_manual_lists_every_api_route() -> None:
     for path, methods in app.openapi()["paths"].items():
         for method in methods:
             assert f"`{method.upper()} {path}`" in MANUAL, f"{method.upper()} {path} not documented"
+
+
+@pytest.mark.parametrize("code", [c.value for c in CheckCode])
+def test_manual_explains_every_validation_check(code: str) -> None:
+    section = MANUAL.split("### 4.10")[1].split("### 4.11")[0]
+    assert f"`{code}`" in section
+
+
+@pytest.mark.parametrize("name", list(ValidationSettings.__dataclass_fields__))
+def test_manual_lists_every_tenant_validation_setting(name: str) -> None:
+    section = MANUAL.split("### 4.11")[1].split("## 5. Reference")[0]
+    assert f"`{name}`" in section, f"{name} is missing from manual section 4.11"

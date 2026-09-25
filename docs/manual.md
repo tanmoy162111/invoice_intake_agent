@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M3 (extraction), 2026-09-25.
+> **Describes:** the system after M4 (validation rules), 2026-09-25.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -48,7 +48,7 @@ Every invoice moves through these steps. Each change is written to a permanent h
 |---|---|---|
 | `received` | We have the file and it is waiting to be read | Today (M2) |
 | `extracting` / `extracted` | Fields are being read / have been read | Today (M3) |
-| `checking` | The checks are running | [M4 to M7] |
+| `checking` | The checks have run and their results are saved; a person or the router (M7) decides next | Today (M4); deciding is [M7] |
 | `cleared` | All checks passed and confidence is high; waits for one-click approval | [M7] |
 | `needs_review` | A person must look | [M7] |
 | `approved` / `rejected` | A person decided | [M8] |
@@ -243,6 +243,56 @@ need a lot of memory, and **any accuracy you measure does not apply to the Claud
 pages are sent to whatever address `OLLAMA_BASE_URL` points at, so keep it on hardware you control.
 Never use hosted free-tier models with real data: they may learn from what you send.
 
+### 4.10 See the checks on an invoice
+
+After reading, every invoice is checked seven ways. Each check ends as `pass`, `fail` or `skipped`
+(*could not check*: a value was missing or unreadable). **`skipped` is never a pass.**
+
+```bash
+docker compose exec db psql -U intake -c "
+  select check_code, details->>'outcome' as outcome, details
+  from check_results where invoice_id = '<invoice-id>' order by check_code;"
+```
+
+| Check | Fails when | Useful details |
+|---|---|---|
+| `LINE_MATH_MISMATCH` | quantity times price differs from a line amount by more than a cent | the lines, with expected and actual amounts |
+| `TOTAL_MISMATCH` | lines do not add up to the subtotal, or subtotal plus tax is not the total | each comparison, expected and actual |
+| `TAX_MISMATCH` | the tax differs from the supplier's usual rate (or the line rates) | expected and actual tax, the rate and its source |
+| `INVALID_DATE` | invoice date in the future or too old, or due date before the invoice date | `reasons`: `FUTURE_INVOICE_DATE`, `INVOICE_TOO_OLD`, `DUE_BEFORE_INVOICE` |
+| `CURRENCY_MISMATCH` | currency differs from the supplier's usual currency | both currencies and what was printed |
+| `UNKNOWN_SUPPLIER` | no exact tax ID or name/alias match, or the identifiers conflict | the closest known supplier and its similarity; `conflict` |
+| `BANK_DETAILS_CHANGED` | the account differs from the one on file | never shows the account |
+
+The invoice's status stays `checking`. Turning failures into explained exceptions and routing the
+invoice is [Coming in M7]. The supplier is linked on the invoice (`invoices.supplier_id`) when it is
+known. `checks_completed` in the invoice's history lists which checks failed or were skipped.
+
+`UNKNOWN_SUPPLIER` details use `conflict` values: `NAME_DIFFERS_FROM_TAX_ID` (the tax ID belongs to a
+different supplier than the name) and `TAX_ID_DIFFERS_FROM_RECORD` (a known name with another tax ID).
+`skipped` bank checks say why in `reason` (`BANK_NOT_READ`, `NO_BANK_ON_FILE`, `UNKNOWN_SUPPLIER`).
+
+### 4.11 Adjust the check rules for a client
+
+The limits live in the client's settings (`tenants.settings`). Change one and new checks use it:
+
+```bash
+docker compose exec db psql -U intake -c "
+  update tenants set settings = settings || '{\"max_invoice_age_days\": 90}'::jsonb;"
+```
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `max_invoice_age_days` | 365 | Older invoices fail `INVALID_DATE` |
+| `future_date_tolerance_days` | 0 | How many days ahead an invoice date may be |
+| `line_tolerance_minor` | 1 | Rounding allowed per line, in cents |
+| `total_tolerance_minor` | 1 | Rounding allowed between subtotal plus tax and the total |
+| `tax_tolerance_per_line_minor` | 1 | Rounding allowed on tax (per line when line rates are used) |
+| `supplier_fuzzy_min` | 90 | A closest supplier at or above this similarity is *suggested* (never trusted) |
+
+An invalid value is ignored and the default is used. Old invoices in the demo data will start to look
+"too old" a year after they are dated; set `VALIDATION_TODAY` (section 5.4) to keep a demo stable.
+
 ---
 
 ## 5. Reference
@@ -308,6 +358,8 @@ login arrives in M8. If no token is configured the server refuses everything exc
 | `EXTRACTION_PROMPT_VERSION` | `v1` | Which prompt file is used (`apps/api/src/intake/extract/prompts/`) |
 | `EXTRACT_MAX_OUTPUT_TOKENS` | 8000 | Longest answer the model may give |
 | `EXTRACT_MAX_INPUT_TOKENS` | 100000 | Largest estimated document; bigger is failed before any spend |
+| `APP_ENV` | `development` | `development`, `test` or `production`. Production refuses `VALIDATION_TODAY` |
+| `VALIDATION_TODAY` | empty | A fixed "as of" date (`YYYY-MM-DD`) for the date checks. Test and demo only |
 | `EXTRACT_TIMEOUT_S` | 120 | How long one model call may take before it counts as a failure to retry |
 | `EXTRACT_NOT_CONFIGURED_RETRY_S` | 300 | How often a paused job checks whether reading has been configured |
 | `FIELD_CONFIDENCE_MIN` | 0.8 | Below this a critical field counts as doubtful |
@@ -319,7 +371,7 @@ login arrives in M8. If no token is configured the server refuses everything exc
 
 | Folder | Contents |
 |---|---|
-| `apps/api` | The API and worker (Python). Prompts are in `src/intake/extract/prompts/` |
+| `apps/api` | The API and worker (Python). Prompts are in `src/intake/extract/prompts/`; the checks are `src/intake/core/validate.py` and `src/intake/checks/` |
 | `apps/web` | The web page (Next.js) |
 | `data/seed` | The 120 demo invoices, answer keys (`truth/`), `master.json`, `MANIFEST.md` |
 | `data/golden` | The fixed 60-invoice test set for accuracy. Never edited |
@@ -417,6 +469,8 @@ today and every one is planted in the demo data.** The exact wording comes from
   nothing it says can change a status or a decision. Text inside an invoice that tries to give
   instructions is ignored.
 - **Bank details stay protected** in the extracted fields and in the saved model answers.
+- **Checks never pass on missing data.** A check that cannot be done says so, and later routing treats it as needing a person.
+- **Look-alike suppliers are not trusted:** a supplier is known only by an exact tax ID or exact name, and the two must agree.
 - **Spending has a daily limit** and every model call is logged with its cost.
 - **What the model provider sees** and how long they keep it: [`data-handling.md`](data-handling.md).
 
@@ -440,6 +494,10 @@ hardening, the database password and encryption of stored files.
 | `extraction_paused` in an invoice's history | The daily limit was reached | It resumes at 00:00 UTC, or raise `DAILY_SPEND_CAP_USD` |
 | Invoice is `failed` | See the reason in section 5.6 | Fix the cause, then re-queue (runbook) |
 | Currency and amounts are empty for an invoice | A bare `$` the supplier's usual currency does not settle, or another reason in section 5.7 | Expected: a person confirms it (M8) |
+| An invoice stays `checking` | Expected until routing exists (M7) | See the results (section 4.10) |
+| Every check is `skipped` | The invoice was read with empty fields (see section 5.7) | Fix the cause; a person confirms the fields (M8) |
+| Old demo invoices fail `INVALID_DATE` as `INVOICE_TOO_OLD` | The demo dates are more than a year old | Set `VALIDATION_TODAY` or raise `max_invoice_age_days` |
+| A real supplier shows as `UNKNOWN_SUPPLIER` with a 90+ similarity | Names must match exactly (or a tax ID) | Add the printed name as an alias or link the supplier |
 | Almost every scanned or photo field is under 80% | No text layer to check against | Expected: they need supporting evidence, or a person |
 
 More on operations: [`runbook.md`](runbook.md). Design details: [`architecture.md`](architecture.md).
@@ -453,10 +511,12 @@ More on operations: [`runbook.md`](runbook.md). Design details: [`architecture.m
 | **Accounts payable (AP)** | The team that checks and pays supplier invoices |
 | **API** | The front door programs use to talk to the system |
 | **Audit log** | The permanent, tamper-proof history of every action |
+| **As-of date** | The date the date checks treat as today; normally today, or `VALIDATION_TODAY` in tests and demos |
 | **Cache (saved answer)** | The model's answer for a file, kept so the same file is never paid for twice |
 | **Confidence** | How sure the system is about a value it read |
 | **Daily spend cap** | The most the system may spend on model calls in one UTC day; reading pauses when it is reached |
 | **Duplicate** | The same invoice received more than once |
+| **Check result** | One check's answer for an invoice: pass, fail or could not check (skipped), with the numbers behind it |
 | **Exception** | A problem the system found, with an explanation and a suggested fix |
 | **Extraction** | Reading an invoice into fields: supplier, dates, amounts, lines |
 | **False clear** | An invoice wrongly passed as fine. The number we most want at zero |
@@ -468,6 +528,7 @@ More on operations: [`runbook.md`](runbook.md). Design details: [`architecture.m
 | **SHA-256 fingerprint** | A short code that identifies a file's exact contents |
 | **Synthetic data** | Made-up documents that look real |
 | **Tenant** | One client's separate slice of the system |
+| **Skipped (could not check)** | A check that could not be done because a value was missing or unreadable. Never counts as a pass |
 | **Text layer** | The text already inside a digital PDF, used to double-check what was read from the picture |
 | **Three-way match** | Comparing the invoice, the purchase order and the goods receipt |
 | **Touchless rate** | Share of invoices cleared with no human work |

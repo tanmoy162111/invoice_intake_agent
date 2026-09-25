@@ -46,6 +46,16 @@ says why and how to fix it).
 - `llm_calls.response` holds supplier data in the clear (bank account sealed). Purge or scrub it before
   sharing a database.
 
+## Validation: what the checks say
+- `select check_code, details->>'outcome', details from check_results where invoice_id='...'` shows every
+  check with its numbers. `skipped` means the check could not be done; never read it as a pass.
+- A `validate_invoice` job that fails leaves the invoice in `checking` with a failed job in `/jobs`.
+  Fix the cause and re-queue it (same `update jobs ...` as above). Only an `extracted` invoice is
+  validated, so to re-run one that is already `checking`, delete its `check_results` rows and set its
+  status back to `extracted` (this writes no audit event, so note it in the ticket).
+- `checks_completed` in the invoice history records `as_of_overridden: true` when `VALIDATION_TODAY` was in
+  effect. It must be empty in production (the API refuses to start with `APP_ENV=production` and it set).
+
 ## Limits worth knowing
 - Uploads are capped by `MAX_UPLOAD_BYTES` (15 MB) and `MAX_PAGES` (10). The API refuses oversized
   files after reading at most limit+1 bytes, but the web server still receives the request body first.

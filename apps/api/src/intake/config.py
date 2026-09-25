@@ -1,7 +1,9 @@
+from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +11,9 @@ class Settings(BaseSettings):
     """Runtime settings, read from the environment (see .env.example)."""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    # "production" turns on guards: for example the as-of date override below is refused.
+    app_env: Literal["development", "test", "production"] = "development"
 
     database_url: str = "postgresql+psycopg://intake:intake@localhost:5432/intake"
     cors_origins: str = "http://localhost:3000"
@@ -41,12 +46,22 @@ class Settings(BaseSettings):
     extract_not_configured_retry_s: int = 300
     field_confidence_min: Decimal = Decimal("0.8")  # playbook §6.3
 
+    # Validation (M4). The rule settings (tolerances, age limit) live in each tenant's settings.
+    # A fixed "as of" date for the date checks; empty means today. Keeps tests and demos stable.
+    validation_today: date | None = None
+
     # Job queue
     job_max_attempts: int = 3
     job_backoff_base_s: int = 10
     job_backoff_cap_s: int = 600
     job_visibility_timeout_s: int = 300
     worker_poll_interval_s: float = 2.0
+
+    @model_validator(mode="after")
+    def _no_date_override_in_production(self) -> "Settings":
+        if self.app_env == "production" and self.validation_today is not None:
+            raise ValueError("VALIDATION_TODAY must not be set when APP_ENV=production")
+        return self
 
     @property
     def daily_spend_cap_micros(self) -> int:

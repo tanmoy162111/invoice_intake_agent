@@ -106,3 +106,13 @@ def test_copy_inbox_copies_invoices_but_not_truth(tmp_path: Path) -> None:
     assert n == len(files) == len(list((DEFAULT_SEED_DIR / "invoices").iterdir()))
     assert not any(f.suffix == ".json" for f in files)
     assert copy_inbox(DEFAULT_SEED_DIR, tmp_path / "inbox") == 0
+
+
+def test_seed_loads_each_suppliers_usual_tax_rate(
+    session: Session, vault: BankVault, clean_db: None
+) -> None:
+    load_master(session, MASTER, vault)
+    session.commit()
+    rates = {s.name: s.tax_rate_bp for s in session.scalars(select(Supplier))}
+    assert rates == {s["name"]: s["tax_rate_bp"] for s in MASTER["suppliers"]}
+    assert all(bp is not None for bp in rates.values())

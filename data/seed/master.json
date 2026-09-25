@@ -19,7 +19,8 @@
       ],
       "tax_id": "69-9397618",
       "bank_account": "ABA 533367701 / Acct 1472427652",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 800
     },
     {
       "id": "fd79de6b-6b3b-5d47-86e8-c126b13fd2d9",
@@ -30,7 +31,8 @@
       ],
       "tax_id": "85-7880089",
       "bank_account": "ABA 376578283 / Acct 4502596013",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 700
     },
     {
       "id": "ec66fe3b-1800-55cc-a2ef-9f29ab7e302f",
@@ -41,7 +43,8 @@
       ],
       "tax_id": "38-2698816",
       "bank_account": "ABA 332171150 / Acct 9655427721",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 600
     },
     {
       "id": "450f709f-5cf0-58f6-a421-79072c58be4c",
@@ -52,7 +55,8 @@
       ],
       "tax_id": "19-1665819",
       "bank_account": "ABA 088321796 / Acct 1367917152",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 500
     },
     {
       "id": "d7d9c1af-8ee1-575a-a2eb-93468adcc3ab",
@@ -63,7 +67,8 @@
       ],
       "tax_id": "15-6860743",
       "bank_account": "ABA 398324802 / Acct 7971455092",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 1000
     },
     {
       "id": "6f1daa33-01f5-562c-ab6f-54133dbda6c1",
@@ -74,7 +79,8 @@
       ],
       "tax_id": "09-3142001",
       "bank_account": "ABA 371059502 / Acct 1506018295",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 800
     },
     {
       "id": "92be99a2-04b3-5e50-b557-ef03194c0ba1",
@@ -85,7 +91,8 @@
       ],
       "tax_id": "17-8600401",
       "bank_account": "ABA 129719713 / Acct 6857911042",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 700
     },
     {
       "id": "382acd5d-9f4e-5c86-8b81-fe5f12b334d5",
@@ -96,7 +103,8 @@
       ],
       "tax_id": "24-9050066",
       "bank_account": "ABA 483347900 / Acct 8531047253",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 900
     },
     {
       "id": "e311ea42-c98c-507d-90e2-b6a2527b7eec",
@@ -107,7 +115,8 @@
       ],
       "tax_id": "48-5823372",
       "bank_account": "ABA 642612284 / Acct 0500735315",
-      "default_currency": "USD"
+      "default_currency": "USD",
+      "tax_rate_bp": 750
     },
     {
       "id": "2c04142d-6ca5-5a73-9ffc-82c85186b7b7",
@@ -118,7 +127,8 @@
       ],
       "tax_id": "DE325333087",
       "bank_account": "DE20 3554 6670 1194 6383 4401",
-      "default_currency": "EUR"
+      "default_currency": "EUR",
+      "tax_rate_bp": 1900
     },
     {
       "id": "69179108-5335-5329-84e4-ef168cabe4ef",
@@ -129,7 +139,8 @@
       ],
       "tax_id": "DE670684662",
       "bank_account": "DE59 3052 9564 0005 6879 7490",
-      "default_currency": "EUR"
+      "default_currency": "EUR",
+      "tax_rate_bp": 2000
     },
     {
       "id": "c1167252-9b03-5cf5-bbb7-6b93cf9c520f",
@@ -140,7 +151,8 @@
       ],
       "tax_id": "DE768792579",
       "bank_account": "DE31 2219 1206 2657 7287 8504",
-      "default_currency": "EUR"
+      "default_currency": "EUR",
+      "tax_rate_bp": 2100
     },
     {
       "id": "50827050-3f61-57da-a3b9-45b797b15f18",
@@ -151,7 +163,8 @@
       ],
       "tax_id": "GB211715718",
       "bank_account": "GB25 2818 3812 7197 4930 3341",
-      "default_currency": "GBP"
+      "default_currency": "GBP",
+      "tax_rate_bp": 2000
     },
     {
       "id": "2812a755-7223-5016-916c-5067682bb5ba",
@@ -162,7 +175,8 @@
       ],
       "tax_id": "GB843343369",
       "bank_account": "GB37 6223 7163 4145 9815 6996",
-      "default_currency": "GBP"
+      "default_currency": "GBP",
+      "tax_rate_bp": 2000
     },
     {
       "id": "cab88da8-15b9-5964-b97a-097dc623bae3",
@@ -173,7 +187,8 @@
       ],
       "tax_id": "GB111320267",
       "bank_account": "GB58 4610 4921 9185 8543 2895",
-      "default_currency": "GBP"
+      "default_currency": "GBP",
+      "tax_rate_bp": 500
     }
   ],
   "purchase_orders": [
