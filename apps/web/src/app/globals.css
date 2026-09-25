@@ -1,1 +1,243 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/newsreader";
+@import "@fontsource-variable/newsreader/wght-italic.css";
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* A ledger: warm paper, ink, and the vermilion of a rubber stamp. */
+:root {
+  --background: #f5f1e8;
+  --foreground: #1a2233;
+  --card: #fbf9f3;
+  --card-foreground: #1a2233;
+  --popover: #fbf9f3;
+  --popover-foreground: #1a2233;
+  --muted: #ece7db;
+  --muted-foreground: #5e5d57;
+  --border: #dad3c2;
+  --input: #cfc7b3;
+  --ring: #1f2b47;
+  --primary: #1f2b47;
+  --primary-foreground: #f8f4ea;
+  --secondary: #e7e1d1;
+  --secondary-foreground: #1a2233;
+  --brand: #c4412b;
+  --desk: #d9d3c4;
+  --block: #a8291a;
+  --block-soft: #f7dfd8;
+  --review: #7a5300;
+  --review-soft: #f5e7bf;
+  --info: #24507f;
+  --info-soft: #dde8f3;
+  --ok: #22593f;
+  --ok-soft: #d9eadf;
+  --page-shadow: 0 1px 2px rgb(26 34 51 / 0.12), 0 12px 32px -8px rgb(26 34 51 / 0.28);
+  color-scheme: light;
+}
+
+.dark {
+  --background: #0f131a;
+  --foreground: #ece6d6;
+  --card: #151a23;
+  --card-foreground: #ece6d6;
+  --popover: #151a23;
+  --popover-foreground: #ece6d6;
+  --muted: #1c222d;
+  --muted-foreground: #9a9ca3;
+  --border: #283040;
+  --input: #323b4d;
+  --ring: #e8e0cb;
+  --primary: #e8e0cb;
+  --primary-foreground: #141922;
+  --secondary: #222a37;
+  --secondary-foreground: #ece6d6;
+  --brand: #ee6a52;
+  --desk: #0a0d12;
+  --block: #ff8f7c;
+  --block-soft: #3a1b18;
+  --review: #f1c35a;
+  --review-soft: #372b0c;
+  --info: #8fbceb;
+  --info-soft: #15283e;
+  --ok: #7fd0a5;
+  --ok-soft: #12301f;
+  --page-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 16px 40px -8px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+/* Follow the system unless the reader chose a theme with the toggle. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark) {
+    --background: #0f131a;
+    --foreground: #ece6d6;
+    --card: #151a23;
+    --card-foreground: #ece6d6;
+    --popover: #151a23;
+    --popover-foreground: #ece6d6;
+    --muted: #1c222d;
+    --muted-foreground: #9a9ca3;
+    --border: #283040;
+    --input: #323b4d;
+    --ring: #e8e0cb;
+    --primary: #e8e0cb;
+    --primary-foreground: #141922;
+    --secondary: #222a37;
+    --secondary-foreground: #ece6d6;
+    --brand: #ee6a52;
+    --desk: #0a0d12;
+    --block: #ff8f7c;
+    --block-soft: #3a1b18;
+    --review: #f1c35a;
+    --review-soft: #372b0c;
+    --info: #8fbceb;
+    --info-soft: #15283e;
+    --ok: #7fd0a5;
+    --ok-soft: #12301f;
+    --page-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 16px 40px -8px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-brand: var(--brand);
+  --color-desk: var(--desk);
+  --color-block: var(--block);
+  --color-block-soft: var(--block-soft);
+  --color-review: var(--review);
+  --color-review-soft: var(--review-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --font-display: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --shadow-page: var(--page-shadow);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+  }
+  /* Paper grain: a faint texture so the page feels printed, not painted. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.15  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  .dark body::before {
+    opacity: 0.35;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 30%, transparent);
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
+  }
+  .hairline {
+    border-color: color-mix(in oklab, var(--foreground) 14%, transparent);
+  }
+  /* Ledger rule: a double line under a heading, like a column head in an account book. */
+  .ledger-rule {
+    border-bottom: 3px double color-mix(in oklab, var(--foreground) 22%, transparent);
+  }
+  .scroll-thin {
+    scrollbar-width: thin;
+  }
+}
+
+/* A page load that unfolds: rows rise in one after another. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* A stamp being pressed onto the page. */
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.35) rotate(-4deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.96) rotate(0.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.reveal {
+  animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.stamp-in {
+  animation: stamp 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+  animation-delay: calc(120ms + var(--i, 0) * 60ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .stamp-in {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
