@@ -4,15 +4,35 @@
  */
 
 export interface paths {
-    "/health": {
+    "/auth/login": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Health */
-        get: operations["health_health_get"];
+        get?: never;
+        put?: never;
+        /**
+         * Login
+         * @description The demo reviewer signs in. This is the one route besides /health that needs no token.
+         */
+        post: operations["login_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Me */
+        get: operations["me_auth_me_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -55,20 +75,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/jobs": {
+    "/exceptions/{exception_id}/close": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Job Overview
-         * @description Queue health: counts by status, jobs stuck past the visibility timeout, recent failures.
-         */
-        get: operations["job_overview_jobs_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Close Exception
+         * @description Resolve or dismiss an exception. A block exception needs a note.
+         */
+        post: operations["close_exception_exceptions__exception_id__close_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -95,123 +115,605 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health */
+        get: operations["health_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Queue
+         * @description Invoices that need a person: worst exception first, then oldest. `status` repeats
+         *     (default: needs_review and failed); `code` keeps invoices with that exception still open.
+         */
+        get: operations["queue_invoices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Invoice Detail */
+        get: operations["invoice_detail_invoices__invoice_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_invoices__invoice_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}/bank/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reveal Bank
+         * @description Show the account as read from the invoice. Revealing it is written to the history.
+         */
+        post: operations["reveal_bank_invoices__invoice_id__bank_reveal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Correct
+         * @description Correct a header field. The checks and the routing run again straight away.
+         */
+        post: operations["correct_invoices__invoice_id__corrections_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}/pages/{page}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Page Image */
+        get: operations["page_image_invoices__invoice_id__pages__page__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject */
+        post: operations["reject_invoices__invoice_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}/request-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Information */
+        post: operations["request_information_invoices__invoice_id__request_info_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job Overview
+         * @description Queue health: counts by status, jobs stuck past the visibility timeout, recent failures.
+         */
+        get: operations["job_overview_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BankOut */
+        BankOut: {
+            /** Masked */
+            masked: string | null;
+            /** Present */
+            present: boolean;
+        };
         /** Body_upload_document_documents_post */
         Body_upload_document_documents_post: {
             /** File */
             file: string;
         };
+        /** CheckOut */
+        CheckOut: {
+            /** Code */
+            code: string;
+            /** Outcome */
+            outcome: string;
+        };
+        /** CloseIn */
+        CloseIn: {
+            /** Note */
+            note?: string | null;
+            /**
+             * Resolution
+             * @enum {string}
+             */
+            resolution: "resolved" | "dismissed";
+        };
+        /** CorrectionIn */
+        CorrectionIn: {
+            /** Field */
+            field: string;
+            /** Value */
+            value: string;
+        };
         /** DocumentOut */
         DocumentOut: {
+            /** Doc Quality */
+            doc_quality: string;
             /**
              * Document Id
              * Format: uuid
              */
             document_id: string;
+            /** Duplicate */
+            duplicate: boolean;
+            /** Filename */
+            filename: string;
             /**
              * Invoice Id
              * Format: uuid
              */
             invoice_id: string;
+            /** Invoice Status */
+            invoice_status: string;
             /** Job Id */
             job_id: string | null;
-            /** Duplicate */
-            duplicate: boolean;
-            /** Filename */
-            filename: string;
             /** Mime */
             mime: string;
             /** Page Count */
             page_count: number | null;
-            /** Doc Quality */
-            doc_quality: string;
-            /** Invoice Status */
-            invoice_status: string;
         };
         /** ErrorDetail */
         ErrorDetail: {
             /** Code */
             code: string;
-            /** Message */
-            message: string;
             /** Fix */
             fix: string;
+            /** Message */
+            message: string;
         };
-        /** ExtractionStatus */
-        ExtractionStatus: {
-            /** Configured */
-            configured: boolean;
-            /** Provider */
-            provider: string;
-            /** Model */
-            model: string;
-            /** Prompt Version */
-            prompt_version: string;
-            /** Spent Today Usd Micros */
-            spent_today_usd_micros: number;
-            /** Daily Cap Usd Micros */
-            daily_cap_usd_micros: number;
-            /** Cap Reached */
-            cap_reached: boolean;
-            /** Paused Jobs */
-            paused_jobs: number;
-            /** Resumes At */
-            resumes_at: string | null;
-        };
-        /** FailedJob */
-        FailedJob: {
+        /**
+         * ExceptionCode
+         * @enum {string}
+         */
+        ExceptionCode: "UNREADABLE_DOCUMENT" | "LOW_CONFIDENCE_FIELD" | "LINE_MATH_MISMATCH" | "TOTAL_MISMATCH" | "TAX_MISMATCH" | "INVALID_DATE" | "UNKNOWN_SUPPLIER" | "BANK_DETAILS_CHANGED" | "POSSIBLE_DUPLICATE" | "NO_PO" | "PO_NOT_FOUND" | "PRICE_VARIANCE" | "QTY_VARIANCE" | "RECEIPT_MISSING" | "QTY_NOT_RECEIVED" | "PO_OVERBILLED" | "CURRENCY_MISMATCH" | "ABOVE_APPROVAL_LIMIT";
+        /** ExceptionOut */
+        ExceptionOut: {
+            code: components["schemas"]["ExceptionCode"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Explanation */
+            explanation: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** Type */
-            type: string;
+            related_invoice: components["schemas"]["RelatedInvoice"] | null;
+            /** Resolution Note */
+            resolution_note: string | null;
+            /** Resolved By */
+            resolved_by: string | null;
+            severity: components["schemas"]["Severity"];
+            status: components["schemas"]["ExceptionStatus"];
+            /** Suggested Fix */
+            suggested_fix: string;
+        };
+        /** ExceptionRef */
+        ExceptionRef: {
+            code: components["schemas"]["ExceptionCode"];
+            severity: components["schemas"]["Severity"];
+        };
+        /**
+         * ExceptionStatus
+         * @enum {string}
+         */
+        ExceptionStatus: "open" | "resolved" | "dismissed";
+        /** ExtractionStatus */
+        ExtractionStatus: {
+            /** Cap Reached */
+            cap_reached: boolean;
+            /** Configured */
+            configured: boolean;
+            /** Daily Cap Usd Micros */
+            daily_cap_usd_micros: number;
+            /** Model */
+            model: string;
+            /** Paused Jobs */
+            paused_jobs: number;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Provider */
+            provider: string;
+            /** Resumes At */
+            resumes_at: string | null;
+            /** Spent Today Usd Micros */
+            spent_today_usd_micros: number;
+        };
+        /** FailedJob */
+        FailedJob: {
             /** Attempts */
             attempts: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Last Error */
             last_error: string | null;
+            /** Type */
+            type: string;
+        };
+        /** FieldOut */
+        FieldOut: {
+            /** Confidence */
+            confidence: number | null;
+            /** Corrected */
+            corrected: boolean;
+            /** Corrected By */
+            corrected_by: string | null;
+            /** Field */
+            field: string;
+            /** Page */
+            page: number | null;
+            /** Raw */
+            raw: string | null;
+            /** Reason */
+            reason: string | null;
+            /** Value */
+            value: string | null;
+            /** Weak */
+            weak: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HeaderOut */
+        HeaderOut: {
+            /** Currency */
+            currency: string | null;
+            /** Due Date */
+            due_date: string | null;
+            /** Invoice Date */
+            invoice_date: string | null;
+            /** Invoice Number */
+            invoice_number: string | null;
+            /** Payment Terms */
+            payment_terms: string | null;
+            /** Po Number */
+            po_number: string | null;
+            /** Subtotal Minor */
+            subtotal_minor: number | null;
+            /** Supplier Name */
+            supplier_name: string | null;
+            /** Tax Minor */
+            tax_minor: number | null;
+            /** Total Minor */
+            total_minor: number | null;
+        };
         /** HealthResponse */
         HealthResponse: {
             /** Status */
             status: string;
         };
+        /** InvoiceDetail */
+        InvoiceDetail: {
+            /** Approval Blockers */
+            approval_blockers: number;
+            bank: components["schemas"]["BankOut"];
+            /** Can Approve */
+            can_approve: boolean;
+            /** Checks */
+            checks: components["schemas"]["CheckOut"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            document: components["schemas"]["InvoiceDocument"];
+            /** Exceptions */
+            exceptions: components["schemas"]["ExceptionOut"][];
+            /** Fields */
+            fields: components["schemas"]["FieldOut"][];
+            header: components["schemas"]["HeaderOut"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Info Requested */
+            info_requested: boolean;
+            /** Lines */
+            lines: components["schemas"]["LineOut"][];
+            /** Route */
+            route: string | null;
+            /** Routing Reasons */
+            routing_reasons: string[];
+            status: components["schemas"]["InvoiceStatus"];
+            supplier: components["schemas"]["SupplierOut"] | null;
+        };
+        /** InvoiceDocument */
+        InvoiceDocument: {
+            /** Doc Quality */
+            doc_quality: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Page Count */
+            page_count: number | null;
+        };
+        /**
+         * InvoiceStatus
+         * @enum {string}
+         */
+        InvoiceStatus: "received" | "extracting" | "extracted" | "checking" | "cleared" | "needs_review" | "approved" | "rejected" | "exported" | "failed";
         /** JobsOut */
         JobsOut: {
             /** Counts */
             counts: {
                 [key: string]: number;
             };
-            /** Stuck */
-            stuck: number;
-            /** Paused */
-            paused: number;
-            /** Oldest Queued Age S */
-            oldest_queued_age_s: number | null;
             /** Failed */
             failed: components["schemas"]["FailedJob"][];
+            /** Oldest Queued Age S */
+            oldest_queued_age_s: number | null;
+            /** Paused */
+            paused: number;
+            /** Stuck */
+            stuck: number;
+        };
+        /** LineOut */
+        LineOut: {
+            /** Amount Minor */
+            amount_minor: number | null;
+            /** Description */
+            description: string | null;
+            /** Line No */
+            line_no: number;
+            /** Matched */
+            matched: boolean;
+            /** Qty */
+            qty: string | null;
+            /** Sku */
+            sku: string | null;
+            /** Unit Price Minor */
+            unit_price_minor: number | null;
+        };
+        /** LoginIn */
+        LoginIn: {
+            /** Password */
+            password: string;
+            /** Username */
+            username: string;
+        };
+        /** LoginOut */
+        LoginOut: {
+            /** Expires In */
+            expires_in: number;
+            /** Token */
+            token: string;
+            /** User */
+            user: string;
+        };
+        /** MeOut */
+        MeOut: {
+            /** User */
+            user: string | null;
+        };
+        /** NoteIn */
+        NoteIn: {
+            /** Note */
+            note?: string | null;
+        };
+        /** QueueItem */
+        QueueItem: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string | null;
+            /** Doc Quality */
+            doc_quality: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Info Requested */
+            info_requested: boolean;
+            /** Invoice Date */
+            invoice_date: string | null;
+            /** Invoice Number */
+            invoice_number: string | null;
+            /** Open Exceptions */
+            open_exceptions: number;
+            /** Route */
+            route: string | null;
+            status: components["schemas"]["InvoiceStatus"];
+            /** Supplier Id */
+            supplier_id: string | null;
+            /** Supplier Name */
+            supplier_name: string | null;
+            top_exception: components["schemas"]["ExceptionRef"] | null;
+            /** Total Minor */
+            total_minor: number | null;
+        };
+        /** QueueOut */
+        QueueOut: {
+            /** Items */
+            items: components["schemas"]["QueueItem"][];
+            /** Total */
+            total: number;
+        };
+        /** RejectIn */
+        RejectIn: {
+            /** Reason */
+            reason: string;
+        };
+        /** RelatedInvoice */
+        RelatedInvoice: {
+            /** Currency */
+            currency: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invoice Date */
+            invoice_date: string | null;
+            /** Invoice Number */
+            invoice_number: string | null;
+            status: components["schemas"]["InvoiceStatus"];
+            /** Supplier Name */
+            supplier_name: string | null;
+            /** Total Minor */
+            total_minor: number | null;
+        };
+        /** RevealOut */
+        RevealOut: {
+            /** Account */
+            account: string;
+        };
+        /**
+         * Severity
+         * @enum {string}
+         */
+        Severity: "info" | "review" | "block";
+        /** SupplierOut */
+        SupplierOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** ValidationError */
         ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
             msg: string;
             /** Error Type */
             type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -222,10 +724,45 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    health_health_get: {
+    login_auth_login_post: {
         parameters: {
             query?: never;
             header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    me_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -237,7 +774,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HealthResponse"];
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -337,16 +883,22 @@ export interface operations {
             };
         };
     };
-    job_overview_jobs_get: {
+    close_exception_exceptions__exception_id__close_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
-            path?: never;
+            path: {
+                exception_id: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -354,7 +906,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["JobsOut"];
+                    "application/json": components["schemas"]["InvoiceDetail"];
                 };
             };
             /** @description Validation Error */
@@ -386,6 +938,342 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExtractionStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    health_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    queue_invoices_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["InvoiceStatus"][] | null;
+                code?: components["schemas"]["ExceptionCode"] | null;
+                supplier_id?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invoice_detail_invoices__invoice_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_invoices__invoice_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reveal_bank_invoices__invoice_id__bank_reveal_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevealOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    correct_invoices__invoice_id__corrections_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CorrectionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    page_image_invoices__invoice_id__pages__page__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+                page: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_invoices__invoice_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_information_invoices__invoice_id__request_info_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_overview_jobs_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobsOut"];
                 };
             };
             /** @description Validation Error */
