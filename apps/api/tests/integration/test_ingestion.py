@@ -46,8 +46,14 @@ def make_settings(db_url: str, tmp_path: Path, **kw: Any) -> Settings:
 def clean_tables(engine: Engine) -> None:
     with engine.begin() as conn:
         for t in (
-            "jobs", "llm_calls", "field_extractions", "invoice_lines", "invoices", "documents",
-        ):  # fmt: skip
+            "check_results",
+            "jobs",
+            "llm_calls",
+            "field_extractions",
+            "invoice_lines",
+            "invoices",
+            "documents",
+        ):
             conn.execute(text(f"delete from {t}"))
 
 

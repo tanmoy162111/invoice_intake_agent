@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine, create_engine, func, select, text, update
 from sqlalchemy.orm import Session
 
+from intake.checks.pipeline import VALIDATE_JOB
 from intake.config import Settings
 from intake.core.llm_budget import ModelPrice
 from intake.db.models import (
@@ -50,8 +51,16 @@ TOKEN = "test-token"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 BANK_KEY = Fernet.generate_key().decode()
 PIPELINE_TABLES = (
+    "check_results",
     "jobs", "llm_calls", "field_extractions", "invoice_lines", "invoices", "documents",
 )  # fmt: skip
+
+
+def purge(engine: Engine) -> None:
+    """Start from empty pipeline tables: other modules share the default tenant and leave rows."""
+    with engine.begin() as conn:
+        for t in PIPELINE_TABLES:
+            conn.execute(text(f"delete from {t}"))  # noqa: S608
 
 
 def make_settings(url: str, tmp: Path, **kw: Any) -> Settings:
@@ -65,6 +74,7 @@ def make_settings(url: str, tmp: Path, **kw: Any) -> Settings:
 
 def drain(engine: Engine, storage: LocalStorage, settings: Settings, client: RecordedClient) -> int:
     handlers = {
+        VALIDATE_JOB: lambda *_: None,  # these tests stop after extraction; M4 has its own tests
         PROCESS_JOB: HANDLERS[PROCESS_JOB],
         EXTRACT_JOB: make_extract_handler(lambda _: client),
     }
@@ -109,6 +119,7 @@ class Env:
 def env(migrated_db_url: str, tmp_path_factory: pytest.TempPathFactory) -> Iterator[Env]:
     tmp = tmp_path_factory.mktemp("m3")
     engine = create_engine(migrated_db_url)
+    purge(engine)
     settings = make_settings(migrated_db_url, tmp, default_tenant_id=MASTER["tenant"]["id"])
     storage = LocalStorage(settings.storage_dir)
     with Session(engine) as s:  # supplier master data, for the master-data confidence signal

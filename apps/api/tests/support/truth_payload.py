@@ -25,10 +25,11 @@ RATE_LAYOUTS = {"D"}  # only this layout prints a tax % per line
 CURRENCY_TEXT = {"USD": "$", "GBP": "£", "EUR": "EUR"}
 
 
-def load_truths(quality: str = "clean") -> list[dict[str, Any]]:
+def load_truths(quality: str | None = "clean") -> list[dict[str, Any]]:
+    """Readable seed invoices with their ground truth; all qualities when `quality` is None."""
     paths = sorted((DEFAULT_SEED_DIR / "truth").glob("*.json"))
     truths = [json.loads(p.read_text()) for p in paths]
-    return [t for t in truths if t["doc_quality"] == quality and t["readable"]]
+    return [t for t in truths if t["readable"] and quality in (None, t["doc_quality"])]
 
 
 def seed_file(truth: dict[str, Any]) -> Path:

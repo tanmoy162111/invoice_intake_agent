@@ -5,9 +5,10 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from intake.audit.writer import record_event
+from intake.checks.pipeline import VALIDATE_JOB, validate_invoice
 from intake.config import Settings
-from intake.core.statuses import ActorType
-from intake.db.models import Job
+from intake.core.statuses import ActorType, InvoiceStatus
+from intake.db.models import Invoice, Job
 from intake.extract.factory import build_client
 from intake.extract.llm import LlmClient
 from intake.extract.pipeline import EXTRACT_JOB, extract_invoice
@@ -62,12 +63,25 @@ def make_extract_handler(client_factory: ClientFactory = build_client) -> Handle
                     data={"reason": "SPEND_CAP_REACHED", "resume_at": paused.resume_at.isoformat()},
                 )  # fmt: skip
             return queue.Deferral(paused.resume_at, "SPEND_CAP_REACHED")
+        inv = session.get_one(Invoice, invoice_id)
+        if InvoiceStatus(inv.status) is InvoiceStatus.EXTRACTED:  # next stage: the checks
+            queue.enqueue(
+                session, tenant_id=job.tenant_id, type=VALIDATE_JOB,
+                payload={"invoice_id": str(invoice_id)}, dedupe_key=f"{VALIDATE_JOB}:{invoice_id}",
+            )  # fmt: skip
         return None
 
     return handler
 
 
+def _validate_invoice(
+    session: Session, storage: LocalStorage, settings: Settings, job: Job
+) -> None:
+    validate_invoice(session, settings, uuid.UUID(job.payload["invoice_id"]))
+
+
 HANDLERS: dict[str, Handler] = {
     PROCESS_JOB: _process_document,
     EXTRACT_JOB: make_extract_handler(),
+    VALIDATE_JOB: _validate_invoice,
 }

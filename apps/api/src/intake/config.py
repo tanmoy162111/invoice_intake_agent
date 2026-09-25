@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
@@ -40,6 +41,10 @@ class Settings(BaseSettings):
     daily_spend_cap_usd: Decimal = Decimal("5")  # 0 pauses all extraction
     extract_not_configured_retry_s: int = 300
     field_confidence_min: Decimal = Decimal("0.8")  # playbook §6.3
+
+    # Validation (M4). The rule settings (tolerances, age limit) live in each tenant's settings.
+    # A fixed "as of" date for the date checks; empty means today. Keeps tests and demos stable.
+    validation_today: date | None = None
 
     # Job queue
     job_max_attempts: int = 3
