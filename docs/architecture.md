@@ -209,4 +209,31 @@ detect_duplicates ─▶ enqueue match_invoice ─▶ earlier invoices unread or
   checks that would pass become `skipped`.
 - **Audit:** `match_completed` carries the PO id, whether it was inferred, the outcome of each code, the
   line pairs (line number and method) and the pending count. No invoice numbers.
-- **Not yet:** exceptions, explanations and routing (M7). The invoice stays in `checking`.
+- **Then:** the `match_invoice` job enqueues `route_invoice` (M7, below).
+
+## Exceptions and routing (M7)
+
+```
+match_invoice ─▶ enqueue route_invoice ─▶ read check_results, field confidences, tenant limit
+                                            │
+                        core/classify.classify ─▶ exceptions rows + exception_raised audit
+                        core/routing.decide_route ─▶ invoices.route + status (cleared | needs_review) + audit
+```
+
+- **Pure rules:** `core/classify.py` (`classify(checks, ctx)` returns `ExceptionDraft`s: code, severity,
+  explanation, fix, whether the check could not be done, evidence) and `core/routing.py`
+  (`decide_route(RoutingInput)` returns status, route and `RoutingReason`s). Explanations are built only from
+  `core/exceptions.py` templates (`explain`, `explain_unchecked`, `VARIANTS`); a builder that cannot read its
+  details never drops the exception, it falls back to the "could not be checked" wording.
+- **Stage** (`checks/routing.py`): only an invoice in `checking` is worked on; the status change is the
+  idempotency marker, so exceptions, route and status commit together and a re-run does nothing. The latest
+  rule version of each check wins. Expected results are the seven validation checks, `POSSIBLE_DUPLICATE` and
+  the seven match checks; a missing one is `MISSING_CHECKS` (review). A corrected field counts as fully
+  confident.
+- **Audit:** `exception_raised` (code, severity, whether unchecked), `status_changed` (with the reasons) and
+  `routing_decided` (status, route, reasons, exception codes). Explanations, which can name an invoice number,
+  are stored on the exception row only, never in the audit log.
+- **Blank documents:** `db.invoices.fail_extraction` adds an `UNREADABLE_DOCUMENT` exception when reading fails
+  for that reason; the invoice stays `failed` (playbook 5.2 allows only a retry from there).
+- **Not yet:** approving, rejecting and correcting (M8; correcting will re-run the checks and the routing),
+  `auto_approve_cleared`, and the history view (M9).

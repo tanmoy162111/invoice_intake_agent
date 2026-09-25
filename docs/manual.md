@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M6 (3-way matching), 2026-09-25.
+> **Describes:** the system after M7 (exceptions and routing), 2026-09-25.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -48,14 +48,15 @@ Every invoice moves through these steps. Each change is written to a permanent h
 |---|---|---|
 | `received` | We have the file and it is waiting to be read | Today (M2) |
 | `extracting` / `extracted` | Fields are being read / have been read | Today (M3) |
-| `checking` | The checks have run and their results are saved; a person or the router (M7) decides next | Today (M4); deciding is [M7] |
-| `cleared` | All checks passed and confidence is high; waits for one-click approval | [M7] |
-| `needs_review` | A person must look | [M7] |
+| `checking` | The checks have run and their results are saved; the router decides next (a few seconds) | Today (M4 to M6) |
+| `cleared` | Nothing is in doubt: no open exception, every important field confident, every check ran, total within the approval limit. Waits for a person to approve | Today (M7) |
+| `needs_review` | A person must look. The reasons are in the history (section 4.14) | Today (M7) |
 | `approved` / `rejected` | A person decided | [M8] |
 | `exported` | Handed to the accounting system | [M12] |
 | `failed` | Reading failed, with a reason (section 5.6); can be retried | Today (M3) |
 
-An invoice above the approval limit always needs a person, even if every check passed.
+An invoice above the approval limit always needs a person, even if every check passed. A blank document
+never reaches the checks: it becomes `failed` and shows an `UNREADABLE_DOCUMENT` exception (section 4.14).
 
 ### Exceptions
 
@@ -264,8 +265,7 @@ docker compose exec db psql -U intake -c "
 | `UNKNOWN_SUPPLIER` | no exact tax ID or name/alias match, or the identifiers conflict | the closest known supplier and its similarity; `conflict` |
 | `BANK_DETAILS_CHANGED` | the account differs from the one on file | never shows the account |
 
-The invoice's status stays `checking`. Turning failures into explained exceptions and routing the
-invoice is [Coming in M7]. The supplier is linked on the invoice (`invoices.supplier_id`) when it is
+Turning failures into explained exceptions and routing the invoice is the last step (section 4.14). The supplier is linked on the invoice (`invoices.supplier_id`) when it is
 known. `checks_completed` in the invoice's history lists which checks failed or were skipped.
 
 `UNKNOWN_SUPPLIER` details use `conflict` values: `NAME_DIFFERS_FROM_TAX_ID` (the tax ID belongs to a
@@ -288,6 +288,9 @@ docker compose exec db psql -U intake -c "
 | `line_tolerance_minor` | 1 | Rounding allowed per line, in cents |
 | `total_tolerance_minor` | 1 | Rounding allowed between subtotal plus tax and the total |
 | `tax_tolerance_per_line_minor` | 1 | Rounding allowed on tax (per line when line rates are used) |
+| `approval_amount_limit_minor` | none | The largest total, in cents, that may clear without a person, for invoices in `approval_limit_currency` |
+| `approval_limit_currency` | `USD` | Which currency `approval_amount_limit_minor` is in |
+| `approval_amount_limits_minor` | none | Limits for other currencies, for example `{"EUR": 1000000, "GBP": 1000000}`. An invoice in a currency with no limit always needs review |
 | `supplier_fuzzy_min` | 90 | A closest supplier at or above this similarity is *suggested* (never trusted) |
 | `dedupe_window_days` | 7 | Days apart two invoices can be and still be a soft duplicate |
 | `dedupe_number_similarity_min` | 85 | How similar two invoice numbers must be (0 to 100) for a soft duplicate |
@@ -372,6 +375,57 @@ with `last_error` `WAITING_FOR_EARLIER_INVOICES`. It checks again every 10 secon
 5 minutes (`MATCH_POLL_S`, `MATCH_MAX_WAIT_S`). Five client settings tune the matching (section 4.11).
 The currency rule (`CURRENCY_MISMATCH`) is a validation check (section 4.10); the matching skips amount
 checks when the currencies differ instead of repeating it.
+
+### 4.14 See the exceptions and where the invoice went
+
+The last step reads every check result, raises the exceptions and decides the route. Ask what it decided:
+
+```bash
+docker compose exec db psql -U intake -c "
+  select i.status, i.route, e.code, e.severity, e.explanation, e.suggested_fix
+  from invoices i left join exceptions e on e.invoice_id = i.id
+  where i.id = '<invoice-id>' order by e.severity desc, e.code;"
+```
+
+Every failed check becomes **one** exception: a check that finds several problems (price on lines 2 and 4)
+lists each line with its numbers in a single explanation. The explanation and the fix come from fixed
+templates (section 6), filled with the numbers from the check, so they are always accurate. Three
+exceptions have no check of their own: `LOW_CONFIDENCE_FIELD` (an important field is missing or below the
+confidence minimum; each is named with its percentage), `ABOVE_APPROVAL_LIMIT`, and `UNREADABLE_DOCUMENT`.
+
+**"Could not be checked."** A check that could not be done is never a pass. It is raised under its own code at
+`review` severity, worded "The tax could not be checked (there is no tax rate on file...), so a person needs to
+look at it." A check that was only skipped because of another problem is not repeated (a supplier that is not
+known already explains why its currency and bank checks were skipped; a missing PO explains the skipped price
+and quantity checks; a missing receipt explains the skipped received-quantity check).
+
+**The route.** The invoice becomes `cleared` (route `straight_through`) only if all of these hold, otherwise
+`needs_review` (route `review`):
+
+- there is no open `review` or `block` exception;
+- every important field (supplier, invoice number, date, total, currency) is at least as confident as
+  `FIELD_CONFIDENCE_MIN`;
+- the total is not above the client's limit for the invoice's currency (section 4.11), and is not zero or negative;
+- every check has a result.
+
+A changed bank account always sends the invoice to review, whatever its severity. The reasons are written to
+the history: the status change carries them, and a `routing_decided` event lists them with the exceptions.
+Reasons: `BANK_DETAILS_CHANGED`, `OPEN_EXCEPTIONS`, `LOW_CONFIDENCE`, `NO_TOTAL`, `CREDIT_NOTE`,
+`ZERO_TOTAL`, `NO_LIMIT` (no approval limit is set for the invoice's currency), `ABOVE_LIMIT` and
+`MISSING_CHECKS`. A bank check that merely could not be done (the account could not be read, or none is on
+file) is a "could not be checked" exception, not a `BANK_DETAILS_CHANGED` reason.
+
+Good to know:
+
+- A limit is only ever compared with a total in the same currency; there is no exchange-rate conversion. An
+  invoice in a currency with no configured limit always goes to review.
+- Text copied from the document into an explanation (supplier and PO names, invoice numbers) is cleaned of
+  control characters and cut to 80 characters (numbers to 40). It is plain text; a screen showing it must not
+  treat it as markup.
+- A cleared invoice still waits for a person to approve it (M8); nothing is paid or moved.
+- A blank document fails at reading (section 5.6). It stays `failed` (it can only be retried) and carries an
+  open `UNREADABLE_DOCUMENT` exception so a reviewer sees it.
+- Every exception, and the routing decision, is written to the history with codes only, never invoice text.
 
 ---
 
@@ -495,8 +549,8 @@ Shown in `signals.normalize_error` of `field_extractions`. Confidence is 0 for a
 
 ## 6. What the exceptions mean
 
-Eighteen kinds of problem exist. **Detecting them starts in M4 and finishes in M7; the list is fixed
-today and every one is planted in the demo data.** The exact wording comes from
+Eighteen kinds of problem exist. **All of them are now raised by the system, each with an explanation that
+states the real numbers, and every one is planted in the demo data.** The exact wording comes from
 [`exception-taxonomy.md`](exception-taxonomy.md).
 
 | Code | Severity | In plain words | What a person does |
@@ -526,7 +580,6 @@ today and every one is planted in the demo data.** The exact wording comes from
 
 | When | You will be able to |
 |---|---|
-| M7 | See every problem explained with real numbers and a suggested fix, and each invoice routed |
 | M8 | Work the review queue in a browser, on a phone too; correct fields; approve or reject |
 | M9 | Read the complete history of any invoice |
 | M10 | See measured accuracy per field and per document quality |
@@ -579,7 +632,8 @@ hardening, the database password and encryption of stored files.
 | Currency and amounts are empty for an invoice | A bare `$` the supplier's usual currency does not settle, or another reason in section 5.7 | Expected: a person confirms it (M8) |
 | Duplicate check keeps waiting (`WAITING_FOR_EARLIER_INVOICES`) | An earlier invoice is still being read (or its reading is paused) | It goes ahead by itself after 5 minutes; fix the paused reading (section 4.6) |
 | Two similar invoices, only one `POSSIBLE_DUPLICATE` | Only the later-received one is flagged | Expected (section 4.12) |
-| An invoice stays `checking` | Expected until routing exists (M7) | See the results (section 4.10) |
+| An invoice stays `checking` | The routing job has not run: an earlier stage is waiting, or the worker is stopped | Look at `/jobs` for `route_invoice`, `match_invoice` and `detect_duplicates` (section 4.4) |
+| Almost every scanned or photographed invoice goes to review | Its invoice number has no text layer to confirm it, so confidence is 75%, below the 80% minimum | Expected with the current confidence rules; measured in M10, and a reviewer confirms the field (M8) |
 | Every check is `skipped` | The invoice was read with empty fields (see section 5.7) | Fix the cause; a person confirms the fields (M8) |
 | Old demo invoices fail `INVALID_DATE` as `INVOICE_TOO_OLD` | The demo dates are more than a year old | Set `VALIDATION_TODAY` or raise `max_invoice_age_days` |
 | A real supplier shows as `UNKNOWN_SUPPLIER` with a 90+ similarity | Names must match exactly (or a tax ID) | Add the printed name as an alias or link the supplier |

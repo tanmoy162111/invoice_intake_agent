@@ -5,9 +5,10 @@ import uuid
 from sqlalchemy.orm import Session
 
 from intake.audit.writer import record_event
+from intake.core.exceptions import SPECS, ExceptionCode, explain
 from intake.core.statuses import ActorType, InvoiceStatus
 from intake.core.workflow import can_transition
-from intake.db.models import Invoice
+from intake.db.models import Invoice, InvoiceException
 
 
 class InvalidTransition(Exception):
@@ -50,6 +51,21 @@ def fail_extraction(session: Session, invoice: Invoice, reason: str) -> None:
         event_type="extraction_failed", actor_type=ActorType.SYSTEM, actor_id="worker",
         data={"reason": reason},
     )  # fmt: skip
+    if reason == ExceptionCode.UNREADABLE_DOCUMENT.value:
+        # A blank document never reaches the checks, so it is shown to a reviewer here instead.
+        spec = SPECS[ExceptionCode.UNREADABLE_DOCUMENT]
+        session.add(
+            InvoiceException(
+                tenant_id=invoice.tenant_id, invoice_id=invoice.id, code=spec.code.value,
+                severity=spec.severity.value, suggested_fix=spec.suggested_fix,
+                explanation=explain(spec.code, reason="the page is blank or unreadable"),
+            )
+        )  # fmt: skip
+        record_event(
+            session, tenant_id=invoice.tenant_id, invoice_id=invoice.id,
+            event_type="exception_raised", actor_type=ActorType.SYSTEM, actor_id="worker",
+            data={"code": spec.code.value, "severity": spec.severity.value, "unchecked": False},
+        )  # fmt: skip
 
 
 def fail_invoice_after_job_gave_up(session: Session, invoice_id: uuid.UUID, reason: str) -> None:

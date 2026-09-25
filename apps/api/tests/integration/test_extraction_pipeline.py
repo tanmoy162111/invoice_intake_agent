@@ -51,7 +51,7 @@ TOKEN = "test-token"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 BANK_KEY = Fernet.generate_key().decode()
 PIPELINE_TABLES = (
-    "check_results",
+    "exceptions", "check_results",
     "jobs", "llm_calls", "field_extractions", "invoice_lines", "invoices", "documents",
 )  # fmt: skip
 
