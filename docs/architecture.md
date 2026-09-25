@@ -237,3 +237,30 @@ match_invoice ─▶ enqueue route_invoice ─▶ read check_results, field conf
   for that reason; the invoice stays `failed` (playbook 5.2 allows only a retry from there).
 - **Not yet:** approving, rejecting and correcting (M8; correcting will re-run the checks and the routing),
   `auto_approve_cleared`, and the history view (M9).
+
+## The review API (M8a)
+
+```
+browser/script ─▶ POST /auth/login ─▶ signed session ─▶ Authorization: Bearer <session>
+GET  /invoices, /invoices/{id}, /invoices/{id}/pages/{n}        (session or static token)
+POST corrections | exceptions/{id}/close | approve | reject | request-info | bank/reveal   (session only)
+        └─▶ review/service.py (one transaction, invoice row locked)
+              ├─ core/review.py   rules: approval, notes, correction parsing, carry-over
+              ├─ review_actions row + audit events (names and codes, never values)
+              └─ correction ─▶ close open exceptions, clear results, extracted ─▶ validate ─▶ dedupe ─▶ match ─▶ route
+```
+
+- **Who is calling.** `api/auth.resolve_caller` accepts the static `API_TOKEN` (a service: no user) or a
+  session signed with `SESSION_SECRET` (a user, verified by `core/session.py` with the clock passed in).
+  `require_user` refuses the service caller. The upload guard uses the same resolver before the body is read.
+- **Queue query.** One SQL statement orders by the worst open exception (block, review, info) then age; the
+  page's open exceptions and "information requested" flags are loaded in two more queries. All queries filter by
+  tenant.
+- **Detail.** Built in one function from `field_extractions` (bank accounts masked with `BankVault`),
+  `invoice_lines`, `exceptions`, `check_results`, the latest `routing_decided` event and, for a duplicate, the
+  earlier invoice named in its check result. Confidence reasons come from `core/review.confidence_reason`.
+- **Pages** are read from storage by document id and page number (bounded by `page_count`), served as
+  `image/png` with `nosniff`.
+- **Re-check.** After a correction the stages run in-process with `stop_waiting=True`; the routing stage skips
+  exceptions a person already closed (`is_carried_over`).
+- **Not yet:** the browser screen (M8b), line corrections, a waiting status, and the history view (M9).

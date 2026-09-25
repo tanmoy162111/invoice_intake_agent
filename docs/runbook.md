@@ -90,6 +90,17 @@ says why and how to fix it).
   deleted). Re-run the missing stage's job before trusting the route.
 - A failed invoice with an `UNREADABLE_DOCUMENT` exception is a blank document; ask the supplier for a new copy.
 
+## Reviewer login and actions
+- Login needs `REVIEWER_PASSWORD` and `SESSION_SECRET` in `.env` (`make dev` generates both). Changing
+  `SESSION_SECRET` signs every reviewer out. Sessions last `SESSION_TTL_S` (8 hours by default).
+- Five wrong passwords in a minute lock the login for that minute (per API process; a restart clears it).
+- Every reviewer action is a `review_actions` row and an audit event. To see what a reviewer did to an invoice:
+  `select created_at, user_id, action, payload from review_actions where invoice_id = '<id>' order by created_at;`
+- A correction re-checks only that invoice. Invoices matched to the same purchase order *after* it keep their old
+  cumulative-billing result; correct or re-check them in received order.
+- Do not edit `exceptions`, `check_results` or `invoices.status` by hand after a reviewer has acted: the history
+  and the data would disagree. Approve and reject are final.
+
 ## Limits worth knowing
 - Uploads are capped by `MAX_UPLOAD_BYTES` (15 MB) and `MAX_PAGES` (10). The API refuses oversized
   files after reading at most limit+1 bytes, but the web server still receives the request body first.
