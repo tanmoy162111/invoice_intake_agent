@@ -377,3 +377,101 @@ def test_the_openapi_schema_lists_every_review_route(env: Env) -> None:
         "/exceptions/{exception_id}/close",
     ):  # fmt: skip
         assert path in paths, path
+
+
+# ---- review findings --------------------------------------------------------------------------
+
+
+def app_with(env: Env, **changes: Any) -> TestClient:
+    settings = env.client.app.state.settings.model_copy(update=changes)  # type: ignore[attr-defined]
+    return TestClient(create_app(settings))
+
+
+def audit_events(env: Env, kind: str) -> list[Any]:
+    with env.engine.begin() as conn:
+        return list(
+            conn.execute(
+                text("select actor_type, actor_id, data from audit_events where event_type = :k"),
+                {"k": kind},
+            )
+        )
+
+
+def test_logins_are_audited_without_any_secret(env: Env) -> None:
+    c = app_with(env)
+    before = len(audit_events(env, "login_failed"))
+    assert (
+        c.post("/auth/login", json={"username": "reviewer", "password": "nope"}).status_code == 401
+    )
+    failed = audit_events(env, "login_failed")
+    assert len(failed) == before + 1
+    assert failed[-1].data == {} and failed[-1].actor_id is None  # the name typed is not trusted
+    ok = c.post("/auth/login", json={"username": "reviewer", "password": PASSWORD})
+    assert ok.status_code == 200
+    succeeded = audit_events(env, "login_succeeded")
+    assert succeeded and succeeded[-1].actor_type == "user" and succeeded[-1].actor_id == "reviewer"
+    blob = " ".join(str(r) for r in audit_events(env, "login_failed") + succeeded)
+    assert PASSWORD not in blob and ok.json()["token"] not in blob
+
+
+def test_a_locked_login_says_when_to_retry_and_other_clients_are_unaffected(env: Env) -> None:
+    c = app_with(env)
+    for _ in range(5):
+        c.post("/auth/login", json={"username": "reviewer", "password": "nope"})
+    locked = c.post("/auth/login", json={"username": "reviewer", "password": PASSWORD})
+    assert locked.status_code == 429 and 1 <= int(locked.headers["retry-after"]) <= 60
+    other = c.post(
+        "/auth/login",
+        json={"username": "reviewer", "password": PASSWORD},
+        headers={"X-Forwarded-For": "203.0.113.9"},
+    )
+    assert other.status_code == 429  # the forwarded header is not trusted to pick a client
+
+
+def test_a_session_ends_when_login_is_switched_off(env: Env) -> None:
+    c = app_with(env, reviewer_password="")
+    assert c.get("/invoices", headers=env.session).status_code == 401
+    assert c.get("/invoices", headers=env.service).status_code == 200  # scripts are unaffected
+
+
+def test_sensitive_responses_are_not_cached(env: Env) -> None:
+    tid = truth_with("BANK_DETAILS_CHANGED")
+    r = env.post(f"/invoices/{env.id_of(tid)}/bank/reveal")
+    assert r.status_code == 200 and r.headers["cache-control"] == "no-store"
+    page = env.get(f"/invoices/{env.id_of('inv-002')}/pages/1")
+    assert page.headers["cache-control"] == "no-store"
+
+
+def test_an_unreadable_stored_account_is_a_clear_refusal_not_a_crash(env: Env) -> None:
+    from cryptography.fernet import Fernet
+
+    c = app_with(env, bank_encryption_key=Fernet.generate_key().decode())
+    tid = truth_with("BANK_DETAILS_CHANGED")
+    iid = env.id_of(tid)
+    before = len(audit_events(env, "bank_details_reveal_failed"))
+    r = c.post(f"/invoices/{iid}/bank/reveal", json={}, headers=env.session)
+    assert r.status_code == 409 and r.json()["detail"]["code"] == "BANK_UNREADABLE"
+    assert len(audit_events(env, "bank_details_reveal_failed")) == before + 1
+    d = c.get(f"/invoices/{iid}", headers=env.session).json()
+    assert d["bank"]["masked"] == "••••"
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "code"),
+    [
+        ("total", "99999999999999999999", "INVALID_VALUE"),
+        ("invoice_number", "INV\u0000-1", "INVALID_VALUE"),
+        ("supplier_name", "!!!", "INVALID_VALUE"),
+        ("invoice_date", "9999-12-31", "INVALID_VALUE"),
+        ("currency", "JPY", "CURRENCY_HAS_AMOUNTS"),
+    ],
+)
+def test_unsafe_corrections_are_refused_over_http(
+    env: Env, field: str, value: str, code: str
+) -> None:
+    iid = env.id_of(truth_with("PRICE_VARIANCE"))
+    d = env.get(f"/invoices/{iid}").json()
+    if field == "currency" and d["header"]["currency"] == "JPY":
+        value = "USD"
+    r = env.post(f"/invoices/{iid}/corrections", {"field": field, "value": value})
+    assert r.status_code == 422 and r.json()["detail"]["code"] == code, r.text

@@ -93,7 +93,13 @@ says why and how to fix it).
 ## Reviewer login and actions
 - Login needs `REVIEWER_PASSWORD` and `SESSION_SECRET` in `.env` (`make dev` generates both). Changing
   `SESSION_SECRET` signs every reviewer out. Sessions last `SESSION_TTL_S` (8 hours by default).
-- Five wrong passwords in a minute lock the login for that minute (per API process; a restart clears it).
+- Login attempts are limited to 5 a minute per client address and 50 a minute overall (per API process; a restart
+  clears it). A locked login answers 429 with `Retry-After`. The client address is the connection's: a
+  `X-Forwarded-For` header is not trusted, so behind a proxy the proxy must present the real address.
+- Every sign-in and every failed sign-in is an audit event (`login_succeeded`, `login_failed`; the name typed on a
+  failure is not recorded). A burst of `login_failed` is a password-guessing attempt.
+- A session ends when `REVIEWER_PASSWORD` is emptied or `REVIEWER_USERNAME` changes, as well as when it expires
+  or `SESSION_SECRET` changes. There is no per-session revocation.
 - Every reviewer action is a `review_actions` row and an audit event. To see what a reviewer did to an invoice:
   `select created_at, user_id, action, payload from review_actions where invoice_id = '<id>' order by created_at;`
 - A correction re-checks only that invoice. Invoices matched to the same purchase order *after* it keep their old

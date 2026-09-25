@@ -42,7 +42,9 @@ def resolve_caller(
     if settings.api_token and _same(supplied, settings.api_token):
         return Caller("api", None)
     user = verify_session(settings.session_secret, supplied, now)
-    if user is not None:
+    # A session is only as good as today's configuration: switching login off (no password) or
+    # renaming the reviewer ends every session that was issued before.
+    if user is not None and settings.reviewer_password and _same(user, settings.reviewer_username):
         return Caller("user", user)
     return _INVALID
 

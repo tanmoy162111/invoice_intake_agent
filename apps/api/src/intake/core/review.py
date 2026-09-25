@@ -5,8 +5,10 @@ and a `block` exception needs a written note to close. A correction is normalize
 parsers that read the document, so a corrected value means exactly what a read one would.
 """
 
+import unicodedata
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
@@ -19,6 +21,8 @@ from intake.core.money import Money
 from intake.core.statuses import ExceptionStatus, InvoiceStatus
 
 NOTE_MAX = 2000
+MONEY_MAX_MINOR = 10**15  # far below a BIGINT, far above any real invoice
+YEAR_RANGE = (2000, 2100)
 VALUE_MAX = 500
 _OPEN_STATUSES = frozenset({InvoiceStatus.CLEARED, InvoiceStatus.NEEDS_REVIEW})
 
@@ -32,6 +36,7 @@ class ReviewProblem(StrEnum):
     VALUE_REQUIRED = "VALUE_REQUIRED"
     INVALID_VALUE = "INVALID_VALUE"
     CURRENCY_NEEDED = "CURRENCY_NEEDED"
+    CURRENCY_HAS_AMOUNTS = "CURRENCY_HAS_AMOUNTS"
 
 
 @dataclass(frozen=True)
@@ -44,6 +49,9 @@ class ExceptionState:
 def approval_problem(
     status: InvoiceStatus, exceptions: Sequence[ExceptionState]
 ) -> ReviewProblem | None:
+    """Only exceptions are looked at, not the route: every reason that sends an invoice to review
+    (a doubtful field, a total over the limit, a credit note) also raises an exception, so closing
+    them all is what a person is asked to do."""
     if status not in _OPEN_STATUSES:
         return ReviewProblem.WRONG_STATUS
     if any(e.status is ExceptionStatus.OPEN for e in exceptions):
@@ -51,11 +59,23 @@ def approval_problem(
     return None
 
 
+def clean_note(note: str | None) -> str:
+    """A note as it is stored: control characters (except newline and tab) and invisible or
+    direction-changing characters are removed, so a note cannot hide or spoof text."""
+    kept = [
+        ch
+        for ch in (note or "")
+        if unicodedata.category(ch) not in ("Cf", "Cs")
+        and (unicodedata.category(ch) != "Cc" or ch in "\n\t")
+    ]
+    return "".join(kept).strip()
+
+
 def _note_problem(note: str | None, *, required: bool) -> ReviewProblem | None:
-    text = (note or "").strip()
+    text = clean_note(note)
     if len(text) > NOTE_MAX:
         return ReviewProblem.NOTE_TOO_LONG
-    if required and not text:
+    if required and not any(ch.isalnum() for ch in text):  # "." or an invisible note is no note
         return ReviewProblem.NOTE_REQUIRED
     return None
 
@@ -114,13 +134,17 @@ class Correction:
     value: object | None  # what goes in that column
 
 
-def normalize_correction(field: str, raw: str, currency: str | None) -> Correction | ReviewProblem:
+def normalize_correction(
+    field: str, raw: str, currency: str | None, amounts_set: bool = False
+) -> Correction | ReviewProblem:
     if field not in CORRECTABLE_FIELDS:
         return ReviewProblem.UNKNOWN_FIELD
     column = _COLUMN[field]
     text = (raw or "").strip()
     if len(text) > VALUE_MAX:
         return ReviewProblem.INVALID_VALUE
+    if any(unicodedata.category(ch) in ("Cc", "Cf", "Cs") for ch in text):
+        return ReviewProblem.INVALID_VALUE  # NUL, line breaks, invisible or direction characters
     if not text:
         if field in _OPTIONAL:
             return Correction(field, None, column, None)
@@ -135,9 +159,21 @@ def normalize_correction(field: str, raw: str, currency: str | None) -> Correcti
         parsed = parse_currency(text, None)
     else:
         parsed = parse_text(field, text)
-    if parsed.error is not None or parsed.typed is None or parsed.text is None:
+    if parsed.error is not None or parsed.typed is None or not parsed.text:
         return ReviewProblem.INVALID_VALUE
-    value = parsed.typed.minor if isinstance(parsed.typed, Money) else parsed.typed
+    typed = parsed.typed
+    is_text = field not in _MONEY and field not in _DATES and field != "currency"
+    if is_text and not any(ch.isalnum() for ch in parsed.text):
+        return ReviewProblem.INVALID_VALUE  # punctuation alone is not a name, number or term
+    if isinstance(typed, Money) and abs(typed.minor) > MONEY_MAX_MINOR:
+        return ReviewProblem.INVALID_VALUE
+    if isinstance(typed, date) and not YEAR_RANGE[0] <= typed.year <= YEAR_RANGE[1]:
+        return ReviewProblem.INVALID_VALUE
+    if field == "currency" and amounts_set and typed != currency:
+        # amounts were read in the old currency (a yen amount has no cents); they cannot be
+        # re-read from here, so the invoice needs a corrected copy instead
+        return ReviewProblem.CURRENCY_HAS_AMOUNTS
+    value = typed.minor if isinstance(typed, Money) else typed
     return Correction(field, parsed.text, column, value)
 
 
@@ -171,7 +207,7 @@ def confidence_reason(
     if signals.get("text_layer") is False:
         return "it does not match the document's text layer"
     if signals.get("rule") is False:
-        return "it disagrees with another value on the invoice (a sum or a rate)"
+        return "it disagrees with another value on the invoice"
     if signals.get("master_data") is False:
         return "it does not match the supplier records"
     present = [k for k in _SUPPORT_SIGNALS if k in signals]
@@ -197,6 +233,8 @@ def is_carried_over(priors: Sequence[PriorDecision], code: ExceptionCode, explan
     """A person already closed this exact exception (same code and same words, so same numbers):
     after a re-check it is not raised again. One closed by the system, or still open, never
     counts."""
+    if code is ExceptionCode.BANK_DETAILS_CHANGED:
+        return False  # its words name no account, so a person must decide again every time
     return any(
         p.code is code
         and p.explanation == explanation

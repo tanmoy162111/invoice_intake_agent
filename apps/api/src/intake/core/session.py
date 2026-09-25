@@ -10,6 +10,7 @@ import binascii
 import hashlib
 import hmac
 import json
+import threading
 from collections import deque
 
 _VERSION = "v1"
@@ -63,22 +64,51 @@ def verify_session(secret: str, token: str, now: int) -> str | None:
 
 
 class LoginThrottle:
-    """Refuses logins for a while after too many failures (guessing a password takes many tries)."""
+    """Limits login attempts per client and overall (guessing a password takes many tries).
 
-    def __init__(self, max_failures: int = 5, window_s: int = 60) -> None:
-        self.max_failures, self.window_s = max_failures, window_s
-        self._failures: deque[int] = deque()
+    `attempt` reserves a slot before the password is checked, atomically, so a burst of parallel
+    guesses cannot exceed the limit. A good login gives its client's attempts back."""
+
+    def __init__(self, max_attempts: int = 5, window_s: int = 60, global_max: int = 50) -> None:
+        self.max_attempts, self.window_s, self.global_max = max_attempts, window_s, global_max
+        self._by_client: dict[str, deque[int]] = {}
+        self._all: deque[int] = deque()
+        self._lock = threading.Lock()
 
     def _forget_old(self, now: int) -> None:
-        while self._failures and self._failures[0] <= now - self.window_s:
-            self._failures.popleft()
+        cutoff = now - self.window_s
+        while self._all and self._all[0] <= cutoff:
+            self._all.popleft()
+        for key in list(self._by_client):
+            recent = self._by_client[key]
+            while recent and recent[0] <= cutoff:
+                recent.popleft()
+            if not recent:
+                del self._by_client[key]
 
-    def allowed(self, now: int) -> bool:
-        self._forget_old(now)
-        return len(self._failures) < self.max_failures
+    def attempt(self, client: str, now: int) -> bool:
+        with self._lock:
+            self._forget_old(now)
+            mine = self._by_client.setdefault(client, deque())
+            if len(mine) >= self.max_attempts or len(self._all) >= self.global_max:
+                if not mine:
+                    del self._by_client[client]
+                return False
+            mine.append(now)
+            self._all.append(now)
+            return True
 
-    def record_failure(self, now: int) -> None:
-        self._failures.append(now)
+    def succeeded(self, client: str) -> None:
+        with self._lock:
+            self._by_client.pop(client, None)
 
-    def record_success(self) -> None:
-        self._failures.clear()
+    def retry_after(self, client: str, now: int) -> int:
+        """Seconds until this client may try again (0 when it may now)."""
+        with self._lock:
+            self._forget_old(now)
+            mine = self._by_client.get(client)
+            if mine and len(mine) >= self.max_attempts:
+                return max(mine[0] + self.window_s - now, 1)
+            if len(self._all) >= self.global_max:
+                return max(self._all[0] + self.window_s - now, 1)
+            return 0

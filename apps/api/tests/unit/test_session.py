@@ -85,18 +85,62 @@ def test_a_session_needs_a_user_and_a_positive_lifetime() -> None:
 # ---- login throttle ---------------------------------------------------------------------------
 
 
-def test_the_throttle_blocks_after_too_many_failures_and_recovers() -> None:
-    t = LoginThrottle(max_failures=3, window_s=60)
-    assert t.allowed(NOW)
-    for i in range(3):
-        t.record_failure(NOW + i)
-    assert not t.allowed(NOW + 3)
-    assert t.allowed(NOW + 61 + 2)  # the failures have aged out of the window
+def test_a_client_is_blocked_after_too_many_attempts_and_recovers() -> None:
+    t = LoginThrottle(max_attempts=3, window_s=60)
+    assert [t.attempt("1.2.3.4", NOW + i) for i in range(4)] == [True, True, True, False]
+    assert not t.attempt("1.2.3.4", NOW + 30)
+    assert t.attempt("1.2.3.4", NOW + 61 + 2)  # the attempts have aged out of the window
 
 
-def test_a_success_clears_the_failures() -> None:
-    t = LoginThrottle(max_failures=2, window_s=60)
-    t.record_failure(NOW)
-    t.record_success()
-    t.record_failure(NOW + 1)
-    assert t.allowed(NOW + 2)
+def test_one_clients_failures_do_not_lock_out_another() -> None:
+    t = LoginThrottle(max_attempts=2, window_s=60)
+    assert (
+        t.attempt("attacker", NOW) and t.attempt("attacker", NOW) and not t.attempt("attacker", NOW)
+    )
+    assert t.attempt("reviewer-pc", NOW)
+
+
+def test_a_good_login_clears_that_clients_attempts() -> None:
+    t = LoginThrottle(max_attempts=2, window_s=60)
+    assert t.attempt("c", NOW) and t.attempt("c", NOW)
+    t.succeeded("c")
+    assert t.attempt("c", NOW + 1)
+
+
+def test_a_global_cap_stops_many_clients_together() -> None:
+    t = LoginThrottle(max_attempts=5, window_s=60, global_max=10)
+    allowed = [t.attempt(f"client-{i}", NOW) for i in range(20)]
+    assert allowed.count(True) == 10 and not any(allowed[10:])
+
+
+def test_the_throttle_holds_under_parallel_requests() -> None:
+    import threading
+
+    t = LoginThrottle(max_attempts=5, window_s=60, global_max=1000)
+    results: list[bool] = []
+    lock = threading.Lock()
+
+    def guess() -> None:
+        ok = t.attempt("one-client", NOW)
+        with lock:
+            results.append(ok)
+
+    threads = [threading.Thread(target=guess) for _ in range(200)]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join()
+    assert results.count(True) == 5  # not one more, however many arrive at once
+
+
+def test_the_retry_after_time_is_reported() -> None:
+    t = LoginThrottle(max_attempts=1, window_s=60)
+    assert t.attempt("c", NOW) and not t.attempt("c", NOW + 10)
+    assert t.retry_after("c", NOW + 10) == 50
+    assert t.retry_after("someone-else", NOW + 10) == 0
+
+
+def test_the_retry_time_covers_the_global_cap_too() -> None:
+    t = LoginThrottle(max_attempts=5, window_s=60, global_max=2)
+    assert t.attempt("a", NOW) and t.attempt("b", NOW) and not t.attempt("c", NOW + 5)
+    assert t.retry_after("c", NOW + 5) == 55

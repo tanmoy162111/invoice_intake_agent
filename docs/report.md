@@ -822,6 +822,16 @@ their name.
   re-check, and a cleared invoice can be rejected. No migration.
 - ADR 0008 records the decisions.
 
+Two independent reviews (decision logic and security) ran; neither found a critical or high security issue.
+Fixed test-first: a reviewer's dismissal of a changed bank account being carried over (its words name no account,
+so it is now raised again after every re-check and always needs a fresh decision), a currency change that would
+have left amounts in the wrong scale, amounts too large for the database, control and invisible characters in
+corrections and notes (an invisible or punctuation-only note no longer counts as the note a block needs), a login
+throttle that a burst of parallel guesses could beat and that locked the real reviewer out for everyone (now
+atomic, per client and overall, with `Retry-After` and audited sign-ins), sessions that outlived the login being
+switched off, a stale read of an exception after waiting for the invoice lock (two reviewers could both close it),
+an unreadable bank account causing a crash, and page images and reveals being cached by the browser.
+
 **What we proved.** (Recorded answers built from the answer key; real PDFs, worker, database and HTTP; all 118
 readable seed invoices.)
 
@@ -837,7 +847,7 @@ readable seed invoices.)
 | Another tenant's invoice or exception | Not found, for every action |
 | Bank account in any response or audit event | Never in full; a reveal is logged without it |
 | Queue order | Worst open exception first, then oldest; filters and paging work |
-| Automated tests | 1260 pass, decision-logic coverage 99.9% |
+| Automated tests | 1320 pass, decision-logic coverage 99.9% |
 
 **Left open.**
 - **The screen** (M8b): queue, invoice page with the document, cards and actions, 375 px layout, and the
@@ -847,10 +857,15 @@ readable seed invoices.)
 - **Later invoices are not re-matched.** Correcting an invoice changes what it bills against its PO, but invoices
   already matched after it keep their old result until they are corrected (runbook).
 - **Request information** is a log entry; there is no "waiting" status and nothing is sent to the supplier.
-- The demo login is one shared identity; a real user system is needed before real data.
+- The demo login is one shared identity; a real user system is needed before real data. Sessions cannot be
+  revoked one by one (only by changing `SESSION_SECRET`, the reviewer name or emptying the password).
 - `auto_approve_cleared` is still not implemented; a person approves every invoice.
 - No partial unique index on open exceptions per (invoice, code); the row lock on an invoice in the review
   service and the routing stage covers concurrent actions.
+- A currency can only be corrected while no amounts were read; a wrong currency on an invoice with amounts is
+  rejected and re-requested, because amounts cannot be re-read from here.
+- `review_actions` holds invoice values (before and after a correction) and free-text notes; its retention and
+  access are recorded in `data-handling.md`.
 
 ---
 
@@ -882,7 +897,7 @@ or rule requires running the evaluation and reporting the result first.
 | M5 | 885 | 99.9% | Green | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
 | M6 | 972 | 99.9% | Green | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
 | M7 | 1104 | 99.9% | Green | 58/58 planted problems raised as exceptions; 0 false clears; every explanation carries its real numbers (23/23 checked) |
-| M8a | 1260 | 99.9% | Pending | Correcting a field re-runs the checks and routing; approval blocked while any exception is open; every action audited without values |
+| M8a | 1320 | 99.9% | Pending | Correcting a field re-runs the checks and routing; approval blocked while any exception is open; every action audited without values |
 
 The build gates on decision-logic coverage of at least 90%.
 

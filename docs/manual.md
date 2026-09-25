@@ -455,18 +455,18 @@ masked (`••••••••6016`). Pages of the document are at `/invoices
 
 | Action | How | Rules |
 |---|---|---|
-| Correct a field | `POST /invoices/<id>/corrections` `{"field":"total","value":"1,234.50"}` | Header fields only (not the bank account, not lines yet). Amounts are read in the invoice currency, dates as `2026-05-31`. Optional fields (PO number, due date, payment terms, tax ID) may be emptied. The checks and routing run again at once; exceptions that no longer apply are closed by the system, and one a person already closed, unchanged, stays closed |
-| Close an exception | `POST /exceptions/<id>/close` `{"resolution":"resolved","note":"..."}` | `resolved` (dealt with) or `dismissed` (not a problem). A `block` exception needs a note |
+| Correct a field | `POST /invoices/<id>/corrections` `{"field":"total","value":"1,234.50"}` | Header fields only (not the bank account, not lines yet). Amounts are read in the invoice currency (up to 10 trillion units), dates as `2026-05-31` (years 2000 to 2100). The currency itself can only be changed while no amounts have been read (`CURRENCY_HAS_AMOUNTS` otherwise: reject the invoice and ask for a corrected copy). Text must have a letter or digit and may not contain control or invisible characters. Optional fields (PO number, due date, payment terms, tax ID) may be emptied. The checks and routing run again at once; exceptions that no longer apply are closed by the system, and one a person already closed, unchanged, stays closed |
+| Close an exception | `POST /exceptions/<id>/close` `{"resolution":"resolved","note":"..."}` | `resolved` (dealt with) or `dismissed` (not a problem). A `block` exception needs a note with at least a letter or digit. Notes are stored without control or invisible characters. A changed bank account is raised again after every re-check, so a person decides again |
 | Approve | `POST /invoices/<id>/approve` | Only when every exception is closed, and only from `cleared` or `needs_review`. Final |
 | Reject | `POST /invoices/<id>/reject` `{"reason":"..."}` | A reason is required. Final |
 | Request information | `POST /invoices/<id>/request-info` `{"note":"..."}` | Logged only; the status does not change |
-| Reveal the bank account | `POST /invoices/<id>/bank/reveal` | Returns the account; the reveal is written to the history (without the account) |
+| Reveal the bank account | `POST /invoices/<id>/bank/reveal` | Returns the account (never cached); the reveal is written to the history (without the account). If the stored value cannot be read with the configured key the answer is 409 `BANK_UNREADABLE` and the attempt is logged |
 
 A refused action answers 409 (the invoice is in the wrong state, or exceptions are still open) or 422 (a value
 or note is missing or unreadable) with a `detail.code` such as `OPEN_EXCEPTIONS`, `NOTE_REQUIRED`,
-`INVALID_VALUE`, `UNKNOWN_FIELD` or `WRONG_STATUS`. Actions need a reviewer session; the static API token can
+`INVALID_VALUE`, `UNKNOWN_FIELD`, `CURRENCY_HAS_AMOUNTS` or `WRONG_STATUS`. Actions need a reviewer session; the static API token can
 read but not act. Every action is a row in `review_actions` and an audit event (field names and codes only,
-never values).
+never values). Sign-ins are audited too (`login_succeeded`, and `login_failed` without the name typed).
 
 ---
 
@@ -549,8 +549,8 @@ refuses everything except `/health` and the login.
 | `APP_ENV` | `development` | `development`, `test` or `production`. Production refuses `VALIDATION_TODAY` |
 | `VALIDATION_TODAY` | empty | A fixed "as of" date (`YYYY-MM-DD`) for the date checks. Test and demo only |
 | `DEDUPE_POLL_S`, `DEDUPE_MAX_WAIT_S` | 10, 300 | How often the duplicate check re-tries while earlier invoices are unread, and when it stops waiting (seconds) |
-| `REVIEWER_USERNAME`, `REVIEWER_PASSWORD` | `reviewer`, empty | The one demo reviewer. An empty password switches login off. `make dev` generates a password into `.env` |
-| `SESSION_SECRET`, `SESSION_TTL_S` | empty, 28800 | The key that signs reviewer sessions, and how long one lasts (seconds, at least 60). `make dev` generates the secret |
+| `REVIEWER_USERNAME`, `REVIEWER_PASSWORD` | `reviewer`, empty | The one demo reviewer. An empty password switches login off, and ends any session already issued. The password must be at least 8 characters and the name may not be `system`. `make dev` generates a password into `.env` |
+| `SESSION_SECRET`, `SESSION_TTL_S` | empty, 28800 | The key that signs reviewer sessions (at least 16 characters), and how long one lasts (seconds, at least 60). Changing it signs everyone out. `make dev` generates the secret |
 | `MATCH_POLL_S`, `MATCH_MAX_WAIT_S` | 10, 300 | The same, for the 3-way match: how often it re-tries while earlier invoices are unread or unmatched, and when it stops waiting (seconds) |
 | `EXTRACT_TIMEOUT_S` | 120 | How long one model call may take before it counts as a failure to retry |
 | `EXTRACT_NOT_CONFIGURED_RETRY_S` | 300 | How often a paused job checks whether reading has been configured |
@@ -689,8 +689,8 @@ hardening, the database password and encryption of stored files.
 | Duplicate check keeps waiting (`WAITING_FOR_EARLIER_INVOICES`) | An earlier invoice is still being read (or its reading is paused) | It goes ahead by itself after 5 minutes; fix the paused reading (section 4.6) |
 | Two similar invoices, only one `POSSIBLE_DUPLICATE` | Only the later-received one is flagged | Expected (section 4.12) |
 | `POST /auth/login` says 503 | No `REVIEWER_PASSWORD` or `SESSION_SECRET` is set | Set both in `.env` (`make dev` does), restart the API |
-| `POST /auth/login` says 429 | Five wrong passwords in a minute lock the login for that minute | Wait a minute |
-| A review action says 401 after a while | The session lasted `SESSION_TTL_S` | Sign in again |
+| `POST /auth/login` says 429 | Five attempts in a minute from one address (or fifty from all addresses) lock the login; the `Retry-After` header says how long | Wait that long. Behind a proxy, the proxy must present the real client address |
+| A review action says 401 after a while | The session lasted `SESSION_TTL_S`, or the reviewer name or password setting changed | Sign in again |
 | A review action says 403 | It was sent with the static API token, which cannot act | Use a session token from `/auth/login` |
 | An invoice stays `checking` | The routing job has not run: an earlier stage is waiting, or the worker is stopped | Look at `/jobs` for `route_invoice`, `match_invoice` and `detect_duplicates` (section 4.4) |
 | Almost every scanned or photographed invoice goes to review | Its invoice number has no text layer to confirm it, so confidence is 75%, below the 80% minimum | Expected with the current confidence rules; measured in M10, and a reviewer confirms the field (M8) |

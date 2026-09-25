@@ -47,6 +47,10 @@ _MESSAGES = {
     ReviewProblem.VALUE_REQUIRED: "That field cannot be left empty.",
     ReviewProblem.INVALID_VALUE: "That value could not be read for this field.",
     ReviewProblem.CURRENCY_NEEDED: "Set the currency first; amounts are read in it.",
+    ReviewProblem.CURRENCY_HAS_AMOUNTS: (
+        "Amounts were already read in the current currency and cannot be re-read. "
+        "Reject the invoice and ask for a corrected copy."
+    ),
 }
 
 
@@ -494,11 +498,11 @@ def page_image(
         raise HTTPException(404, "page not found")
     try:
         png = storage.read(f"{storage.pages_rel(doc.tenant_id, doc.id)}/page-{page:03d}.png")
-    except FileNotFoundError:
+    except OSError:  # missing, or not a readable file
         raise HTTPException(404, "page not found") from None
     return Response(
         png, media_type="image/png",
-        headers={"Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff"},
+        headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
     )  # fmt: skip
 
 
@@ -589,6 +593,7 @@ def request_information(
 @router.post("/{invoice_id}/bank/reveal", response_model=RevealOut)
 def reveal_bank(
     invoice_id: uuid.UUID,
+    response: Response,
     session: Annotated[Session, Depends(session_dep)],
     settings: Annotated[Settings, Depends(settings_dep)],
     actor: Annotated[str, Depends(require_user)],
@@ -605,6 +610,16 @@ def reveal_bank(
     except service.NotFound:
         session.rollback()
         raise HTTPException(404, "no bank account on this invoice") from None
+    except service.Unreadable:
+        session.commit()  # keep the record of the failed attempt
+        raise HTTPException(
+            409,
+            {
+                "code": "BANK_UNREADABLE",
+                "message": "The stored account cannot be read with the configured key.",
+            },
+        ) from None
+    response.headers["Cache-Control"] = "no-store"
     return RevealOut(account=account)
 
 

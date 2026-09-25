@@ -533,3 +533,128 @@ def test_another_tenant_cannot_touch_an_invoice_or_an_exception(env: Env) -> Non
             with pytest.raises(NotFound):
                 attempt()
         assert attempt is not None
+
+
+# ---- review findings --------------------------------------------------------------------------
+
+
+def test_a_stale_view_of_an_exception_cannot_close_it_a_second_time(env: Env) -> None:
+    iid = env.invoice_id(truth_with("QTY_NOT_RECEIVED"))
+    with Session(env.engine) as first, Session(env.engine) as second:
+        target = first.scalars(
+            select(InvoiceException).where(
+                InvoiceException.invoice_id == iid, InvoiceException.status == "open"
+            )
+        ).first()
+        assert target is not None
+        target_id = target.id
+        stale = second.get(InvoiceException, target_id)  # the second reviewer already has it open
+        assert stale is not None and stale.status == "open"
+        close_exception(
+            first, tenant_id=TENANT, exception_id=target_id, actor="reviewer-a",
+            resolution="dismissed", note="Delivery confirmed",
+        )  # fmt: skip
+        first.commit()
+        with pytest.raises(ReviewRefused) as e:
+            close_exception(
+                second, tenant_id=TENANT, exception_id=target_id, actor="reviewer-b",
+                resolution="resolved", note="Also handled",
+            )  # fmt: skip
+        assert e.value.problem is ReviewProblem.WRONG_STATUS
+    with Session(env.engine) as s:
+        done = s.get_one(InvoiceException, target_id)
+        assert (done.status, done.resolved_by, done.resolution_note) == (
+            "dismissed", "reviewer-a", "Delivery confirmed",
+        )  # fmt: skip
+        closed = [e for e in events(s, iid, "exception_closed") if e.actor_id == "reviewer-b"]
+        assert closed == []
+
+
+def test_a_dismissed_bank_change_is_raised_again_after_an_unrelated_correction(env: Env) -> None:
+    iid = env.invoice_id(truth_with("BANK_DETAILS_CHANGED"))
+    with Session(env.engine) as s:
+        closed = s.scalars(
+            select(InvoiceException).where(
+                InvoiceException.invoice_id == iid,
+                InvoiceException.code == "BANK_DETAILS_CHANGED",
+                InvoiceException.status == "resolved",
+            )
+        ).all()
+        assert closed, "an earlier test resolved it"
+        correct_field(
+            s, env.settings, tenant_id=TENANT, invoice_id=iid, actor=USER,
+            field="payment_terms", value="Net 15",
+        )  # fmt: skip
+        s.commit()
+    with Session(env.engine) as s:
+        assert "BANK_DETAILS_CHANGED" in open_codes(s, iid)  # a person must decide again
+        inv = s.get_one(Invoice, iid)
+        assert inv.status == "needs_review" and inv.route == "review"
+
+
+def test_a_currency_cannot_be_changed_once_amounts_were_read(env: Env) -> None:
+    iid = env.invoice_id(truth_with("PRICE_VARIANCE"))
+    with Session(env.engine) as s:
+        inv = s.get_one(Invoice, iid)
+        other = "JPY" if inv.currency != "JPY" else "USD"
+        with pytest.raises(ReviewRefused) as e:
+            correct_field(
+                s, env.settings, tenant_id=TENANT, invoice_id=iid, actor=USER,
+                field="currency", value=other,
+            )  # fmt: skip
+        assert e.value.problem is ReviewProblem.CURRENCY_HAS_AMOUNTS
+
+
+@pytest.mark.parametrize("value", ["99999999999999999999999", "12\x0034", "1e400"])
+def test_an_impossible_amount_is_refused_and_never_reaches_the_database(
+    env: Env, value: str
+) -> None:
+    iid = env.invoice_id(truth_with("PRICE_VARIANCE"))
+    with Session(env.engine) as s, pytest.raises(ReviewRefused) as e:
+        correct_field(
+            s,
+            env.settings,
+            tenant_id=TENANT,
+            invoice_id=iid,
+            actor=USER,
+            field="total",
+            value=value,
+        )
+    assert e.value.problem is ReviewProblem.INVALID_VALUE
+
+
+def test_notes_are_stored_without_invisible_or_control_characters(env: Env) -> None:
+    iid = env.invoice_id(truth_with("NO_PO"))
+    with Session(env.engine) as s:
+        ex = s.scalars(
+            select(InvoiceException).where(
+                InvoiceException.invoice_id == iid, InvoiceException.status == "open"
+            )
+        ).first()
+        assert ex is not None
+        ex_id = ex.id
+        close_exception(
+            s, tenant_id=TENANT, exception_id=ex_id, actor=USER, resolution="resolved",
+            note="​Agreed\x00 price‮",
+        )  # fmt: skip
+        s.commit()
+    with Session(env.engine) as s:
+        assert s.get_one(InvoiceException, ex_id).resolution_note == "Agreed price"
+        payloads = [a.payload for a in actions(s, iid, "dismiss_exception")]
+        assert any(p["note"] == "Agreed price" for p in payloads)
+
+
+def test_a_bank_account_that_cannot_be_decrypted_is_reported_and_logged(env: Env) -> None:
+    from cryptography.fernet import Fernet
+
+    from intake.review.service import Unreadable
+
+    iid = env.invoice_id(truth_with("BANK_DETAILS_CHANGED"))
+    wrong = BankVault(Fernet.generate_key().decode())
+    with Session(env.engine) as s:
+        with pytest.raises(Unreadable):
+            reveal_bank_account(s, wrong, tenant_id=TENANT, invoice_id=iid, actor=USER)
+        s.commit()  # the failed attempt is recorded even though nothing was revealed
+    with Session(env.engine) as s:
+        (ev,) = events(s, iid, "bank_details_reveal_failed")
+        assert (ev.actor_type, ev.actor_id, ev.data) == ("user", USER, {})

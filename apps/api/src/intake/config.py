@@ -72,6 +72,17 @@ class Settings(BaseSettings):
     worker_poll_interval_s: float = 2.0
 
     @model_validator(mode="after")
+    def _reviewer_login_is_sound(self) -> "Settings":
+        name = self.reviewer_username.strip()
+        if not name or name.lower() == "system":  # "system" is who the pipeline acts as
+            raise ValueError("REVIEWER_USERNAME must be a real name and not 'system'")
+        if self.reviewer_password and len(self.reviewer_password) < 8:
+            raise ValueError("REVIEWER_PASSWORD must be at least 8 characters")
+        if self.session_secret and len(self.session_secret) < 16:
+            raise ValueError("SESSION_SECRET must be at least 16 characters")
+        return self
+
+    @model_validator(mode="after")
     def _no_date_override_in_production(self) -> "Settings":
         if self.app_env == "production" and self.validation_today is not None:
             raise ValueError("VALIDATION_TODAY must not be set when APP_ENV=production")

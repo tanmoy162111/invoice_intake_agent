@@ -10,6 +10,7 @@ from intake.core.review import (
     PriorDecision,
     ReviewProblem,
     approval_problem,
+    clean_note,
     confidence_reason,
     correct_problem,
     is_carried_over,
@@ -204,7 +205,7 @@ def test_a_confident_field_has_no_reason() -> None:
         ({"normalize_error": "SOMETHING_NEW"}, "the value could not be normalized"),
         ({"missing": True}, "it was not found on the document"),
         ({"text_layer": False}, "it does not match the document's text layer"),
-        ({"rule": False}, "it disagrees with another value on the invoice (a sum or a rate)"),
+        ({"rule": False}, "it disagrees with another value on the invoice"),
         ({"master_data": False}, "it does not match the supplier records"),
         (
             {"text_layer": None, "rule": None, "master_data": None, "self_confidence": "high"},
@@ -248,3 +249,88 @@ def test_an_open_or_system_closed_exception_is_never_carried_over() -> None:
     assert not is_carried_over([prior(X.RESOLVED, by="system")], ExceptionCode.TOTAL_MISMATCH, "T")
     assert not is_carried_over([prior(X.DISMISSED, by=None)], ExceptionCode.TOTAL_MISMATCH, "T")
     assert not is_carried_over([], ExceptionCode.TOTAL_MISMATCH, "T")
+
+
+# ---- review findings: what a correction may contain -------------------------------------------
+
+
+def test_a_currency_change_is_refused_when_amounts_were_read_in_the_old_one() -> None:
+    assert (
+        normalize_correction("currency", "JPY", "USD", amounts_set=True)
+        is ReviewProblem.CURRENCY_HAS_AMOUNTS
+    )
+    same = normalize_correction("currency", "usd", "USD", amounts_set=True)
+    assert not isinstance(same, ReviewProblem) and same.value == "USD"
+    fresh = normalize_correction("currency", "JPY", None, amounts_set=False)
+    assert not isinstance(fresh, ReviewProblem) and fresh.value == "JPY"
+
+
+@pytest.mark.parametrize(
+    "amount", ["99999999999999999999999", "10000000000000.01", "-99999999999999999"]
+)
+def test_an_amount_too_large_for_the_database_is_refused(amount: str) -> None:
+    assert normalize_correction("total", amount, "USD") is ReviewProblem.INVALID_VALUE
+
+
+def test_the_largest_accepted_amount_fits_a_bigint() -> None:
+    ok = normalize_correction("total", "9999999999999.99", "USD")
+    assert not isinstance(ok, ReviewProblem) and isinstance(ok.value, int)
+    assert abs(ok.value) < 2**63
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["INV\x00 1", "a\x1fb", "line\nbreak", "tab\there", "abc‮def", "zero​width", "\ud800"],
+)
+def test_control_and_invisible_characters_are_refused_in_a_correction(value: str) -> None:
+    for field in ("invoice_number", "supplier_name", "po_number", "payment_terms"):
+        assert normalize_correction(field, value, "USD") is ReviewProblem.INVALID_VALUE
+
+
+def test_a_name_that_normalizes_to_nothing_is_refused() -> None:
+    assert normalize_correction("supplier_name", "!!!", "USD") is ReviewProblem.INVALID_VALUE
+
+
+@pytest.mark.parametrize("day", ["0001-01-01", "1999-12-31", "2101-01-01", "9999-12-31"])
+def test_a_date_outside_a_sane_range_is_refused(day: str) -> None:
+    assert normalize_correction("invoice_date", day, "USD") is ReviewProblem.INVALID_VALUE
+
+
+def test_the_edges_of_the_sane_date_range_are_accepted() -> None:
+    for day in ("2000-01-01", "2100-12-31"):
+        assert not isinstance(normalize_correction("invoice_date", day, "USD"), ReviewProblem)
+
+
+# ---- notes ------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("empty", ["​⁠﻿", ".", "  -  ", "​.​", "\x00\x01"])
+def test_a_note_with_no_letters_or_digits_does_not_count_as_a_note(empty: str) -> None:
+    assert resolution_problem(Severity.BLOCK, empty) is ReviewProblem.NOTE_REQUIRED
+    assert reject_problem(S.NEEDS_REVIEW, empty) is ReviewProblem.NOTE_REQUIRED
+
+
+def test_a_short_real_note_is_enough() -> None:
+    assert resolution_problem(Severity.BLOCK, "ok") is None
+    assert resolution_problem(Severity.BLOCK, "​Phoned​") is None
+
+
+def test_clean_note_removes_control_and_invisible_characters() -> None:
+    assert clean_note("  a\x00b​c‮ d  ") == "abc d"
+    assert clean_note("line one\nline two\tend") == "line one\nline two\tend"
+    assert clean_note(None) == ""
+    assert clean_note("   ") == ""
+
+
+def test_the_length_limit_applies_to_the_cleaned_note() -> None:
+    assert resolution_problem(Severity.REVIEW, "x" * 2000 + "​" * 50) is None
+    assert resolution_problem(Severity.REVIEW, "x" * 2001) is ReviewProblem.NOTE_TOO_LONG
+
+
+# ---- carry-over never hides a fraud signal ---------------------------------------------------
+
+
+@pytest.mark.parametrize("status", [X.DISMISSED, X.RESOLVED])
+def test_a_closed_bank_change_is_never_carried_over(status: ExceptionStatus) -> None:
+    p = PriorDecision(ExceptionCode.BANK_DETAILS_CHANGED, "T", status, "reviewer")
+    assert not is_carried_over([p], ExceptionCode.BANK_DETAILS_CHANGED, "T")

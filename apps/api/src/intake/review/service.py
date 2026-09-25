@@ -10,6 +10,7 @@ here pays or moves money: approving only marks the invoice ready for export (M12
 import uuid
 from typing import Any
 
+from cryptography.fernet import InvalidToken
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
@@ -24,6 +25,7 @@ from intake.core.review import (
     ExceptionState,
     ReviewProblem,
     approval_problem,
+    clean_note,
     correct_problem,
     normalize_correction,
     reject_problem,
@@ -47,6 +49,10 @@ _BANK_FIELD = "supplier_bank_account"
 
 class NotFound(Exception):
     """No such invoice or exception for this tenant (a different tenant's is the same as none)."""
+
+
+class Unreadable(Exception):
+    """The stored bank account cannot be decrypted with the configured key."""
 
 
 class ReviewRefused(Exception):
@@ -130,6 +136,25 @@ def _recheck(session: Session, settings: Settings, inv: Invoice, actor: str) -> 
     route_invoice(session, settings, inv.id, tenant_id=inv.tenant_id)
 
 
+def _has_amounts(session: Session, inv: Invoice) -> bool:
+    """Were any amounts read (in the invoice's current currency)? Then the currency is fixed."""
+    if any(v is not None for v in (inv.subtotal_minor, inv.tax_minor, inv.total_minor)):
+        return True
+    return (
+        session.scalars(
+            select(InvoiceLine.id)
+            .where(
+                InvoiceLine.tenant_id == inv.tenant_id,
+                InvoiceLine.invoice_id == inv.id,
+                (InvoiceLine.unit_price_minor.is_not(None))
+                | (InvoiceLine.amount_minor.is_not(None)),
+            )
+            .limit(1)
+        ).first()
+        is not None
+    )
+
+
 def correct_field(
     session: Session,
     settings: Settings,
@@ -142,7 +167,7 @@ def correct_field(
 ) -> None:
     inv = _invoice(session, tenant_id, invoice_id)
     _refuse(correct_problem(InvoiceStatus(inv.status)))
-    correction = normalize_correction(field, value, inv.currency)
+    correction = normalize_correction(field, value, inv.currency, _has_amounts(session, inv))
     if isinstance(correction, ReviewProblem):
         raise ReviewRefused(correction)
     row = session.execute(
@@ -190,14 +215,15 @@ def close_exception(
     ex = session.get(InvoiceException, exception_id)
     if ex is None or ex.tenant_id != tenant_id:
         raise NotFound
-    inv = _invoice(session, tenant_id, ex.invoice_id)
+    inv = _invoice(session, tenant_id, ex.invoice_id)  # take the lock first...
+    session.refresh(ex)  # ...then read the exception as it is now, not as it was when we loaded it
     if resolution not in (ExceptionStatus.RESOLVED.value, ExceptionStatus.DISMISSED.value):
         raise ValueError("resolution must be 'resolved' or 'dismissed'")
     _refuse(correct_problem(InvoiceStatus(inv.status)))
     if ex.status != ExceptionStatus.OPEN.value:
         raise ReviewRefused(ReviewProblem.WRONG_STATUS)
     _refuse(resolution_problem(Severity(ex.severity), note))
-    text = (note or "").strip() or None
+    text = clean_note(note) or None
     ex.status, ex.resolved_by, ex.resolution_note = resolution, actor, text
     _act(
         session, inv, actor, ReviewAction.DISMISS_EXCEPTION,
@@ -230,7 +256,7 @@ def approve_invoice(
     set_invoice_status(
         session, inv, InvoiceStatus.APPROVED, actor_type=ActorType.USER, actor_id=actor
     )
-    _act(session, inv, actor, ReviewAction.APPROVE, {"note": (note or "").strip() or None})
+    _act(session, inv, actor, ReviewAction.APPROVE, {"note": clean_note(note) or None})
 
 
 def reject_invoice(
@@ -241,7 +267,7 @@ def reject_invoice(
     set_invoice_status(
         session, inv, InvoiceStatus.REJECTED, actor_type=ActorType.USER, actor_id=actor
     )
-    _act(session, inv, actor, ReviewAction.REJECT, {"reason": (reason or "").strip()})
+    _act(session, inv, actor, ReviewAction.REJECT, {"reason": clean_note(reason)})
 
 
 def request_info(
@@ -255,7 +281,7 @@ def request_info(
     """Records that the supplier or the requester was asked for something. No status changes."""
     inv = _invoice(session, tenant_id, invoice_id)
     _refuse(request_info_problem(InvoiceStatus(inv.status), note))
-    _act(session, inv, actor, ReviewAction.REQUEST_INFO, {"note": (note or "").strip() or None})
+    _act(session, inv, actor, ReviewAction.REQUEST_INFO, {"note": clean_note(note) or None})
     record_event(
         session, tenant_id=inv.tenant_id, invoice_id=inv.id, event_type="info_requested",
         actor_type=ActorType.USER, actor_id=actor,
@@ -276,7 +302,14 @@ def reveal_bank_account(
     ).scalar_one_or_none()
     if not token:
         raise NotFound
-    account = vault.decrypt(token)
+    try:
+        account = vault.decrypt(token)
+    except InvalidToken:  # a wrong key or a damaged value: say so, and keep a record of the attempt
+        record_event(
+            session, tenant_id=inv.tenant_id, invoice_id=inv.id,
+            event_type="bank_details_reveal_failed", actor_type=ActorType.USER, actor_id=actor,
+        )  # fmt: skip
+        raise Unreadable from None
     record_event(
         session, tenant_id=inv.tenant_id, invoice_id=inv.id, event_type="bank_details_revealed",
         actor_type=ActorType.USER, actor_id=actor,
