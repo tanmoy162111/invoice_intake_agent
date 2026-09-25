@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M5 (duplicate detection), 2026-09-25.
+> **Last updated:** after M6 (3-way matching), 2026-09-25.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -46,8 +46,8 @@ You can read only the first layer of each chapter and still understand the whole
 | M2 | Ingestion and job queue | Upload a file; it is stored and prepared | Built, in review (PR #3) |
 | M3 | Extraction | Fields read from the invoice, with confidence | Built, in review (PR #4) |
 | M4 | Validation rules | Math, dates, supplier and bank details checked | Built, in review |
-| M5 | Duplicate detection | Repeats caught before approval | Built, in review |
-| M6 | 3-way matching | Invoice compared with PO and receipt | Planned |
+| M5 | Duplicate detection | Repeats caught before approval | Built, merged (PR #6) |
+| M6 | 3-way matching | Invoice compared with PO and receipt | Built, in review |
 | M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Planned |
 | M8 | Review queue UI | A reviewer clears the queue in a browser | Planned |
 | M9 | Audit timeline | Full readable history per invoice | Planned |
@@ -553,11 +553,103 @@ non-evidence, over-eager "uncertain" between clearly different companies, a boun
 
 ---
 
+### M6: 3-way matching
+
+*Goal: invoices are compared with purchase orders and receipts.*
+
+**In plain words.** A company should only pay for what it ordered, at the price it agreed, and only once
+the goods have arrived. Each invoice is now compared with three things: the purchase order (PO), the
+delivery receipts, and what other invoices already billed against the same PO. The system finds the PO
+(by its number, or, when the invoice names none, by the one open order that fits), pairs each invoice line
+with a PO line even when the wording differs a little, and then asks: is the price right, is the quantity
+right, has it been delivered, and is the PO's total now exceeded? Every answer names the line and the
+numbers, so a person can see exactly what is off. If the system cannot tell (an unreadable price, two
+orders that both fit) it says "could not check" rather than passing.
+
+**How it works.**
+
+```
+ Checked invoice ──▶ earlier invoices still unread or unmatched? ──yes──▶ wait (up to 5 minutes)
+                                   │ no
+                                   ▼
+   find the PO: by number, else the single open PO of that supplier whose total is close
+                                   ▼
+   pair lines: SKU ─▶ similar description ─▶ amount   (a line that fits two PO lines is not guessed)
+                                   ▼
+   price ±2%?  quantity ≤ ordered (counting earlier invoices)?  received ≥ billed?  PO total exceeded?
+```
+
+1. **Finding the PO.** By number, ignoring case, spaces and dashes. A number that is not in the system, or
+   belongs to another supplier, is `PO_NOT_FOUND`. With no number, only the supplier's *open* POs in the same
+   currency are considered, and only if the subtotal is within 2% of the PO total; exactly one is used and
+   marked *inferred*, none is `NO_PO`, and several is "could not check" (never a guess).
+2. **Pairing lines.** SKU first, then description similarity (80 or more, so `Blue widgets - box of 10`
+   pairs with `Blue widget, box of 10`), then an identical amount. A PO line is used once. A line that could
+   equally be two PO lines stays unpaired, and an unpaired line is reported as not on the PO.
+3. **Price.** Each paired line's unit price must be within 2% of the PO price, above or below.
+4. **Quantity.** The billed quantity, plus what earlier invoices already billed on that PO line, may not
+   exceed the ordered quantity. Billing less is a partial invoice and is fine.
+5. **Receipts.** No receipt at all is `RECEIPT_MISSING`. Otherwise billed quantity (plus earlier billing) may
+   not exceed the total received across all receipts: `QTY_NOT_RECEIVED`.
+6. **Over-billing.** Earlier subtotals on the PO plus this one may not exceed the PO total (both before tax).
+7. **Order and waiting.** "Earlier" is received order, as in M5. The stage waits for earlier invoices that
+   are unread or not matched yet, because they decide what has been billed. After five minutes a clean result
+   that depends on earlier billing is reported as "could not check", never as a pass.
+
+**Under the hood.**
+- **Pure rules** in `core/match.py` (`check_match`, `match_lines`, `MatchSettings`), test-first, 100% covered,
+  mypy strict. Money is integer minor units; quantities are `Decimal`; tolerances are basis points.
+- **Stage** `checks/matching.py::match_invoice`, chained after the duplicate check as a `match_invoice` job.
+  It writes seven `check_results` rows (one per code, unique per invoice and rule version) and records the
+  paired PO line on each `invoice_lines.matched_po_line_id`, which is how later invoices see what was
+  billed. It audits `match_completed` (ids, codes and outcomes only). The job payload's tenant must match.
+- **What a later invoice reads:** the quantity already matched to each PO line, and each earlier invoice's
+  billed amount, stored in its `PO_OVERBILLED` row. If an earlier invoice on the same PO has an unreadable
+  quantity or amount, the cumulative checks become "could not check" (`EARLIER_BILLING_UNKNOWN`); this is
+  counted per PO, not across the supplier.
+- **Waiting** is a `Deferral` (`WAITING_FOR_EARLIER_INVOICES`), like M5. Settings `MATCH_POLL_S` (10) and
+  `MATCH_MAX_WAIT_S` (300).
+- **Per-client settings** in `tenants.settings`: `match_price_tolerance_bp` (200), `match_qty_tolerance_bp` (0),
+  `match_description_similarity_min` (80), `match_po_total_tolerance_bp` (200), `match_overbill_tolerance_minor` (0).
+- No migration: the tables (`purchase_orders`, `po_lines`, `goods_receipts`, `receipt_lines`) and
+  `invoice_lines.matched_po_line_id` came with M1. ADR 0006 records the decisions. More than 2,000 candidate
+  POs gives "could not check" (`TOO_MANY_POS_TO_COMPARE`), never a truncated search.
+
+**What we proved.** (Recorded answers built from the answer key; real PDFs, worker and database; all 118
+readable seed invoices.)
+
+| Check | Result |
+|---|---|
+| Planted PO, price, quantity, receipt and over-billing problems detected | 25 of 25 (4 `NO_PO`, 3 `PO_NOT_FOUND`, 5 price, 4 quantity, 4 not received, 4 no receipt, 1 over-billed) |
+| Invoices that should clear and are flagged or left unchecked by any match check | None |
+| Other match failures | 4, all knock-ons of a planted line-amount typo that also inflates the printed subtotal above the PO total (`inv-004`, `-064`, `-075`, `-077`); see below |
+| Over-billing across invoices | `inv-095` is caught only because `inv-006`'s billing on the same PO is counted |
+| Missing receipt vs part-received | Told apart: `RECEIPT_MISSING` (no receipt) vs `QTY_NOT_RECEIVED` (part) |
+| Same invoice matched twice | Nothing added |
+| Invoice numbers in the audit log | None (ids, codes and outcomes only) |
+| Automated tests | 961 pass, decision-logic coverage 99.9% |
+
+**Left open.**
+- **Knock-ons.** The seed's `may_raise` does not list `PO_OVERBILLED` for four invoices whose planted line
+  typo also inflates the subtotal beyond the PO total. The flag is correct by the printed numbers; the fixed
+  golden set was not edited, and the acceptance test carries one explicit allowance. Decide in M10.
+- **Golden label (from M5).** `inv-095` is still labelled over-billing only; unchanged, for M10.
+- M7 must treat a failed or "could not check" match result as needs-review, and turn each into an
+  exception with its explanation; nothing is raised as an exception yet.
+- `CURRENCY_MISMATCH` stays a validation check (M4); matching skips amount checks when currencies differ.
+- Only invoices in `failed` or `rejected` status stop counting as billed. When M8 adds corrections or
+  rejection, the review screen must refresh or re-run matching for later invoices.
+- Description matching uses similarity (`rapidfuzz`), not meaning; two very differently worded lines with
+  different SKUs and amounts stay unpaired and go to a person. Safe, slightly noisy.
+- Like M5, received order is the database time the invoice row was created.
+- PO inference by total is deliberately narrow (open, same supplier, same currency, one candidate).
+
+---
+
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
 |---|---|---|
-| **M6 Matching** | Compare against the purchase order and delivery receipt; price, quantity, missing delivery, over-billing. | See the three-way comparison |
 | **M7 Explanations and routing** | Every problem gets a plain-language explanation with the real numbers and a suggested fix; each invoice is routed to "cleared" or "needs a person". | Read exactly what is wrong and what to do |
 | **M8 Reviewer screen** | A browser queue: document on one side, fields on the other, actions to correct, approve, reject. Bank details masked. Works on a phone. | Clear the review queue |
 | **M9 Audit timeline** | A readable history of everything that happened to an invoice. | Answer "what happened to this invoice?" |
@@ -580,7 +672,8 @@ or rule requires running the evaluation and reporting the result first.
 | M2 | 277 | 100% | Green on #1 and #2; #3 pending | 120/120 quality classification; hostile-upload guard |
 | M3 | 677 | 99.9% | Green | 59/59 clean invoices extracted end to end; cache and spend cap proved; no bank digits in clear |
 | M4 | 792 | 99.9% | Green | 21/21 planted problems caught, 0/60 clearable invoices flagged; look-alike suppliers rejected |
-| M5 | 885 | 99.9% | Pending | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
+| M5 | 885 | 99.9% | Green | 5/5 planted duplicates found (incl. lower-case and no-hyphen numbers); originals never flagged |
+| M6 | 961 | 99.9% | Pending | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
 
 The build gates on decision-logic coverage of at least 90%.
 
@@ -616,6 +709,9 @@ The build gates on decision-logic coverage of at least 90%.
 | As-of date override is refused in production and audited | It could silently disable the date checks | M4 |
 | Only the later invoice is flagged; the check waits for earlier invoices to be read | The original must not be blamed, and a copy must not be checked before its original is readable | M5, ADR 0005 |
 | Sequential numbers rely on matching total, date and currency; missing data is "could not check" | A near number alone is not evidence | M5 |
+| Line pairing is SKU, then similar description, then amount; a line that fits two PO lines is not guessed | A wrong pairing would compare the wrong prices and could clear a bad invoice | M6, ADR 0006 |
+| Billing more than ordered is a variance; billing less is a partial invoice | Invoices are often split across deliveries | M6, ADR 0006 |
+| Over-billing is counted across invoices in received order, and the check waits for earlier ones | The total on one invoice cannot show an over-billed PO | M6, ADR 0006 |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
 
 ## 7. Risks and open questions

@@ -66,6 +66,19 @@ says why and how to fix it).
   (`update jobs set status='queued', attempts=0, run_after=now() where id='...'`); the invoice must still be
   `checking`. Note the action in the ticket (a manual delete of a check row writes no audit event).
 
+## 3-way match
+- The seven match rows are in `check_results` (manual, section 4.13). `PO_OVERBILLED.details` holds the running
+  total; `skipped` rows carry a `reason`, and none of them is a pass.
+- Jobs of type `match_invoice` with `last_error = WAITING_FOR_EARLIER_INVOICES` are waiting for an earlier
+  invoice that is unread, or still `checking` without match rows. Fix the stuck earlier invoice first (usually a
+  paused or failed extraction, or a duplicate-check job that has not run); the match gives up waiting after
+  `MATCH_MAX_WAIT_S` and records `skipped` for the checks that depend on earlier billing.
+- `EARLIER_BILLING_UNKNOWN` on many invoices of one PO means an earlier invoice on it has an unreadable quantity
+  or amount. Correct that invoice (M8) or check it by hand; later invoices on the PO stay "could not check".
+- To re-run the match for one invoice, delete its seven match rows and re-queue its `match_invoice` job as above;
+  the invoice must still be `checking`. Later invoices on the same PO were matched with the old numbers, so
+  re-run them too, in received order. Note the action in the ticket (a manual delete writes no audit event).
+
 ## Limits worth knowing
 - Uploads are capped by `MAX_UPLOAD_BYTES` (15 MB) and `MAX_PAGES` (10). The API refuses oversized
   files after reading at most limit+1 bytes, but the web server still receives the request body first.
