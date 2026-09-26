@@ -48,6 +48,16 @@ session. Keeping the token on the server and the policy strict costs a little co
 and a distinct look are part of showing this to clients, not decoration.
 
 ## Consequences
+- The web server proxies every browser login, so the API's login throttle would see one client for all
+  visitors. The web server passes the visitor's address in `X-Forwarded-For` (only when `TRUST_FORWARDED_FOR=1`,
+  i.e. a proxy in front sets it) and the API believes it only from `TRUSTED_PROXIES`, taking the last address that
+  is not one of ours. Without a proxy, the web server is the one client and a burst of failures locks the login for
+  all for a minute (a demo limitation; the overall cap and audit remain).
+- Logout clears the cookie but the signed token stays valid until it expires; only rotating `SESSION_SECRET`
+  ends sessions early. Server-side revocation is future work.
+- Compose binds the web and API ports to `127.0.0.1`, because the demo cookie is not `Secure`.
+- Server Actions rely on `SameSite=Strict` and Next's Origin check; `ALLOWED_ORIGINS` pins the origins behind a proxy.
+- Dependabot (npm, uv, Docker, GitHub Actions) keeps dependencies current; the web image runs as the `node` user.
 - `SameSite=Strict` means a link into the app from another site (an email) first lands on sign-in if the cookie
   was not sent; signing in continues to the requested page.
 - A change to the API needs `make gen-api` or the API suite fails.

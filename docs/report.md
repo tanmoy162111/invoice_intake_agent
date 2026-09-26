@@ -923,6 +923,13 @@ M8b-2, so it can be reviewed and tested as its own piece.
   CSP, cookie options, public paths.
 - ADR 0009 records the decisions. No migration; no new API behaviour beyond the typed header.
 
+A security review of the web layer found no exploitable XSS, open redirect, token leak or CSRF path. Fixed: the
+API's login throttle would have seen the web server as the only client, so any visitor could lock every reviewer
+out (the visitor's address is now forwarded and believed only from a configured proxy, taking the last address
+that is not ours); Compose now publishes the ports on `127.0.0.1` (the demo cookie is not Secure); allowed origins
+can be pinned for Server Actions; the web image runs as a non-root user; and Dependabot is configured. Stated
+plainly instead of changed: signing out clears the cookie but the token stays valid until it expires.
+
 **What we proved.** (Real API, worker and database with the seed invoices run through the pipeline on recorded
 answers; a real browser.)
 
@@ -935,7 +942,7 @@ answers; a real browser.)
 | An invoice number or PO shown as printed (not the lower-cased matching form) | Yes |
 | Upload through the browser | Stored, with a link to the invoice |
 | Dependencies | `pnpm audit` clean; every licence permissive (MIT, ISC, Apache-2.0, OFL for the fonts) |
-| Automated tests | 1322 API tests and 40 web tests pass; lint, types and a production build are clean |
+| Automated tests | 1342 API tests and 43 web tests pass; lint, types and a production build are clean |
 
 **Left open.**
 - **M8b-2**: correcting a field, closing exceptions, approve, reject, request information and the bank reveal
@@ -944,6 +951,7 @@ answers; a real browser.)
 - The queue counts use one small request per tab; a single summary endpoint would be cheaper for a large queue.
 - The document viewer shows pages and jumps to a field's page, but cannot highlight where a field sits: the
   reader records a page, not a position.
+- Sessions cannot be revoked one by one (logout clears the cookie only); the demo login is one shared identity.
 - No automated accessibility audit yet (axe); keyboard, contrast and labels were checked by hand.
 - Component-level tests are not written; the pure logic is tested, and the browser test in M8b-2 covers the flow.
 
@@ -978,7 +986,7 @@ or rule requires running the evaluation and reporting the result first.
 | M6 | 972 | 99.9% | Green | 25/25 planted PO problems found; over-billing counted across invoices; no clearable invoice flagged |
 | M7 | 1104 | 99.9% | Green | 58/58 planted problems raised as exceptions; 0 false clears; every explanation carries its real numbers (23/23 checked) |
 | M8a | 1320 | 99.9% | Green | Correcting a field re-runs the checks and routing; approval blocked while any exception is open; every action audited without values |
-| M8b-1 | 1322 (+ 40 web) | 99.9% | Pending | Sign-in, queue and invoice screens on real data; no horizontal scroll at 375 px; clean browser console under a strict CSP |
+| M8b-1 | 1342 (+ 43 web) | 99.9% | Pending | Sign-in, queue and invoice screens on real data; no horizontal scroll at 375 px; clean browser console under a strict CSP |
 
 The build gates on decision-logic coverage of at least 90%.
 

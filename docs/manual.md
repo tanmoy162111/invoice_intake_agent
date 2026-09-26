@@ -502,6 +502,9 @@ release the invoice page is read-only: correcting, closing exceptions and approv
 result shows the file, its quality and a link to the invoice. Reading takes about a minute; an invoice that needs
 a person then appears in the queue.
 
+Signing out clears the session cookie in your browser. The session token itself stays valid until it expires
+(`SESSION_TTL_S`, 8 hours); it can only be ended earlier by changing `SESSION_SECRET` (which signs everyone out).
+
 Good to know: the theme button switches light, dark or follow the device. The token that talks to the API never
 reaches the browser (the web server holds the session in a cookie that scripts cannot read). Text copied from a
 document is shown as plain text, never as markup. Amounts are shown from whole minor units (cents), so what is
@@ -589,6 +592,8 @@ refuses everything except `/health` and the login.
 | `VALIDATION_TODAY` | empty | A fixed "as of" date (`YYYY-MM-DD`) for the date checks. Test and demo only |
 | `DEDUPE_POLL_S`, `DEDUPE_MAX_WAIT_S` | 10, 300 | How often the duplicate check re-tries while earlier invoices are unread, and when it stops waiting (seconds) |
 | `REVIEWER_USERNAME`, `REVIEWER_PASSWORD` | `reviewer`, empty | The one demo reviewer. An empty password switches login off, and ends any session already issued. The password must be at least 8 characters and the name may not be `system`. `make dev` generates a password into `.env` |
+| `TRUSTED_PROXIES` | empty | Proxies whose `X-Forwarded-For` the API believes (for example `172.16.0.0/12`). The web server proxies every browser login, so with none the login throttle sees one client for all visitors. Behind a reverse proxy set this to the web server's network and set `TRUST_FORWARDED_FOR=1` on the web service |
+| `TRUST_FORWARDED_FOR`, `ALLOWED_ORIGINS` (web) | unset | `1` only when a proxy in front of the web server sets `X-Forwarded-For` (otherwise the header is whatever the visitor typed). `ALLOWED_ORIGINS` lists the public address(es) when a proxy rewrites the Host header |
 | `SESSION_SECRET`, `SESSION_TTL_S` | empty, 28800 | The key that signs reviewer sessions (at least 16 characters), and how long one lasts (seconds, at least 60). Changing it signs everyone out. `make dev` generates the secret |
 | `MATCH_POLL_S`, `MATCH_MAX_WAIT_S` | 10, 300 | The same, for the 3-way match: how often it re-tries while earlier invoices are unread or unmatched, and when it stops waiting (seconds) |
 | `API_URL` (web) | `http://localhost:8000` | Where the web server reaches the API (Compose sets `http://api:8000`) |
@@ -735,6 +740,8 @@ hardening, the database password and encryption of stored files.
 | A review action says 403 | It was sent with the static API token, which cannot act | Use a session token from `/auth/login` |
 | The web page sends you back to sign-in again and again | The session ended, or the API address is wrong | Sign in again; check `API_URL` and that the API is up |
 | Sign-in succeeds but the next page asks for sign-in | The site is on plain http but the cookie is marked Secure | Set `COOKIE_INSECURE=1` for the web service (Compose does) |
+| Everyone gets "too many attempts" at sign-in | The login throttle sees the web server as a single client, so one person's wrong passwords count for all | Behind a reverse proxy set `TRUSTED_PROXIES` and `TRUST_FORWARDED_FOR=1` (section 5.4); on a local demo, wait a minute |
+| The site cannot be opened from another computer | Compose publishes the web and API ports on this machine only, because the demo cookie is not Secure | Put a reverse proxy with https in front (remove `COOKIE_INSECURE`), or change the `127.0.0.1:` in `docker-compose.yml` knowingly |
 | A page image does not appear | The document has no rendered pages yet, or the API is down | Wait for reading to finish; check `/jobs` |
 | An invoice stays `checking` | The routing job has not run: an earlier stage is waiting, or the worker is stopped | Look at `/jobs` for `route_invoice`, `match_invoice` and `detect_duplicates` (section 4.4) |
 | Almost every scanned or photographed invoice goes to review | Its invoice number has no text layer to confirm it, so confidence is 75%, below the 80% minimum | Expected with the current confidence rules; measured in M10, and a reviewer confirms the field (M8) |

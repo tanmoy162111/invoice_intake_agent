@@ -1,8 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { ApiError, login } from "@/lib/api/server";
+import { forwardedFor } from "@/lib/forwarded";
 import { safeNext } from "@/lib/safe-redirect";
 import { clearSession, setSession } from "@/lib/session";
 
@@ -22,7 +24,11 @@ export async function loginAction(_previous: LoginState, form: FormData): Promis
 
   let session;
   try {
-    session = await login(username, password);
+    const visitor = forwardedFor(
+      (await headers()).get("x-forwarded-for"),
+      process.env.TRUST_FORWARDED_FOR === "1",
+    );
+    session = await login(username, password, visitor);
   } catch (error) {
     if (error instanceof ApiError) return { error: MESSAGES[error.status] ?? "Could not sign in. Try again." };
     return { error: "Could not reach the server. Try again in a moment." };

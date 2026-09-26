@@ -47,11 +47,11 @@ async function json<T>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function login(username: string, password: string): Promise<LoginOut> {
+export async function login(username: string, password: string, visitor?: string): Promise<LoginOut> {
   const res = await fetch(`${apiUrl}/auth/login`, {
     method: "POST",
     cache: "no-store",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(visitor ? { "X-Forwarded-For": visitor } : {}) },
     body: JSON.stringify({ username, password }),
   });
   if (!res.ok) throw new ApiError(res.status, await readDetail(res));

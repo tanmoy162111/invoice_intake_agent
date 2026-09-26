@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from intake.api.auth import Caller, credentials_match
+from intake.api.auth import Caller, client_address, credentials_match, parse_networks
 from intake.api.deps import require_token, session_dep, settings_dep
 from intake.audit.writer import record_event
 from intake.config import Settings
@@ -31,10 +31,13 @@ class MeOut(BaseModel):
     user: str | None  # None for a caller using the static API token
 
 
-def _client(request: Request) -> str:
-    """Who is knocking: the connection's address. A forwarded-for header is not trusted, since
-    anyone can send one; behind a proxy, configure the proxy to set the real client address."""
-    return request.client.host if request.client else "unknown"
+def _client(request: Request, settings: Settings) -> str:
+    """Who is knocking. The web server proxies every browser login, so the connection is the web
+    server; it forwards the visitor's address, which is believed only from `TRUSTED_PROXIES`."""
+    peer = request.client.host if request.client else None
+    return client_address(
+        peer, request.headers.get("x-forwarded-for"), parse_networks(settings.trusted_proxies)
+    )
 
 
 @router.post("/login", response_model=LoginOut)
@@ -49,7 +52,7 @@ def login(
         raise HTTPException(503, "login is not configured on the server")
     throttle: LoginThrottle = request.app.state.throttle
     now = int(time.time())
-    client = _client(request)
+    client = _client(request, settings)
     tenant_id = uuid.UUID(settings.default_tenant_id)
     if not throttle.attempt(client, now):  # a slot is reserved before the password is checked
         wait = max(throttle.retry_after(client, now), 1)

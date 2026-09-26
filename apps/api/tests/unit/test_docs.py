@@ -74,7 +74,7 @@ def test_manual_explains_every_reason_an_invoice_can_fail(code: str) -> None:
 
 EXTRACTION_SETTING_PREFIXES = (
     "llm_", "ollama_", "extraction_", "extract_", "daily_", "field_", "validation_", "app_",
-    "dedupe_", "match_", "reviewer_", "session_",
+    "dedupe_", "match_", "reviewer_", "session_", "trusted_",
 )  # fmt: skip
 
 

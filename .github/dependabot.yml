@@ -1,0 +1,23 @@
+# Keeps dependencies current (playbook section 10). Lock files stay committed; each update is a pull
+# request that runs the full CI before it can merge.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      radix-and-ui:
+        patterns: ["radix-ui", "@radix-ui/*", "lucide-react", "class-variance-authority", "clsx", "tailwind-merge", "tw-animate-css"]
+      fonts:
+        patterns: ["@fontsource*"]
+  - package-ecosystem: uv
+    directory: /apps/api
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+  - package-ecosystem: docker
+    directories: [/apps/api, /apps/web]
+    schedule: { interval: weekly }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }

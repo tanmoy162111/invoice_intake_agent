@@ -475,3 +475,30 @@ def test_unsafe_corrections_are_refused_over_http(
         value = "USD"
     r = env.post(f"/invoices/{iid}/corrections", {"field": field, "value": value})
     assert r.status_code == 422 and r.json()["detail"]["code"] == code, r.text
+
+
+def test_each_visitor_behind_the_web_server_is_throttled_on_their_own(env: Env) -> None:
+    settings = env.client.app.state.settings.model_copy(update={"trusted_proxies": "10.0.0.0/8"})  # type: ignore[attr-defined]
+    web = TestClient(create_app(settings), client=("10.0.0.5", 4000))  # the web server's address
+    body = {"username": "reviewer", "password": "nope"}
+    attacker = {"X-Forwarded-For": "203.0.113.9"}
+    for _ in range(5):
+        assert web.post("/auth/login", json=body, headers=attacker).status_code == 401
+    assert web.post("/auth/login", json=body, headers=attacker).status_code == 429
+    # a different visitor, through the same web server, is not locked out
+    good = {"username": "reviewer", "password": PASSWORD}
+    other = web.post("/auth/login", json=good, headers={"X-Forwarded-For": "198.51.100.20"})
+    assert other.status_code == 200
+
+
+def test_a_forwarded_address_from_anyone_else_is_ignored(env: Env) -> None:
+    settings = env.client.app.state.settings.model_copy(update={"trusted_proxies": "10.0.0.0/8"})  # type: ignore[attr-defined]
+    stranger = TestClient(create_app(settings), client=("203.0.113.77", 4000))
+    body = {"username": "reviewer", "password": "nope"}
+    for i in range(5):  # rotating the header does not give fresh attempts
+        r = stranger.post("/auth/login", json=body, headers={"X-Forwarded-For": f"1.1.1.{i}"})
+        assert r.status_code == 401
+    assert (
+        stranger.post("/auth/login", json=body, headers={"X-Forwarded-For": "1.1.1.99"}).status_code
+        == 429
+    )
