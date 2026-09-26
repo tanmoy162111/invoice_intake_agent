@@ -1,4 +1,6 @@
 import hmac
+import ipaddress
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -47,6 +49,42 @@ def resolve_caller(
     if user is not None and settings.reviewer_password and _same(user, settings.reviewer_username):
         return Caller("user", user)
     return _INVALID
+
+
+Network = ipaddress.IPv4Network | ipaddress.IPv6Network
+
+
+def parse_networks(text: str) -> list[Network]:
+    """Addresses or networks, comma separated ("10.0.0.0/8, 192.168.1.5"). Bad input is an error."""
+    parts = [part.strip() for part in text.split(",") if part.strip()]
+    return [ipaddress.ip_network(part, strict=False) for part in parts]
+
+
+def _in(address: str, networks: Sequence[Network]) -> bool:
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return False
+    return any(ip in n for n in networks)
+
+
+def client_address(peer: str | None, forwarded_for: str | None, trusted: Sequence[Network]) -> str:
+    """Who is really calling. The connection's address, unless it is one of our own proxies (the web
+    server), which reports the visitor in X-Forwarded-For: then the last address in that header that
+    is not ours. Anyone else's forwarded header is ignored, since anyone can send one."""
+    if not peer:
+        return "unknown"
+    if not forwarded_for or not _in(peer, trusted):
+        return peer
+    hops = [h.strip() for h in forwarded_for.split(",") if h.strip()]
+    for hop in reversed(hops):
+        try:
+            ipaddress.ip_address(hop)
+        except ValueError:
+            return peer  # a header we cannot read is not evidence
+        if not _in(hop, trusted):
+            return hop
+    return peer
 
 
 def credentials_match(settings: Settings, username: str, password: str) -> bool:

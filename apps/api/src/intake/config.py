@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     reviewer_password: str = ""
     session_secret: str = ""
     session_ttl_s: int = Field(default=8 * 3600, ge=60)
+    # Proxies (the web server) whose X-Forwarded-For is believed, e.g. "172.16.0.0/12". Empty: none,
+    # and the login throttle then sees the web server as the only client.
+    trusted_proxies: str = ""
 
     # Ingestion limits (playbook §6.1)
     max_upload_bytes: int = 15 * 1024 * 1024
@@ -73,6 +76,9 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _reviewer_login_is_sound(self) -> "Settings":
+        from intake.api.auth import parse_networks  # a bad address fails at start-up, not at login
+
+        parse_networks(self.trusted_proxies)
         name = self.reviewer_username.strip()
         if not name or name.lower() == "system":  # "system" is who the pipeline acts as
             raise ValueError("REVIEWER_USERNAME must be a real name and not 'system'")

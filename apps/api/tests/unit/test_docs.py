@@ -74,7 +74,7 @@ def test_manual_explains_every_reason_an_invoice_can_fail(code: str) -> None:
 
 EXTRACTION_SETTING_PREFIXES = (
     "llm_", "ollama_", "extraction_", "extract_", "daily_", "field_", "validation_", "app_",
-    "dedupe_", "match_", "reviewer_", "session_",
+    "dedupe_", "match_", "reviewer_", "session_", "trusted_",
 )  # fmt: skip
 
 
@@ -166,3 +166,22 @@ def test_taxonomy_doc_names_every_second_wording() -> None:
     doc = (DOCS / "exception-taxonomy.md").read_text()
     for code, name in VARIANTS:
         assert f"`{code.value}` / `{name}`" in doc
+
+
+def _web_routes() -> set[str]:
+    """URL paths of the web app's pages, from its file layout (route groups are not in a URL)."""
+    app = ROOT / "apps" / "web" / "src" / "app"
+    routes = set()
+    for page in app.rglob("page.tsx"):
+        parts = [p for p in page.parent.relative_to(app).parts if not p.startswith("(")]
+        routes.add("/" + "/".join(parts))
+    return routes
+
+
+def test_manual_describes_every_web_page() -> None:
+    section = MANUAL.split("### 4.16")[1].split("## 5. Reference")[0]
+    routes = _web_routes()
+    assert {"/login", "/queue", "/upload", "/invoices/[id]"} <= routes | {"/"}
+    for route in routes - {"/"}:
+        shown = route.replace("[id]", "<id>")
+        assert shown in section or shown in MANUAL, f"{route} is not described in the manual"

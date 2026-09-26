@@ -16,3 +16,6 @@ storage/
 *.tsbuildinfo
 data/inbox/
 build/
+
+# Browser automation scratch (screenshots, snapshots, console logs)
+.playwright-mcp/

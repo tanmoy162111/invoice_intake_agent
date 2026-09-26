@@ -84,7 +84,7 @@ class QueueOut(BaseModel):
     total: int
 
 
-class DocumentOut(BaseModel):
+class InvoiceDocument(BaseModel):
     id: uuid.UUID
     filename: str
     page_count: int | None
@@ -151,14 +151,27 @@ class SupplierOut(BaseModel):
     name: str
 
 
+class HeaderOut(BaseModel):
+    supplier_name: str | None
+    invoice_number: str | None
+    invoice_date: date | None
+    due_date: date | None
+    po_number: str | None
+    payment_terms: str | None
+    subtotal_minor: int | None
+    tax_minor: int | None
+    total_minor: int | None
+    currency: str | None
+
+
 class InvoiceDetail(BaseModel):
     id: uuid.UUID
     status: InvoiceStatus
     route: str | None
     created_at: datetime
-    header: dict[str, Any]
+    header: HeaderOut
     supplier: SupplierOut | None
-    document: DocumentOut
+    document: InvoiceDocument
     fields: list[FieldOut]
     lines: list[LineOut]
     exceptions: list[ExceptionOut]
@@ -325,17 +338,17 @@ def _detail(
         for e in exceptions
     ]
     masked = _masked(vault, bank_token)
-    header = {
-        "supplier_name": inv.supplier_name, "invoice_number": inv.invoice_number,
-        "invoice_date": inv.invoice_date, "due_date": inv.due_date, "po_number": inv.po_number,
-        "payment_terms": inv.payment_terms, "subtotal_minor": inv.subtotal_minor,
-        "tax_minor": inv.tax_minor, "total_minor": inv.total_minor, "currency": inv.currency,
-    }  # fmt: skip
+    header = HeaderOut(
+        supplier_name=inv.supplier_name, invoice_number=inv.invoice_number,
+        invoice_date=inv.invoice_date, due_date=inv.due_date, po_number=inv.po_number,
+        payment_terms=inv.payment_terms, subtotal_minor=inv.subtotal_minor,
+        tax_minor=inv.tax_minor, total_minor=inv.total_minor, currency=inv.currency,
+    )  # fmt: skip
     return InvoiceDetail(
         id=inv.id, status=InvoiceStatus(inv.status), route=inv.route, created_at=inv.created_at,
         header=header,
         supplier=SupplierOut(id=supplier.id, name=supplier.name) if supplier else None,
-        document=DocumentOut(
+        document=InvoiceDocument(
             id=doc.id, filename=doc.filename, page_count=doc.page_count, doc_quality=doc.doc_quality
         ),
         fields=fields, lines=lines,
