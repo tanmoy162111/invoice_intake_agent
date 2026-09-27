@@ -9,8 +9,28 @@ The false clear rate is the number that matters most: an invoice routed straight
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
+from typing import Any
 
+from intake.core.extraction import Interpreted
 from intake.core.statuses import DocQuality
+
+# Ground-truth header key -> how to read the matching value off `Interpreted`. The three money
+# fields and the two dates have their own typed attribute; everything else is read from
+# `interpreted.fields` (by extraction schema field name) since `Interpreted` has no top-level
+# attribute for it (supplier_tax_id, supplier_address, supplier_bank_account).
+_DIRECT_HEADER_FIELDS: tuple[str, ...] = (
+    "supplier_name", "invoice_number", "po_number", "payment_terms", "currency",
+)  # fmt: skip
+_DATE_HEADER_FIELDS: tuple[str, ...] = ("invoice_date", "due_date")
+# truth key -> Interpreted attribute (only where the names differ)
+_MONEY_HEADER_FIELDS: dict[str, str] = {
+    "subtotal_minor": "subtotal_minor",
+    "tax_total_minor": "tax_minor",
+    "total_minor": "total_minor",
+}
+_VIA_FIELDS: tuple[str, ...] = ("supplier_tax_id", "supplier_address", "supplier_bank_account")
 
 
 @dataclass(frozen=True)
@@ -174,4 +194,76 @@ def aggregate(evals: Sequence[InvoiceEval]) -> Metrics:
         mean_cost_usd_micros=None if not costs else sum(costs) / len(costs),
         latency_p50_ms=_percentile(latencies, 0.50),
         latency_p95_ms=_percentile(latencies, 0.95),
+    )
+
+
+def _matched_line_count(actual: Sequence[Any], expected: Sequence[Mapping[str, Any]]) -> int:
+    """How many expected lines have some actual line with the same amount and quantity (playbook
+    §8.2: "a line matches if its amount and quantity are correct"). Each actual line is used for at
+    most one match, so a duplicated line cannot inflate the count."""
+    remaining = list(actual)
+    matched = 0
+    for exp in expected:
+        exp_qty = Decimal(str(exp["quantity"]))
+        for i, act in enumerate(remaining):
+            if act.amount_minor == exp["amount_minor"] and act.quantity == exp_qty:
+                matched += 1
+                del remaining[i]
+                break
+    return matched
+
+
+def compare_invoice(
+    *,
+    doc_quality: DocQuality,
+    interpreted: Interpreted,
+    truth: Mapping[str, Any],
+    raised_codes: Sequence[str],
+    routed_straight_through: bool,
+    cost_usd_micros: int,
+    latency_ms: int,
+) -> InvoiceEval:
+    """Turn one invoice's real pipeline output, next to its `data/golden/truth/*.json`, into the
+    `InvoiceEval` that `aggregate` needs. The only decision here is what counts as "correct" for a
+    field: exact match after normalization (playbook §8.2), on the same typed value the pipeline
+    itself decides with (an int of minor units, a `date`, or normalized text) - never a raw string
+    comparison of something formatted for display.
+    """
+    header = truth["header"]
+    by_name = {f.field: f for f in interpreted.fields}
+    comparisons = [
+        FieldComparison(name, getattr(interpreted, name) == header[name])
+        for name in _DIRECT_HEADER_FIELDS
+    ]
+    comparisons += [
+        FieldComparison(
+            name,
+            getattr(interpreted, name)
+            == (date.fromisoformat(header[name]) if header[name] else None),
+        )
+        for name in _DATE_HEADER_FIELDS
+    ]
+    comparisons += [
+        FieldComparison(truth_key, getattr(interpreted, attr) == header[truth_key])
+        for truth_key, attr in _MONEY_HEADER_FIELDS.items()
+    ]
+    comparisons += [
+        FieldComparison(
+            name, (by_name[name].normalized if name in by_name else None) == header[name]
+        )
+        for name in _VIA_FIELDS
+    ]
+    expected_lines = truth["lines"]
+    return InvoiceEval(
+        doc_quality=doc_quality,
+        fields=tuple(comparisons),
+        lines_actual=len(interpreted.lines),
+        lines_expected=len(expected_lines),
+        lines_matched=_matched_line_count(interpreted.lines, expected_lines),
+        planted_codes=tuple(p["code"] for p in truth.get("planted") or ()),
+        raised_codes=tuple(raised_codes),
+        should_clear=bool(truth["expected"]["should_clear"]),
+        routed_straight_through=routed_straight_through,
+        cost_usd_micros=cost_usd_micros,
+        latency_ms=latency_ms,
     )
