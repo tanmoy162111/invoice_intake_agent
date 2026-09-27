@@ -234,16 +234,28 @@ Amounts appear in `normalized_value` as whole cents. `confidence` is 0 to 1. `si
 invoice's own columns (number, dates, totals, currency) and its lines are in `invoices` and
 `invoice_lines`.
 
-### 4.9 Try it with a local model (demo only)
+### 4.9 Try it without an Anthropic key (demo only)
 
-To run the demo with nothing leaving your computer, install [Ollama](https://ollama.com), pull a vision
-model, then set in `.env`: `LLM_PROVIDER=ollama`, `EXTRACTION_MODEL=<the model name from ollama list>`,
-and inside Docker `OLLAMA_BASE_URL=http://host.docker.internal:11434`. Restart the worker.
+Two optional backends let you try the pipeline without `ANTHROPIC_API_KEY`. Neither is the reference
+build the eval report (M10) is about, and **any accuracy you measure with them does not apply to the
+Claude-based system**.
 
-Know the trade-offs: small local models read invoices noticeably worse than Claude, they are slower and
-need a lot of memory, and **any accuracy you measure does not apply to the Claude-based system**. Invoice
+**A local model**, with nothing leaving your computer: install [Ollama](https://ollama.com), pull a
+vision model, then set in `.env`: `LLM_PROVIDER=ollama`, `EXTRACTION_MODEL=<the model name from ollama
+list>`, and inside Docker `OLLAMA_BASE_URL=http://host.docker.internal:11434`. Restart the worker. Small
+local models read invoices noticeably worse than Claude and are slower and need a lot of memory. Invoice
 pages are sent to whatever address `OLLAMA_BASE_URL` points at, so keep it on hardware you control.
-Never use hosted free-tier models with real data: they may learn from what you send.
+
+**An open-weight model through [OpenRouter](https://openrouter.ai)**: set `LLM_PROVIDER=openrouter`,
+`OPENROUTER_API_KEY=<your key>`, and `EXTRACTION_MODEL=<an OpenRouter model slug>` (the default demo
+choice is `qwen/qwen2.5-vl-72b-instruct`; it must be a model with vision input and a price entry in
+`core/llm_budget.PRICES`, or extraction refuses to run rather than guess a cost). `OPENROUTER_BASE_URL`
+defaults to `https://openrouter.ai/api/v1` and rarely needs changing. Restart the worker.
+Invoice pages are sent to OpenRouter and whichever upstream provider it routes your request to — a real
+third-party data path (`docs/data-handling.md`) — so use demo or synthetic documents only, the same rule
+as everywhere else in this system (never real client data).
+
+Both backends: never use a hosted free-tier model with real data — it may learn from what you send.
 
 ### 4.10 See the checks on an invoice
 
@@ -523,6 +535,25 @@ reaches the browser (the web server holds the session in a cookie that scripts c
 document is shown as plain text, never as markup. Amounts are shown from whole minor units (cents), so what is
 on screen is what the checks used.
 
+### 4.17 Run the evaluation
+
+`make eval` runs the real pipeline over the 60-document golden set (`data/golden/`) and writes a
+report to `eval/reports/YYYY-MM-DD-<git-sha>.md`, split by field and by document quality, with the
+false clear rate as the headline number (it must be 0%). It uses whichever model backend is already
+configured (`LLM_PROVIDER`/`EXTRACTION_MODEL` in `.env`) and **costs real model spend** unless that
+backend is `recorded`. A run with anything other than `LLM_PROVIDER=anthropic` is clearly labelled in
+the report as a non-reference build (section 4.9): its numbers say nothing about the Claude-based
+system.
+
+`make eval` resets the pipeline tables first, the same as `make seed` and the demo-pipeline loader
+(section 4.3): point `DATABASE_URL` at a database you don't mind resetting.
+
+`make eval-ci` is the free version CI runs: a small subset (`SUBSET`, default 3) replayed from real,
+previously-captured answers in `data/golden/recorded/`, never touching the network.
+
+Every status change, check and exception the eval run causes shows up on the invoice's history
+exactly like a real one (section 2); the eval harness adds no special-cased data path.
+
 ---
 
 ## 5. Reference
@@ -578,7 +609,8 @@ refuses everything except `/health` and the login.
 | `make check` | Run every automated quality check |
 | `make e2e` | The browser test: starts a scratch stack (needs Docker; first run `cd apps/web && pnpm exec playwright install chromium`), runs it with recorded model answers, and removes it. Costs nothing |
 | `make gen-api` | Refresh the web app's API types |
-| `make eval` | Accuracy evaluation [Coming in M10]; costs money, asks first |
+| `make eval` | Full accuracy evaluation on the golden set (section 4.17); costs real model spend |
+| `make eval-ci` | Free, deterministic eval subset with recorded answers (what CI runs) |
 | `make demo-reset` | Reset to the clean demo state [Coming in M13] |
 
 ### 5.4 Settings (in `.env`)

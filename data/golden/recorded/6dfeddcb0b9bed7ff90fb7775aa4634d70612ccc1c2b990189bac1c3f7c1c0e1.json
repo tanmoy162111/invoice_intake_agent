@@ -1,0 +1,137 @@
+{
+  "input_tokens": 6226,
+  "output_tokens": 929,
+  "payload": {
+    "currency": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "EUR"
+    },
+    "due_date": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "May 20, 2026"
+    },
+    "invoice_date": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "April 20, 2026"
+    },
+    "invoice_number": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "OS-2026-0524"
+    },
+    "lines": [
+      {
+        "amount": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "345,60 EUR"
+        },
+        "description": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "UHT milk, case of 12"
+        },
+        "quantity": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "24"
+        },
+        "sku": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "OS-MLK-12"
+        },
+        "tax_rate": {
+          "page": null,
+          "self_confidence": "high",
+          "value": null
+        },
+        "unit_price": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "14,40 EUR"
+        }
+      },
+      {
+        "amount": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "6,40 EUR"
+        },
+        "description": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "Tea bags, box of 100"
+        },
+        "quantity": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "1"
+        },
+        "sku": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "OS-TEA-100"
+        },
+        "tax_rate": {
+          "page": null,
+          "self_confidence": "high",
+          "value": null
+        },
+        "unit_price": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "6,40 EUR"
+        }
+      }
+    ],
+    "payment_terms": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "Net 30"
+    },
+    "po_number": {
+      "page": null,
+      "self_confidence": "high",
+      "value": null
+    },
+    "subtotal": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "352,00 EUR"
+    },
+    "supplier_address": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "454 Harbour Rd, Lyon"
+    },
+    "supplier_bank_account": {
+      "page": null,
+      "self_confidence": "high",
+      "value": null
+    },
+    "supplier_name": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "Olivar Suministros S.L."
+    },
+    "supplier_tax_id": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "DE768792579"
+    },
+    "tax_total": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "73,92 EUR"
+    },
+    "total": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "425,92 EUR"
+    }
+  }
+}

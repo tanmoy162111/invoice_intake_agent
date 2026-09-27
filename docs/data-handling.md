@@ -50,8 +50,11 @@ real-data use; terms change.
   `claude-sonnet-5`, is not one of them. **Choosing `claude-fable-5-1` for real data means Anthropic
   retains requests for 30 days;** decide that deliberately.
 - **Other backends.** `LLM_PROVIDER=ollama` sends pages to the machine at `OLLAMA_BASE_URL` (default:
-  your own computer; inside Docker, `host.docker.internal`). Point it only at hardware you control. It
-  is demo-only. Do not use hosted free tiers with real data: they may train on inputs.
+  your own computer; inside Docker, `host.docker.internal`). Point it only at hardware you control.
+  `LLM_PROVIDER=openrouter` sends pages to [OpenRouter](https://openrouter.ai) and whichever upstream
+  provider it routes the request to that call — a second third party, with its own and its providers'
+  retention terms, outside our control. Both are demo/manual-testing only. Do not use hosted free tiers
+  with real data: they may train on inputs.
 
 ### What the extraction stores, and where
 | Where | What | Protection |

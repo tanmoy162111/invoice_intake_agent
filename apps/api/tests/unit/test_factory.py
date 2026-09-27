@@ -8,11 +8,20 @@ from intake.core.llm_budget import UnknownModelError
 from intake.extract.factory import build_client
 from intake.extract.llm import AnthropicClient
 from intake.extract.ollama import OllamaClient
+from intake.extract.openrouter import OpenRouterClient
 from intake.extract.recorded import RecordedClient
 
 
 def settings(**kw: object) -> Settings:
-    base: dict[str, object] = {"anthropic_api_key": "", "extraction_model": "claude-sonnet-5"}
+    # Every provider setting is pinned here, not just Anthropic's, so these tests are isolated from
+    # whatever a developer's own local .env happens to set (e.g. LLM_PROVIDER=openrouter while
+    # trying the OpenRouter backend by hand) unless a test explicitly overrides it.
+    base: dict[str, object] = {
+        "llm_provider": "anthropic",
+        "anthropic_api_key": "",
+        "extraction_model": "claude-sonnet-5",
+        "openrouter_api_key": "",
+    }
     return Settings(**{**base, **kw})  # type: ignore[arg-type]
 
 
@@ -51,7 +60,9 @@ def test_the_provider_must_be_a_known_one() -> None:
 
 
 def test_the_default_provider_is_anthropic() -> None:
-    assert Settings().llm_provider == "anthropic"
+    # _env_file=None: the class default, regardless of a developer's own local .env (e.g. while
+    # trying LLM_PROVIDER=openrouter by hand).
+    assert Settings(_env_file=None).llm_provider == "anthropic"  # type: ignore[call-arg]
 
 
 def test_recorded_replays_from_a_directory_and_needs_no_key(tmp_path: Path) -> None:
@@ -66,3 +77,37 @@ def test_recorded_without_a_directory_is_not_configured() -> None:
 def test_recorded_is_refused_in_production() -> None:
     with pytest.raises(ValidationError, match="recorded"):
         settings(llm_provider="recorded", recorded_dir="/x", app_env="production")
+
+
+def test_openrouter_needs_a_key() -> None:
+    assert build_client(settings(llm_provider="openrouter", extraction_model="q")) is None
+
+
+def test_openrouter_with_a_key_builds_the_client() -> None:
+    client = build_client(
+        settings(
+            llm_provider="openrouter",
+            extraction_model="qwen/qwen2.5-vl-72b-instruct",
+            openrouter_api_key="sk-or-test",
+        )
+    )
+    assert isinstance(client, OpenRouterClient)
+    assert client.model == "qwen/qwen2.5-vl-72b-instruct"
+
+
+def test_openrouter_without_a_model_is_not_configured() -> None:
+    assert (
+        build_client(
+            settings(llm_provider="openrouter", extraction_model="", openrouter_api_key="k")
+        )
+        is None
+    )
+
+
+def test_openrouter_with_an_unpriced_model_is_refused_not_guessed() -> None:
+    with pytest.raises(UnknownModelError):
+        build_client(
+            settings(
+                llm_provider="openrouter", extraction_model="mystery-1", openrouter_api_key="k"
+            )
+        )

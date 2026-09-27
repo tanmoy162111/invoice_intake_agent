@@ -41,12 +41,15 @@ class Settings(BaseSettings):
     render_dpi: int = 200
     max_image_pixels: int = 25_000_000
 
-    # Which model backend reads invoices. "ollama" is an optional local, demo-only backend.
-    # "recorded" replays saved answers from RECORDED_DIR (browser tests and CI; never production).
-    llm_provider: Literal["anthropic", "ollama", "recorded"] = "anthropic"
+    # Which model backend reads invoices. "ollama" and "openrouter" are optional, demo/manual-
+    # testing-only backends (never the reference build the eval report is based on). "recorded"
+    # replays saved answers from RECORDED_DIR (browser tests and CI; never production).
+    llm_provider: Literal["anthropic", "ollama", "openrouter", "recorded"] = "anthropic"
     recorded_dir: str = ""
     ollama_base_url: str = "http://localhost:11434"
     ollama_num_ctx: int = 8192
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
     # Extraction (playbook §6.2). Money is Decimal dollars here, integer micros everywhere else.
     extraction_prompt_version: str = "v1"
