@@ -2,10 +2,12 @@
 model), so the worker pauses extraction jobs visibly instead of failing them."""
 
 from functools import lru_cache
+from pathlib import Path
 
 from intake.config import Settings
 from intake.extract.llm import AnthropicClient, LlmClient
 from intake.extract.ollama import OllamaClient
+from intake.extract.recorded import RecordedClient
 
 
 @lru_cache(maxsize=4)
@@ -21,6 +23,11 @@ def _ollama(model: str, base_url: str, num_ctx: int, timeout_s: float) -> Ollama
 def build_client(settings: Settings) -> LlmClient | None:
     if not settings.extraction_model:
         return None
+    if settings.llm_provider == "recorded":  # saved answers only: no key, no network
+        if not settings.recorded_dir:
+            return None
+        directory = Path(settings.recorded_dir)
+        return RecordedClient(model=settings.extraction_model, directory=directory)
     if settings.llm_provider == "ollama":  # local, demo only: no API key involved
         return _ollama(
             settings.extraction_model, settings.ollama_base_url, settings.ollama_num_ctx,

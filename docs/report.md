@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M8b-2a (deciding from the browser), 2026-09-27.
+> **Last updated:** after M8b-2 (deciding from the browser, and the browser test), 2026-09-27.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -31,7 +31,7 @@ You can read only the first layer of each chapter and still understand the whole
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
   *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change, and has this invoice been received before. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** The browser test in CI (M8b-2b), audit timeline (M9),
+- **What is not built yet.** Audit timeline (M9),
   accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
   proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
 - **Health.** 885 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
@@ -49,7 +49,7 @@ You can read only the first layer of each chapter and still understand the whole
 | M5 | Duplicate detection | Repeats caught before approval | Built, merged (PR #6) |
 | M6 | 3-way matching | Invoice compared with PO and receipt | Built, merged (PR #7) |
 | M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Built, merged (PR #8) |
-| M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) merged (PR #9); M8b-1 (the screens) merged (PR #10); M8b-2a (deciding from the browser) built; M8b-2b (the browser test in CI) planned |
+| M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) merged (PR #9); M8b-1 (the screens) merged (PR #10); M8b-2a (deciding from the browser) and M8b-2b (the browser test in CI) built |
 | M9 | Audit timeline | Full readable history per invoice | Planned |
 | M10 | Evaluation harness | Honest, published accuracy numbers | Planned |
 | M11 | Metrics dashboard | Business value at a glance | Planned |
@@ -1002,11 +1002,56 @@ Nothing here pays or moves money: approving only marks the invoice ready for exp
 | Automated tests | Web: lint, types, unit tests and a production build pass |
 
 **Left open.**
-- **M8b-2b**: the browser test (upload, review, approve, and no horizontal scroll at 375 px) on recorded model
-  answers, running in CI.
 - *Request info* does not change the invoice or contact anyone; a waiting status and the history view arrive in M9.
 - Line-level corrections are not offered; only header fields can be corrected.
-- Component-level tests are not written; the pure rules are tested, and the browser test will cover the flow.
+- Component-level tests are not written; the pure rules are tested, and the browser test (M8b-2b) covers the flow.
+
+---
+
+### M8b-2b: The browser test
+
+*Goal (end of M8): the whole review flow is proved by a machine on every change: upload, review, approve, in a real browser, without ever calling a model.*
+
+**In plain words.** A robot now does what a reviewer does. It signs in, uploads an invoice, waits while the
+system reads and checks it, closes what is open, approves it, and checks the outcome, then tries the
+awkward cases: approving while a blocking problem stands, typing an amount that is not an amount, and using
+a phone-sized screen. It runs on every change, so a screen that quietly stops working is caught before it
+is merged. It uses saved answers in place of the reading model, so it is free and gives the same result
+every time. Its first run found something real: the invoice it uploaded is sent to a person, not cleared,
+because the system is not sure a similar earlier invoice comes from a different supplier. That is the
+intended behaviour ("uncertain means human"), so the test closes it as a reviewer would.
+
+**How it works.**
+
+1. `make e2e` starts a scratch database, loads the seed invoices through the real pipeline, keeps one back,
+   and starts the real API, the real worker and the web app.
+2. Four tests run in Chrome: *upload, review and approve* (the M8 acceptance test); *approval is blocked until
+   a blocking exception is closed with a note*; *a correction that cannot be read is refused, a good one is
+   saved*; *no sideways scrolling at 375 px* on the queue and while editing.
+3. Everything is removed afterwards. CI runs the same script as a separate job, and keeps the trace of a
+   failed run for a week.
+
+**Under the hood.**
+- **A `recorded` model provider** (`LLM_PROVIDER=recorded`, answers in `RECORDED_DIR`) replays saved answers
+  through the same client interface the real reader uses, so the worker, queue, cache and cost records all run
+  for real. It is refused when `APP_ENV=production`. Three unit tests cover it.
+- **`scripts/load-demo-pipeline.py`** gained `FIXTURES_DIR`, `HOLD_OUT` and `BANK_ENCRYPTION_KEY`, so the
+  answers are kept and one invoice is left for the browser to upload.
+- **`scripts/e2e.sh`** refuses to start if a port is taken, including the database port, so a database that is
+  not ours is never reset; runs every service in its own process group; and cleans up on any exit.
+- **Playwright** (`apps/web/e2e`): one worker, tests in order, a trace kept on failure. Invoices are found by
+  filtering the queue by exception, never by their position, because queue order depends on timing. Vitest is
+  told to leave `e2e/` alone.
+
+**What we proved.** Four of four tests pass locally in about 16 s after the build, and ports and database are
+gone afterwards. The first runs failed for real reasons (the invoice was routed to review; the queue order was not
+what was assumed; a selector matched the framework's own announcer), each fixed in the test rather than hidden.
+
+**Left open.**
+- One browser (Chrome) only; no Firefox or Safari.
+- The uploaded invoice is a synthetic seed file with a saved answer built from its answer key, so the test
+  proves the flow, not the reader's accuracy (that is M10).
+- No automated accessibility audit (axe) yet.
 
 ---
 

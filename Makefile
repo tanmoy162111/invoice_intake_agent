@@ -1,4 +1,4 @@
-.PHONY: dev seed ingest-inbox docs-page generate check check-api check-web eval demo-reset gen-api demo-pipeline
+.PHONY: e2e dev seed ingest-inbox docs-page generate check check-api check-web eval demo-reset gen-api demo-pipeline
 
 dev:            ## start everything (db, api, worker, web)
 	./scripts/ensure-env.sh
@@ -23,6 +23,9 @@ check-api:
 
 check-web:
 	cd apps/web && pnpm lint && pnpm typecheck && pnpm test && pnpm build
+
+e2e:            ## browser test on a throwaway stack with recorded model answers (needs Docker and Chromium: cd apps/web && pnpm exec playwright install chromium)
+	./scripts/e2e.sh
 
 gen-api:        ## regenerate the web app's API types from the code (or from a running API: API_OPENAPI_URL=...)
 	./scripts/gen-api.sh

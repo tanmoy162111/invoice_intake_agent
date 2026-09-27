@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M8b-2a (deciding from the browser: correct, close exceptions, approve, reject, ask, reveal a bank account), 2026-09-27.
+> **Describes:** the system after M8b-2 (deciding from the browser, and a browser test in CI), 2026-09-27.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -576,6 +576,7 @@ refuses everything except `/health` and the login.
 | `make ingest-inbox` | Feed `data/inbox/` through ingestion |
 | `make generate` | Rebuild the synthetic dataset (developers; existing golden files are kept) |
 | `make check` | Run every automated quality check |
+| `make e2e` | The browser test: starts a scratch stack (needs Docker; first run `cd apps/web && pnpm exec playwright install chromium`), runs it with recorded model answers, and removes it. Costs nothing |
 | `make gen-api` | Refresh the web app's API types |
 | `make eval` | Accuracy evaluation [Coming in M10]; costs money, asks first |
 | `make demo-reset` | Reset to the clean demo state [Coming in M13] |
@@ -594,7 +595,8 @@ refuses everything except `/health` and the login.
 | `JOB_BACKOFF_BASE_S` / `_CAP_S` | 10 / 600 | Wait before a retry: 10 s, 20 s, 40 s ... up to 10 min |
 | `JOB_VISIBILITY_TIMEOUT_S` | 300 | When a running job counts as stuck |
 | `WORKER_POLL_INTERVAL_S` | 2 | How often the worker looks for work |
-| `LLM_PROVIDER` | `anthropic` | `anthropic`, or `ollama` (local, demo only) |
+| `LLM_PROVIDER` | `anthropic` | `anthropic`, `ollama` (local, demo only), or `recorded` (replays saved answers from `RECORDED_DIR`; browser test and CI only, refused when `APP_ENV=production`) |
+| `RECORDED_DIR` | empty | Where the saved answers are, for `LLM_PROVIDER=recorded` |
 | `ANTHROPIC_API_KEY` | empty | Your key. Empty means reading is paused, not failed |
 | `EXTRACTION_MODEL` | `claude-sonnet-5` | Which model reads invoices. Must have a known price, or it is refused |
 | `DAILY_SPEND_CAP_USD` | 5 | Most model spend per UTC day. 0 pauses all reading |
@@ -695,7 +697,6 @@ states the real numbers, and every one is planted in the demo data.** The exact 
 
 | When | You will be able to |
 |---|---|
-| M8b-2b | A browser test in CI that uploads an invoice, reviews it and approves it, on recorded model answers |
 | M9 | Read the complete history of any invoice |
 | M10 | See measured accuracy per field and per document quality |
 | M11 | See a dashboard of volume, exceptions, cost and estimated savings |
