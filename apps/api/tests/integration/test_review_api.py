@@ -4,7 +4,7 @@ after the whole pipeline has run on the seed data (recorded answers)."""
 import re
 import uuid
 from collections.abc import Iterator
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 import pytest
@@ -154,9 +154,13 @@ def test_the_queue_lists_invoices_needing_a_person_worst_first(env: Env) -> None
     assert {i["status"] for i in items} <= {"needs_review", "failed"}
     rank = {"block": 3, "review": 2, "info": 1, None: 0}
     keys = [
-        (-rank[i["top_exception"]["severity"] if i["top_exception"] else None], i["created_at"])
+        (
+            -rank[i["top_exception"]["severity"] if i["top_exception"] else None],
+            datetime.fromisoformat(i["created_at"]),
+        )
         for i in items
-    ]
+    ]  # a parsed datetime, not the raw string: created_at drops ".000000" when it lands on a whole
+    # second, which breaks a plain string sort against a neighbor that does have microseconds
     assert keys == sorted(keys)
     first = items[0]
     assert first["top_exception"]["severity"] == "block" and first["open_exceptions"] >= 1
