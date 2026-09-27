@@ -1,5 +1,6 @@
 import { CheckCircle2, Lightbulb, MinusCircle } from "lucide-react";
 
+import { ExceptionClose } from "@/components/invoice/exception-close";
 import { DuplicateCompare } from "@/components/invoice/duplicate-compare";
 import { SeverityStamp } from "@/components/severity-stamp";
 import type { ExceptionOut, InvoiceDetail } from "@/lib/api/types";
@@ -63,6 +64,10 @@ export function ExceptionCard({
       )}
 
       {exception.related_invoice && <DuplicateCompare current={invoice} other={exception.related_invoice} />}
+
+      {!closed && (invoice.status === "needs_review" || invoice.status === "cleared") && (
+        <ExceptionClose invoiceId={invoice.id} exception={exception} />
+      )}
     </article>
   );
 }

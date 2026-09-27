@@ -8,6 +8,7 @@ import { DecisionSummary } from "@/components/invoice/decision-summary";
 import { DocumentViewer } from "@/components/invoice/document-viewer";
 import { ExceptionCard } from "@/components/invoice/exception-card";
 import { FieldsPanel } from "@/components/invoice/fields-panel";
+import { InvoiceActions } from "@/components/invoice/invoice-actions";
 import { LinesPanel } from "@/components/invoice/lines-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ export function InvoiceWorkspace({ detail }: { detail: InvoiceDetail }) {
 
       <div className="flex min-w-0 flex-col gap-5">
         <DecisionSummary detail={detail} />
+        <InvoiceActions detail={detail} />
 
         <Sheet open={sheet} onOpenChange={setSheet}>
           <SheetTrigger asChild>

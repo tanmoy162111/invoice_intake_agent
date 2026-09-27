@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M8b-1 (the review screens), 2026-09-26.
+> **Last updated:** after M8b-2a (deciding from the browser), 2026-09-27.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -31,7 +31,7 @@ You can read only the first layer of each chapter and still understand the whole
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
   *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change, and has this invoice been received before. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** Acting from the browser (M8b-2), audit timeline (M9),
+- **What is not built yet.** The browser test in CI (M8b-2b), audit timeline (M9),
   accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
   proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
 - **Health.** 885 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
@@ -49,7 +49,7 @@ You can read only the first layer of each chapter and still understand the whole
 | M5 | Duplicate detection | Repeats caught before approval | Built, merged (PR #6) |
 | M6 | 3-way matching | Invoice compared with PO and receipt | Built, merged (PR #7) |
 | M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Built, merged (PR #8) |
-| M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) merged (PR #9); M8b-1 (the screens) built, in review; M8b-2 (the actions and browser test) planned |
+| M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) merged (PR #9); M8b-1 (the screens) merged (PR #10); M8b-2a (deciding from the browser) built; M8b-2b (the browser test in CI) planned |
 | M9 | Audit timeline | Full readable history per invoice | Planned |
 | M10 | Evaluation harness | Honest, published accuracy numbers | Planned |
 | M11 | Metrics dashboard | Business value at a glance | Planned |
@@ -954,6 +954,59 @@ answers; a real browser.)
 - Sessions cannot be revoked one by one (logout clears the cookie only); the demo login is one shared identity.
 - No automated accessibility audit yet (axe); keyboard, contrast and labels were checked by hand.
 - Component-level tests are not written; the pure logic is tested, and the browser test in M8b-2 covers the flow.
+
+---
+
+### M8b-2a: Deciding from the browser
+
+*Goal (second half of M8, second part): a reviewer can process an exception without leaving the screen. The browser test in CI follows as M8b-2b.*
+
+**In plain words.** The screens were read-only; now they act. On an invoice a reviewer can close each exception
+(*Resolve* if it was fixed, *Dismiss* if it is not a problem, with a note, which is required for a blocking
+problem), correct a field that was read wrongly and see the checks run again straight away, then approve, reject
+with a reason, or record that more information is needed. Approve stays switched off, with the reason shown,
+until every exception is closed. Bank details stay masked until someone presses *Reveal*, and that is logged.
+Nothing here pays or moves money: approving only marks the invoice ready for export.
+
+**How it works.**
+
+1. **Close an exception.** Each open card has a note box and two buttons. A blocking exception needs a note.
+2. **Correct a field.** *Correct* on a field opens a box with the value as a person would type it (amounts as
+   `12.50`). Saving asks the API, which re-runs the checks and routing, and the page shows the new result.
+3. **Decide.** *Approve*, *Reject* and *Request info* open a small form. Once the invoice is approved or
+   rejected the buttons go away. *Request info* only writes to the history.
+4. **Reveal.** Shows the bank account read from the invoice until *Hide*; the API writes each reveal to the history.
+
+**Under the hood.**
+- **Server Actions** (`app/(app)/invoices/[id]/actions.ts`) call new POST helpers in `lib/api/server.ts`
+  (approve, reject, request-info, corrections, close, reveal). The session token stays on the server. Each action
+  validates its input, calls the API, and on success revalidates the invoice and queue pages; a refusal comes back
+  as the API's own plain-words message.
+- **`lib/review-input.ts`** holds the rules the forms check first (a note for a blocking exception, a reason to
+  reject, the note length, the list of correctable fields), with tests; the API checks again and stays the authority.
+  `minorToDecimal` turns whole minor units into an editable amount using integer maths only.
+- **Components**: `invoice-actions`, `exception-close`, `field-editor` (correction and bank reveal) and a shared
+  `form-message`. No new API behaviour, no migration; the endpoints were built in M8a.
+
+**What we proved.** (Real API, worker, database and a real browser, with the seed invoices run through the pipeline on recorded answers.)
+
+| Check | Result |
+|---|---|
+| Resolve a blocking exception with a note, dismiss the other, approve | Works; the status becomes `approved`, and the history shows each step by `reviewer` |
+| Approve while an exception is open | Button disabled, with the reason |
+| Correct an invoice number; enter an amount that is not one | The first is saved and marked *Corrected by reviewer*; the second is refused with a message |
+| Reject with no reason; reject with a reason | The empty one is stopped; the second rejects and is final |
+| Request info | Recorded in the history (`info_requested`); the invoice is unchanged |
+| Reveal a bank account, then hide it | Shown, then masked again |
+| Horizontal scroll at 375 px, including while editing a field | None |
+| Automated tests | Web: lint, types, unit tests and a production build pass |
+
+**Left open.**
+- **M8b-2b**: the browser test (upload, review, approve, and no horizontal scroll at 375 px) on recorded model
+  answers, running in CI.
+- *Request info* does not change the invoice or contact anyone; a waiting status and the history view arrive in M9.
+- Line-level corrections are not offered; only header fields can be corrected.
+- Component-level tests are not written; the pure rules are tested, and the browser test will cover the flow.
 
 ---
 

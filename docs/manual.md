@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M8b-1 (the review screens: sign in, queue, invoice, upload), 2026-09-26.
+> **Describes:** the system after M8b-2a (deciding from the browser: correct, close exceptions, approve, reject, ask, reveal a bank account), 2026-09-27.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -28,13 +28,13 @@ anyone.**
 
 | Role | What they do | Available |
 |---|---|---|
-| **Reviewer** (AP clerk) | Works the queue of invoices that need a person; corrects, approves, rejects | Reads the queue and every invoice in the browser today (section 4.16); acts through the API (section 4.15). Acting in the browser is [Coming in M8b-2] |
+| **Reviewer** (AP clerk) | Works the queue of invoices that need a person; corrects, approves, rejects | Reads the queue and every invoice, and corrects, closes exceptions, approves, rejects and asks for information, all in the browser (section 4.16); the same actions exist in the API (section 4.15) |
 | **Approver / manager** | Approves invoices above the limit | [Coming in M8] |
 | **Operator** (IT or support) | Starts the system, loads data, watches the background jobs | Today |
 | **Developer** | Builds and tests the system | Today |
 
 **Today, the only way in is the API** (a set of web addresses a program or the `curl` command can call).
-The review screens (sign in, the queue, the invoice page and upload) are described in section 4.16. Correcting, closing exceptions and approving in the browser arrive in M8b-2; until then they are done through the API (section 4.15).
+The review screens (sign in, the queue, the invoice page and upload) are described in section 4.16. Correcting, closing exceptions, approving, rejecting and asking for information are done there too (the same actions are in the API, section 4.15).
 
 ---
 
@@ -490,13 +490,26 @@ person. Below is the document beside the findings (on a phone the document opens
   what differs marked. Closed exceptions show who closed them and their note.
 - **Fields**: the *key fields* (supplier, invoice number, date, total, currency) first, each with a confidence
   bar (the mark on the bar is the 80% minimum) and, when doubtful, the reason in plain words. The button on a
-  row (`p.1`) jumps the document to that page. Other fields follow. The bank account is only ever shown masked.
+  row (`p.1`) jumps the document to that page. Other fields follow. The bank account is shown masked; *Reveal* shows it until you press *Hide*, and every reveal is written to the history.
 - **Lines** and **Checks**: the invoice lines (and whether each matched a purchase order line) and the result of
   every check (*Passed*, *Failed*, *Could not be checked*).
 
-A banner says whether the invoice is ready to approve or how many exceptions still stand in the way. In this
-release the invoice page is read-only: correcting, closing exceptions and approving are done through the API
-(section 4.15) until M8b-2.
+A banner says whether the invoice is ready to approve or how many exceptions still stand in the way.
+
+**Deciding.** While an invoice is *Needs review* or *Cleared* the page offers:
+
+- **Resolve** or **Dismiss** on each open exception. *Resolve* means the problem was fixed; *Dismiss* means it
+  is not a problem. A note is optional, except for a *Block* exception, where it is required.
+- **Correct** on a field (in the *Fields* tab): type the right value and *Save and re-check*. The checks and
+  the routing run again at once, so exceptions can appear, change or close. A value that cannot be read for
+  that field (a date or an amount that is not one) is refused with the reason. The bank account cannot be edited.
+- **Approve**, available only when every exception is closed (otherwise the button is disabled and says why).
+  It marks the invoice ready for export; it never pays anything. A note is optional.
+- **Reject**, with a required reason. Final and recorded.
+- **Request info**: records that something is needed, with a note. It only writes to the history: the invoice
+  stays where it is and nothing is sent to anyone.
+
+Approved and rejected invoices show no buttons. Every action is recorded with your name.
 
 **Upload** (`/upload`) sends a PDF, PNG, JPEG or TIFF (up to 15 MB and 10 pages) for reading and checking. The
 result shows the file, its quality and a link to the invoice. Reading takes about a minute; an invoice that needs
@@ -682,7 +695,7 @@ states the real numbers, and every one is planted in the demo data.** The exact 
 
 | When | You will be able to |
 |---|---|
-| M8b-2 | Correct fields, close exceptions, approve, reject and ask for information from the browser, with a browser test in CI (the actions already exist in the API, section 4.15) |
+| M8b-2b | A browser test in CI that uploads an invoice, reviews it and approves it, on recorded model answers |
 | M9 | Read the complete history of any invoice |
 | M10 | See measured accuracy per field and per document quality |
 | M11 | See a dashboard of volume, exceptions, cost and estimated savings |

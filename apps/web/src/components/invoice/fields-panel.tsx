@@ -1,9 +1,11 @@
 import { AlertTriangle, BadgeCheck, FileSearch, Lock } from "lucide-react";
 
+import { BankReveal, FieldEditor } from "@/components/invoice/field-editor";
 import { ConfidenceBar } from "@/components/invoice/confidence-bar";
 import type { FieldOut, InvoiceDetail } from "@/lib/api/types";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate, formatMoney, minorToDecimal } from "@/lib/format";
 import { fieldLabel, isKeyField } from "@/lib/labels";
+import { isCorrectable } from "@/lib/review-input";
 import { cn } from "@/lib/utils";
 
 const MONEY = new Set(["subtotal", "tax_total", "total"]);
@@ -28,7 +30,25 @@ function show(f: FieldOut, currency: string | null): React.ReactNode {
   return text;
 }
 
-function Row({ field, currency, onJump, alert }: { field: FieldOut; currency: string | null; onJump: (page: number) => void; alert: boolean }) {
+/** What the edit box starts with: the value as a person would type it. */
+function editable(f: FieldOut, currency: string | null): string {
+  if (f.value === null) return "";
+  if (MONEY.has(f.field) && /^-?\d+$/.test(f.value)) return minorToDecimal(Number(f.value), currency);
+  if (DATES.has(f.field)) return f.value;
+  return f.corrected ? f.value : (f.raw ?? f.value);
+}
+
+type RowProps = {
+  field: FieldOut;
+  currency: string | null;
+  onJump: (page: number) => void;
+  alert: boolean;
+  invoiceId: string;
+  canEdit: boolean;
+};
+
+function Row({ field, currency, onJump, alert, invoiceId, canEdit }: RowProps) {
+  const bank = field.field === "supplier_bank_account" && field.value !== null && field.value !== "";
   return (
     <li className={cn("grid gap-x-4 gap-y-1.5 px-4 py-3.5 sm:grid-cols-[9rem_1fr_auto] sm:items-start", alert && "bg-review-soft/40")}>
       <div className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
@@ -60,6 +80,10 @@ function Row({ field, currency, onJump, alert }: { field: FieldOut; currency: st
             <FileSearch className="size-3.5" aria-hidden /> p.{field.page}
           </button>
         )}
+        {bank && canEdit && <BankReveal invoiceId={invoiceId} />}
+        {canEdit && isCorrectable(field.field) && (
+          <FieldEditor invoiceId={invoiceId} field={field.field} current={editable(field, currency)} />
+        )}
       </div>
     </li>
   );
@@ -67,6 +91,7 @@ function Row({ field, currency, onJump, alert }: { field: FieldOut; currency: st
 
 export function FieldsPanel({ detail, onJump }: { detail: InvoiceDetail; onJump: (page: number) => void }) {
   const currency = detail.header.currency;
+  const canEdit = detail.status === "needs_review" || detail.status === "cleared";
   const key = detail.fields.filter((f) => isKeyField(f.field));
   const other = detail.fields.filter((f) => !isKeyField(f.field));
   const attention = key.filter((f) => f.weak).length;
@@ -84,7 +109,7 @@ export function FieldsPanel({ detail, onJump }: { detail: InvoiceDetail; onJump:
         </h3>
         <ul className="divide-y overflow-hidden rounded-lg border bg-card">
           {key.map((f) => (
-            <Row key={f.field} field={f} currency={currency} onJump={onJump} alert={f.weak} />
+            <Row key={f.field} field={f} currency={currency} onJump={onJump} alert={f.weak} invoiceId={detail.id} canEdit={canEdit} />
           ))}
         </ul>
         <p className="mt-2 text-xs text-muted-foreground">
@@ -99,7 +124,7 @@ export function FieldsPanel({ detail, onJump }: { detail: InvoiceDetail; onJump:
           </h3>
           <ul className="divide-y overflow-hidden rounded-lg border bg-card">
             {other.map((f) => (
-              <Row key={f.field} field={f} currency={currency} onJump={onJump} alert={false} />
+              <Row key={f.field} field={f} currency={currency} onJump={onJump} alert={false} invoiceId={detail.id} canEdit={canEdit} />
             ))}
           </ul>
         </section>
