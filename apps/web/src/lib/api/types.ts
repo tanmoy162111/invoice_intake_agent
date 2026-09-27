@@ -13,3 +13,5 @@ export type RelatedInvoice = S["RelatedInvoice"];
 export type LoginOut = S["LoginOut"];
 export type UploadOut = S["DocumentOut"];
 export type ErrorDetail = S["ErrorDetail"];
+export type AuditEntryOut = S["AuditEntryOut"];
+export type AuditOut = S["AuditOut"];

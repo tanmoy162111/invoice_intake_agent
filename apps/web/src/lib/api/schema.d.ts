@@ -187,6 +187,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invoices/{invoice_id}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit Timeline
+         * @description The invoice's complete history (playbook M9): every status change, check, exception, human
+         *     action and model call, oldest first. This *is* the JSON export the playbook asks for; there is
+         *     no separate endpoint, since the full history is already exactly what this returns.
+         */
+        get: operations["audit_timeline_invoices__invoice_id__audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invoices/{invoice_id}/bank/reveal": {
         parameters: {
             query?: never;
@@ -302,6 +324,36 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AuditEntryOut */
+        AuditEntryOut: {
+            /** Actor Id */
+            actor_id: string | null;
+            /** Actor Type */
+            actor_type: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
+            /** Id */
+            id: string;
+            /** Summary */
+            summary: string;
+        };
+        /** AuditOut */
+        AuditOut: {
+            /** Entries */
+            entries: components["schemas"]["AuditEntryOut"][];
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+        };
         /** BankOut */
         BankOut: {
             /** Masked */
@@ -1065,6 +1117,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvoiceDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    audit_timeline_invoices__invoice_id__audit_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
                 };
             };
             /** @description Validation Error */
