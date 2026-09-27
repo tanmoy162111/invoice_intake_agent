@@ -258,7 +258,10 @@ browser ── cookie ──▶ Next.js server ── Bearer <session> ──▶
 - **Components** are small. Server components render the queue, the header and cards; client components exist
   only where there is interaction (document viewer, workspace tabs and sheet, filter menu, theme, user menu,
   upload form) and receive plain data as props.
-- **Not yet:** acting from the browser, the browser test in CI, and a recorded model provider for it (M8b-2).
+- **Acting (M8b-2a):** Server Actions in `app/(app)/invoices/[id]/actions.ts` call the API's review endpoints
+  (approve, reject, request-info, corrections, exception close, bank reveal) through `lib/api/server.ts`, then
+  revalidate the page. `lib/review-input.ts` holds the pure form rules. The API remains the authority.
+- **Not yet:** the browser test in CI and a recorded model provider for it (M8b-2b).
 
 ## The review API (M8a)
 

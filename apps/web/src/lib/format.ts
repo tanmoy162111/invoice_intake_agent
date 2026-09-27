@@ -52,3 +52,11 @@ export function formatPercent(fraction: number | null | undefined): string {
   if (fraction === null || fraction === undefined) return DASH;
   return `${Math.round(fraction * 100)}%`;
 }
+
+/** An amount in minor units as a plain decimal string ("1250" in USD is "12.50"), for editing. Integer maths only. */
+export function minorToDecimal(minor: number, currency: string | null | undefined): string {
+  const digits = minorUnitDigits(currency);
+  const sign = minor < 0 ? "-" : "";
+  const abs = String(Math.abs(minor)).padStart(digits + 1, "0");
+  return digits === 0 ? `${sign}${abs}` : `${sign}${abs.slice(0, -digits)}.${abs.slice(-digits)}`;
+}

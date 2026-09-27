@@ -109,3 +109,44 @@ export async function uploadDocument(file: File): Promise<UploadOut> {
 export async function getMe(): Promise<{ user: string | null }> {
   return json<{ user: string | null }>(await authed("/auth/me"));
 }
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await authed(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return json<T>(res);
+}
+
+const invoicePath = (id: string) => `/invoices/${encodeURIComponent(id)}`;
+
+export function approveInvoice(id: string, note: string | null): Promise<InvoiceDetail> {
+  return post(`${invoicePath(id)}/approve`, { note });
+}
+
+export function rejectInvoice(id: string, reason: string): Promise<InvoiceDetail> {
+  return post(`${invoicePath(id)}/reject`, { reason });
+}
+
+export function requestInfo(id: string, note: string | null): Promise<InvoiceDetail> {
+  return post(`${invoicePath(id)}/request-info`, { note });
+}
+
+export function correctField(id: string, field: string, value: string): Promise<InvoiceDetail> {
+  return post(`${invoicePath(id)}/corrections`, { field, value });
+}
+
+export function closeException(
+  exceptionId: string,
+  resolution: "resolved" | "dismissed",
+  note: string | null,
+): Promise<InvoiceDetail> {
+  return post(`/exceptions/${encodeURIComponent(exceptionId)}/close`, { resolution, note });
+}
+
+/** The account as read from the invoice. The API writes the reveal to the history. */
+export async function revealBank(id: string): Promise<string> {
+  const out = await post<{ account: string }>(`${invoicePath(id)}/bank/reveal`, {});
+  return out.account;
+}

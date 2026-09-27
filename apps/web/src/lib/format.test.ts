@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { formatAge, formatDate, formatMoney, formatPercent, minorUnitDigits } from "./format";
+import { formatAge, formatDate, formatMoney, formatPercent, minorToDecimal, minorUnitDigits } from "./format";
 
 describe("formatMoney", () => {
   test("shows minor units in the currency with its own decimals", () => {
@@ -59,5 +59,14 @@ describe("formatPercent", () => {
     expect(formatPercent(0.999)).toBe("100%");
     expect(formatPercent(0)).toBe("0%");
     expect(formatPercent(null)).toBe("—");
+  });
+});
+
+describe("minorToDecimal", () => {
+  test("puts the decimal point by the currency's minor digits", () => {
+    expect(minorToDecimal(1250, "USD")).toBe("12.50");
+    expect(minorToDecimal(5, "USD")).toBe("0.05");
+    expect(minorToDecimal(-1250, "USD")).toBe("-12.50");
+    expect(minorToDecimal(1200, "JPY")).toBe("1200");
   });
 });
