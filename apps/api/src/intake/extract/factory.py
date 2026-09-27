@@ -7,6 +7,7 @@ from pathlib import Path
 from intake.config import Settings
 from intake.extract.llm import AnthropicClient, LlmClient
 from intake.extract.ollama import OllamaClient
+from intake.extract.openrouter import OpenRouterClient
 from intake.extract.recorded import RecordedClient
 
 
@@ -18,6 +19,11 @@ def _anthropic(model: str, api_key: str, timeout_s: float) -> AnthropicClient:
 @lru_cache(maxsize=4)
 def _ollama(model: str, base_url: str, num_ctx: int, timeout_s: float) -> OllamaClient:
     return OllamaClient(model=model, base_url=base_url, num_ctx=num_ctx, timeout_s=timeout_s)
+
+
+@lru_cache(maxsize=4)
+def _openrouter(model: str, api_key: str, base_url: str, timeout_s: float) -> OpenRouterClient:
+    return OpenRouterClient(model=model, api_key=api_key, base_url=base_url, timeout_s=timeout_s)
 
 
 def build_client(settings: Settings) -> LlmClient | None:
@@ -32,6 +38,13 @@ def build_client(settings: Settings) -> LlmClient | None:
         return _ollama(
             settings.extraction_model, settings.ollama_base_url, settings.ollama_num_ctx,
             max(settings.extract_timeout_s, 300.0),
+        )  # fmt: skip
+    if settings.llm_provider == "openrouter":  # demo / manual testing only
+        if not settings.openrouter_api_key:
+            return None
+        return _openrouter(
+            settings.extraction_model, settings.openrouter_api_key, settings.openrouter_base_url,
+            settings.extract_timeout_s,
         )  # fmt: skip
     if not settings.anthropic_api_key:
         return None

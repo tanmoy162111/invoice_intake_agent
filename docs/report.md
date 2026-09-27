@@ -321,7 +321,9 @@ never costs twice.
   forced tool choice except on the two models that reject it, base64 page images, SDK retries),
   `service.py` (cache, cap, one schema retry, `llm_calls` logging in its own transaction),
   `pipeline.py` (the stage), `recorded.py` (replays fixtures keyed by request hash for tests),
-  `factory.py` (builds the configured client, or none), `ollama.py` (optional local backend, demo only).
+  `factory.py` (builds the configured client, or none), `ollama.py` (optional local backend, demo
+  only), `openrouter.py` (optional OpenRouter backend for open-weight models, demo/manual-testing
+  only, ADR 0010).
 - **Worker**: `extract_invoice` job is queued when `process_document` finishes. A handler can return a
   `Deferral` (pause without using an attempt) for "not configured" and "spend cap reached".
   `queue.stats` counts paused jobs.
@@ -361,7 +363,7 @@ job gave up. The remaining review notes are under "Left open".
   the default model (`claude-sonnet-5`) and prompt `v1` are a starting point, not a result. Estimated
   (not measured) cost is about one to three US cents per one-page invoice.
 - Model "thinking" effort is left at the default; it may add cost. Tune with the evaluation.
-- Free or local models (Ollama) are supported as a demo backend only; their numbers do not apply to the Claude build.
+- Free, local (Ollama) or OpenRouter models are supported as demo/manual-testing backends only; their numbers do not apply to the Claude build.
 - Fields on scanned and photo documents will often score under 80% (no text to check against). That is intended: they go to a person.
 - A permanent provider rejection (bad key) fails the job visibly; fixing it and re-queueing is manual until M8.
 - **Text-layer check is not position-aware.** It asks whether a value appears anywhere in the document
@@ -1139,6 +1141,7 @@ The build gates on decision-logic coverage of at least 90%.
 | An open invoice can go back to `extracted` (re-check) and a cleared one can be rejected | The playbook diagram had no way to act on a correction | M8a, ADR 0008 |
 | Bank accounts are shown masked; revealing one is a logged action | Playbook section 10 | M8a |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
+| An OpenRouter backend is optional and demo/manual-testing-only; structured output is asked for by prompt only, never `response_format` or tools; cost is a static table entry, never OpenRouter's own per-request figure | Reuses the same `LlmClient` seam and downstream pipeline unchanged; a model with no price entry is refused, not guessed | M3, ADR 0010 |
 
 ## 7. Risks and open questions
 

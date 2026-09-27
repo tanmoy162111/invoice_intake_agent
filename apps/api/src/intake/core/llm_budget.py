@@ -45,6 +45,11 @@ PRICES: dict[str, ModelPrice] = {
     "claude-opus-5-5": ModelPrice(4_000_000, 20_000_000),
     "claude-sonnet-5": ModelPrice(2_000_000, 10_000_000),
     "claude-haiku-4-5-20251001": ModelPrice(1_000_000, 5_000_000),
+    # Source: openrouter.ai/qwen/qwen2.5-vl-72b-instruct, checked 2026-09-28. OpenRouter (demo/
+    # manual-testing only, like Ollama) can route the same model slug through different upstream
+    # providers at slightly different prices; this is OpenRouter's own listed rate, not a
+    # per-request actual.
+    "qwen/qwen2.5-vl-72b-instruct": ModelPrice(800_000, 1_000_000),
 }
 
 
