@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M8b-2 (deciding from the browser, and the browser test), 2026-09-27.
+> **Last updated:** after M9 (the audit timeline), 2026-09-28.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -27,15 +27,17 @@ You can read only the first layer of each chapter and still understand the whole
 - **Why.** Accounts-payable teams do not lose time typing. They lose it on *exceptions*: an amount
   that does not match the purchase order, a duplicate, goods that never arrived, a supplier whose
   bank account suddenly changed. The product is built around explaining and routing those.
-- **Where we are.** Eight of fourteen milestones are built (M0 to M7 are merged) and M8 is well under way: the review API is merged and the review screens (sign in, queue, invoice, upload) are in review; acting from the browser is next.
+- **Where we are.** Nine of fourteen milestones are built (M0 to M9 are merged or ready to merge): a
+  reviewer can clear the whole queue from the browser, and every invoice now has a readable, exportable
+  history.
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
   *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change, and has this invoice been received before. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** Audit timeline (M9),
-  accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
-  proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
-- **Health.** 885 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
-  checks (CI) pass on the earlier pull requests.
+- **What is not built yet.** Accuracy report (M10), dashboard (M11), export (M12), demo polish (M13).
+  The reading step has been proved end to end with recorded answers; its accuracy with a real model has
+  **not** been measured yet.
+- **Health.** 1390 automated tests pass. The decision-logic code has 100% test coverage on the audit
+  timeline and 99.95% overall. Automated checks (CI) pass on the earlier pull requests.
 
 ### Status board
 
@@ -50,7 +52,7 @@ You can read only the first layer of each chapter and still understand the whole
 | M6 | 3-way matching | Invoice compared with PO and receipt | Built, merged (PR #7) |
 | M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Built, merged (PR #8) |
 | M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) merged (PR #9); M8b-1 (the screens) merged (PR #10); M8b-2a (deciding from the browser) and M8b-2b (the browser test in CI) built |
-| M9 | Audit timeline | Full readable history per invoice | Planned |
+| M9 | Audit timeline | Full readable history per invoice | Built |
 | M10 | Evaluation harness | Honest, published accuracy numbers | Planned |
 | M11 | Metrics dashboard | Business value at a glance | Planned |
 | M12 | Export and connectors | Approved invoices leave the system | Planned |
@@ -1055,12 +1057,85 @@ what was assumed; a selector matched the framework's own announcer), each fixed 
 
 ---
 
+### M9: Audit timeline
+
+*Goal: every invoice has a complete, readable history.*
+
+**In plain words.** Every invoice already had a tamper-proof trail of everything that happened to it,
+written as it happened (M1–M8) — but nobody could read it as a story. This step adds a *History* tab: one
+line per event, oldest first, in plain language ("Document received: invoice.pdf (2 page(s),
+application/pdf)", "Extraction completed: 14 field(s), 3 line(s), cost $0.0031", "Field corrected:
+payment_terms"), each naming who or what did it (the system, the reading model, or a reviewer by name) and
+when. Nothing here changes what is recorded, only how it is shown: the log itself stays exactly as it was
+(insert-only, never edited), including every model call and its cost. Opening *Raw details* on a line shows
+the underlying facts; *Download JSON* saves the whole history — which is also just the API response, since
+the full history already is the export the playbook asks for.
+
+**How it works.**
+
+```
+audit_events + llm_calls (already written by every earlier milestone)
+        │
+        ▼
+ one renderer per event type ─▶ plain-language sentence + the raw fields
+        │
+        ▼
+ merged, sorted oldest first ─▶ GET /invoices/<id>/audit ─▶ History tab (and Download JSON)
+```
+
+1. **Nothing new is written.** M9 adds no new audit events and no schema change; it reads the 20-odd event
+   types every earlier milestone already writes (`document_received`, `extraction_completed`,
+   `checks_completed`, `exception_raised`, `field_corrected`, `bank_details_revealed`, and so on), plus every
+   row of `llm_calls` for the invoice.
+2. **One template per event type**, in the same style as the exception taxonomy (playbook §7): a plain
+   sentence built only from the fields that event already carries. An `llm_calls` row becomes its own entry
+   ("Model call to claude-haiku-4-5-20251001 (ok): 1200 in / 300 out tokens, $0.0031, 850 ms"), so a retried
+   or cached call is visible, not just the extraction's own summary.
+3. **A type nobody has written a template for yet** still renders, as a generic sentence from its name,
+   instead of being dropped or crashing the endpoint — the history must always be complete, even for a code
+   added elsewhere before this file catches up.
+4. Events and calls are merged and sorted oldest first, breaking a tied timestamp by a stable id, so the
+   order never depends on how the two tables happened to be read.
+
+**Under the hood.**
+- **Pure core** `core/audit_timeline.py`: `AuditEventFacts` and `LlmCallFacts` in, a sorted list of
+  `TimelineEntry` (id, timestamp, actor, one-line summary, raw detail) out. No DB, no I/O. 100% covered
+  (39 unit tests, one per event type plus the cost formatter, the unknown-type fallback, and the sort).
+- **API** `GET /invoices/{invoice_id}/audit` in `api/invoices.py`: loads the invoice's `audit_events` and
+  `llm_calls` rows (tenant-scoped, same guard as every other invoice route), hands them to the core
+  renderer, returns `{invoice_id, entries[]}`. This *is* the JSON export; there is no separate endpoint.
+- **Web** a *History* tab on `/invoices/<id>` (`components/invoice/history-panel.tsx`), fetched alongside
+  the invoice detail (`lib/api/server.ts`, `getAuditTimeline`) and refreshed by the same
+  `revalidatePath` every reviewer action already triggers, so a correction or approval shows up in the
+  history at once. *Download JSON* saves the already-fetched response; no extra request.
+- `detail` never carries a corrected value, a note's text, or the bank account — only codes, field names
+  and numbers, matching what the audit log itself is allowed to hold (playbook §11, `review/service.py`).
+
+**What we proved.** (Against the real seeded pipeline over HTTP, `test_audit_api.py`.)
+
+| Check | Result |
+|---|---|
+| Every `audit_events` and `llm_calls` row for an invoice appears exactly once in the timeline | Yes |
+| The timeline is oldest first and spans the whole pipeline (receipt to routing) | Yes |
+| A model call appears as its own entry, attributed to the agent | Yes |
+| A reviewer's field correction appears attributed to the reviewer by name | Yes |
+| A bank reveal is in the timeline, but the account itself never is | Yes |
+| An unknown invoice id, or a malformed one | 404 / 422, same as the other invoice routes |
+| No session token | 401 |
+
+**Left open.**
+- No pagination: a very long-lived invoice's whole history is returned in one response. Not a problem at
+  demo scale (60–120 invoices, a few dozen events each).
+- The web timeline is not yet covered by a Playwright test (M8b-2b's suite predates this tab).
+- Login events (`login_succeeded`, `login_failed`) have no `invoice_id` and so never appear on any
+  invoice's timeline, by design; they remain visible only in the raw `audit_events` table.
+
+---
+
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
 |---|---|---|
-| **M8b-2 Reviewer actions** | Correct a field, close exceptions, approve, reject and ask for information from the browser, with a browser test (upload, review, approve) that runs in CI. | Clear the review queue |
-| **M9 Audit timeline** | A readable history of everything that happened to an invoice. | Answer "what happened to this invoice?" |
 | **M10 Accuracy report** | Measured accuracy per field and per document quality on the fixed golden set. | Publish honest numbers; false clear rate 0% |
 | **M11 Dashboard** | Invoices processed, touchless rate, exceptions by reason, cost per invoice, estimated savings (assumptions labelled). | Show business value |
 | **M12 Export** | Approved invoices leave as CSV or JSON, through a connector design that lets accounting systems be added later. Only approved invoices can be exported. | Hand data to accounting |
@@ -1139,6 +1214,8 @@ The build gates on decision-logic coverage of at least 90%.
 | An open invoice can go back to `extracted` (re-check) and a cleared one can be rejected | The playbook diagram had no way to act on a correction | M8a, ADR 0008 |
 | Bank accounts are shown masked; revealing one is a logged action | Playbook section 10 | M8a |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
+| The JSON export is the same `GET /invoices/{id}/audit` response, not a separate endpoint | The full history already is the export the playbook asks for | M9 |
+| An audit event type with no template yet still renders, generically, instead of failing the endpoint | The history must always be complete, even for a code a future milestone adds before this file catches up | M9 |
 
 ## 7. Risks and open questions
 

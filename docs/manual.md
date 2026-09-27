@@ -85,7 +85,8 @@ Each has a **severity**:
 ### The history (audit log)
 
 Everything that happens to an invoice is recorded: who or what did it, when, and why. The record
-**cannot be edited or deleted**; the database refuses.
+**cannot be edited or deleted**; the database refuses. See it on the *History* tab of an invoice, or
+at `GET /invoices/<id>/audit` (section 4.17).
 
 ---
 
@@ -523,6 +524,41 @@ reaches the browser (the web server holds the session in a cookie that scripts c
 document is shown as plain text, never as markup. Amounts are shown from whole minor units (cents), so what is
 on screen is what the checks used.
 
+### 4.17 See an invoice's history
+
+The *History* tab on `/invoices/<id>` lists every status change, check, exception, human action and model call
+for that invoice, oldest first, each with who or what did it, when, and a plain-language sentence ("Extraction
+completed: 14 field(s), 3 line(s), cost $0.0031"). Open *Raw details* on an entry to see the underlying fields.
+*Download JSON* saves the same list as a file.
+
+The same data is `GET /invoices/<id>/audit`:
+
+```bash
+curl -s -H "$AUTH" localhost:8000/invoices/<id>/audit
+```
+
+```json
+{
+  "invoice_id": "...",
+  "entries": [
+    {
+      "id": "event:1042",
+      "at": "2026-09-25T10:03:11Z",
+      "actor_type": "system",
+      "actor_id": "worker",
+      "summary": "Document received: invoice.pdf (2 page(s), application/pdf).",
+      "detail": {"event_type": "document_received", "document_id": "...", "filename": "invoice.pdf", "...": "..."}
+    }
+  ]
+}
+```
+
+This *is* the JSON export the history promises (section 2): there is no separate export endpoint, since the
+full history is already exactly what this returns. It is read from `audit_events` (append-only; section 2) and
+`llm_calls`, and never includes a corrected value, a note's text, or the bank account: `detail` carries only
+codes, field names and numbers, matching what the audit log itself is allowed to hold. An event type the
+manual has not caught up with yet still shows, with a generic sentence instead of the plain-language one.
+
 ---
 
 ## 5. Reference
@@ -560,6 +596,7 @@ invoice exception (section 6).
 | `POST /invoices/{invoice_id}/reject` | Reject, with a reason | Reviewer session |
 | `POST /invoices/{invoice_id}/request-info` | Record that information was requested | Reviewer session |
 | `POST /invoices/{invoice_id}/bank/reveal` | Show the bank account (logged) | Reviewer session |
+| `GET /invoices/{invoice_id}/audit` | The invoice's whole history, oldest first (this is the JSON export) | Yes |
 | `GET /openapi.json` | Machine-readable description of the API | Yes |
 
 Send the token as `Authorization: Bearer <token>`. Two kinds are accepted: the static `API_TOKEN` (for

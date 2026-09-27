@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import type { QueueStatus } from "../queue-params";
 import { getSessionToken } from "../session";
 import type { ExceptionCode } from "../labels";
-import type { InvoiceDetail, LoginOut, QueueOut, UploadOut } from "./types";
+import type { AuditOut, InvoiceDetail, LoginOut, QueueOut, UploadOut } from "./types";
 
 const apiUrl = process.env.API_URL ?? "http://localhost:8000";
 
@@ -47,11 +47,18 @@ async function json<T>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function login(username: string, password: string, visitor?: string): Promise<LoginOut> {
+export async function login(
+  username: string,
+  password: string,
+  visitor?: string,
+): Promise<LoginOut> {
   const res = await fetch(`${apiUrl}/auth/login`, {
     method: "POST",
     cache: "no-store",
-    headers: { "Content-Type": "application/json", ...(visitor ? { "X-Forwarded-For": visitor } : {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(visitor ? { "X-Forwarded-For": visitor } : {}),
+    },
     body: JSON.stringify({ username, password }),
   });
   if (!res.ok) throw new ApiError(res.status, await readDetail(res));
@@ -95,6 +102,10 @@ export async function getInvoice(id: string): Promise<InvoiceDetail> {
 
 export async function getPageImage(id: string, page: number): Promise<Response> {
   return authed(`/invoices/${encodeURIComponent(id)}/pages/${page}`);
+}
+
+export async function getAuditTimeline(id: string): Promise<AuditOut> {
+  return json<AuditOut>(await authed(`/invoices/${encodeURIComponent(id)}/audit`));
 }
 
 export async function uploadDocument(file: File): Promise<UploadOut> {

@@ -8,17 +8,24 @@ import { DecisionSummary } from "@/components/invoice/decision-summary";
 import { DocumentViewer } from "@/components/invoice/document-viewer";
 import { ExceptionCard } from "@/components/invoice/exception-card";
 import { FieldsPanel } from "@/components/invoice/fields-panel";
+import { HistoryPanel } from "@/components/invoice/history-panel";
 import { InvoiceActions } from "@/components/invoice/invoice-actions";
 import { LinesPanel } from "@/components/invoice/lines-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { InvoiceDetail } from "@/lib/api/types";
+import type { AuditOut, InvoiceDetail } from "@/lib/api/types";
 import { isKeyField } from "@/lib/labels";
 
 /** The document beside the findings. On a phone the document opens from a button instead. */
-export function InvoiceWorkspace({ detail }: { detail: InvoiceDetail }) {
+export function InvoiceWorkspace({ detail, audit }: { detail: InvoiceDetail; audit: AuditOut }) {
   const [page, setPage] = React.useState(1);
   const [sheet, setSheet] = React.useState(false);
   const open = detail.exceptions.filter((e) => e.status === "open").length;
@@ -27,7 +34,8 @@ export function InvoiceWorkspace({ detail }: { detail: InvoiceDetail }) {
 
   function jump(to: number) {
     setPage(to);
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) setSheet(true);
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches)
+      setSheet(true);
   }
 
   const viewer = (className?: string) => (
@@ -66,14 +74,23 @@ export function InvoiceWorkspace({ detail }: { detail: InvoiceDetail }) {
           <TabsList aria-label="Invoice details">
             <TabsTrigger value="exceptions">
               Exceptions
-              {open > 0 && <Badge tone="warn" className="px-1.5 font-mono tabular tracking-normal">{open}</Badge>}
+              {open > 0 && (
+                <Badge tone="warn" className="px-1.5 font-mono tabular tracking-normal">
+                  {open}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="fields">
               Fields
-              {weak > 0 && <Badge tone="warn" className="px-1.5 font-mono tabular tracking-normal">{weak}</Badge>}
+              {weak > 0 && (
+                <Badge tone="warn" className="px-1.5 font-mono tabular tracking-normal">
+                  {weak}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="lines">Lines</TabsTrigger>
             <TabsTrigger value="checks">Checks</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="exceptions" className="flex flex-col gap-4">
@@ -82,7 +99,9 @@ export function InvoiceWorkspace({ detail }: { detail: InvoiceDetail }) {
                 No exceptions were raised for this invoice.
               </p>
             ) : (
-              detail.exceptions.map((e, i) => <ExceptionCard key={e.id} exception={e} invoice={detail} index={i} />)
+              detail.exceptions.map((e, i) => (
+                <ExceptionCard key={e.id} exception={e} invoice={detail} index={i} />
+              ))
             )}
           </TabsContent>
           <TabsContent value="fields">
@@ -93,6 +112,9 @@ export function InvoiceWorkspace({ detail }: { detail: InvoiceDetail }) {
           </TabsContent>
           <TabsContent value="checks">
             <ChecksPanel detail={detail} />
+          </TabsContent>
+          <TabsContent value="history">
+            <HistoryPanel audit={audit} />
           </TabsContent>
         </Tabs>
       </div>

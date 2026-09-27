@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from intake.api.deps import require_user, session_dep, settings_dep, storage_dep
 from intake.config import Settings
+from intake.core.audit_timeline import AuditEventFacts, LlmCallFacts, build_timeline
 from intake.core.exceptions import ExceptionCode, Severity
 from intake.core.review import ExceptionState, ReviewProblem, approval_problem, confidence_reason
 from intake.core.statuses import ExceptionStatus, InvoiceStatus, ReviewAction
@@ -25,6 +26,7 @@ from intake.db.models import (
     Invoice,
     InvoiceException,
     InvoiceLine,
+    LlmCall,
     ReviewActionRow,
     Supplier,
 )
@@ -203,6 +205,20 @@ class RejectIn(BaseModel):
 
 class RevealOut(BaseModel):
     account: str
+
+
+class AuditEntryOut(BaseModel):
+    id: str
+    at: datetime
+    actor_type: str
+    actor_id: str | None
+    summary: str
+    detail: dict[str, Any]
+
+
+class AuditOut(BaseModel):
+    invoice_id: uuid.UUID
+    entries: list[AuditEntryOut]
 
 
 # ---- helpers ----------------------------------------------------------------------------------
@@ -517,6 +533,49 @@ def page_image(
         png, media_type="image/png",
         headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
     )  # fmt: skip
+
+
+@router.get("/{invoice_id}/audit", response_model=AuditOut)
+def audit_timeline(
+    invoice_id: uuid.UUID,
+    session: Annotated[Session, Depends(session_dep)],
+    settings: Annotated[Settings, Depends(settings_dep)],
+) -> AuditOut:
+    """The invoice's complete history (playbook M9): every status change, check, exception, human
+    action and model call, oldest first. This *is* the JSON export the playbook asks for; there is
+    no separate endpoint, since the full history is already exactly what this returns."""
+    tenant_id = _tenant(settings)
+    inv = _load(session, tenant_id, invoice_id)
+    events = [
+        AuditEventFacts(
+            id=str(e.id), actor_type=e.actor_type, actor_id=e.actor_id, event_type=e.event_type,
+            data=e.data, created_at=e.created_at,
+        )
+        for e in session.execute(
+            select(AuditEvent).where(
+                AuditEvent.tenant_id == tenant_id, AuditEvent.invoice_id == inv.id
+            )
+        ).scalars()
+    ]  # fmt: skip
+    calls = [
+        LlmCallFacts(
+            id=str(c.id), model=c.model, prompt_version=c.prompt_version,
+            input_tokens=c.input_tokens, output_tokens=c.output_tokens,
+            cost_usd_micros=c.cost_usd_micros, latency_ms=c.latency_ms, status=c.status,
+            created_at=c.created_at,
+        )
+        for c in session.execute(
+            select(LlmCall).where(LlmCall.tenant_id == tenant_id, LlmCall.invoice_id == inv.id)
+        ).scalars()
+    ]  # fmt: skip
+    entries = [
+        AuditEntryOut(
+            id=t.id, at=t.at, actor_type=t.actor_type, actor_id=t.actor_id, summary=t.summary,
+            detail=t.detail,
+        )
+        for t in build_timeline(events, calls)
+    ]  # fmt: skip
+    return AuditOut(invoice_id=inv.id, entries=entries)
 
 
 # ---- acting -----------------------------------------------------------------------------------

@@ -1,6 +1,75 @@
 {
   "components": {
     "schemas": {
+      "AuditEntryOut": {
+        "properties": {
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "actor_type": {
+            "title": "Actor Type",
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "detail": {
+            "additionalProperties": true,
+            "title": "Detail",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor_type",
+          "actor_id",
+          "summary",
+          "detail"
+        ],
+        "title": "AuditEntryOut",
+        "type": "object"
+      },
+      "AuditOut": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "invoice_id": {
+            "format": "uuid",
+            "title": "Invoice Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoice_id",
+          "entries"
+        ],
+        "title": "AuditOut",
+        "type": "object"
+      },
       "BankOut": {
         "properties": {
           "masked": {
@@ -2019,6 +2088,66 @@
           }
         },
         "summary": "Approve",
+        "tags": [
+          "invoices"
+        ]
+      }
+    },
+    "/invoices/{invoice_id}/audit": {
+      "get": {
+        "description": "The invoice's complete history (playbook M9): every status change, check, exception, human\naction and model call, oldest first. This *is* the JSON export the playbook asks for; there is\nno separate endpoint, since the full history is already exactly what this returns.",
+        "operationId": "audit_timeline_invoices__invoice_id__audit_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Timeline",
         "tags": [
           "invoices"
         ]

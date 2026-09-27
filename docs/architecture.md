@@ -236,7 +236,7 @@ match_invoice ─▶ enqueue route_invoice ─▶ read check_results, field conf
 - **Blank documents:** `db.invoices.fail_extraction` adds an `UNREADABLE_DOCUMENT` exception when reading fails
   for that reason; the invoice stays `failed` (playbook 5.2 allows only a retry from there).
 - **Not yet:** approving, rejecting and correcting (M8; correcting will re-run the checks and the routing),
-  `auto_approve_cleared`, and the history view (M9).
+  `auto_approve_cleared`.
 
 ## The web app (M8b-1)
 
@@ -290,4 +290,25 @@ POST corrections | exceptions/{id}/close | approve | reject | request-info | ban
   `image/png` with `nosniff`.
 - **Re-check.** After a correction the stages run in-process with `stop_waiting=True`; the routing stage skips
   exceptions a person already closed (`is_carried_over`).
-- **Not yet:** the browser screen (M8b), line corrections, a waiting status, and the history view (M9).
+- **Not yet:** line corrections and a waiting status.
+
+## The audit timeline (M9)
+
+```
+GET /invoices/{id}/audit
+  audit_events (tenant + invoice, all rows) ─┐
+                                              ├─▶ core/audit_timeline.build_timeline ─▶ entries[] (oldest first)
+  llm_calls    (tenant + invoice, all rows) ─┘        one renderer per event_type, sorted by (at, id)
+```
+
+- **Pure core** `core/audit_timeline.py`: `AuditEventFacts`/`LlmCallFacts` in, `TimelineEntry` (id, timestamp,
+  actor, one-line summary, raw detail) out. One template per known `event_type`, in the taxonomy style of
+  `core/exceptions.py`; an unrecognized type still renders, generically, rather than being dropped or failing
+  the request. `format_usd_micros` turns an `llm_calls` cost into a display string with integer arithmetic.
+- **API** `api/invoices.py::audit_timeline` (`GET /invoices/{invoice_id}/audit`): loads both tables tenant- and
+  invoice-scoped, hands the rows to the core renderer. No new tables, no new writes; this is a read model over
+  data every earlier milestone already records. It is also the JSON export the playbook asks for — the same
+  response, not a second endpoint.
+- **Web** `components/invoice/history-panel.tsx`, a *History* tab fetched in `invoices/[id]/page.tsx`
+  alongside the invoice detail and refreshed by the same `revalidatePath` a reviewer action already triggers.
+- **Not yet:** pagination (fine at demo scale), a Playwright test for the tab.
