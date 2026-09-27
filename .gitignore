@@ -19,3 +19,7 @@ build/
 
 # Browser automation scratch (screenshots, snapshots, console logs)
 .playwright-mcp/
+
+# Playwright output
+apps/web/test-results/
+apps/web/playwright-report/

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -6,6 +8,7 @@ from intake.core.llm_budget import UnknownModelError
 from intake.extract.factory import build_client
 from intake.extract.llm import AnthropicClient
 from intake.extract.ollama import OllamaClient
+from intake.extract.recorded import RecordedClient
 
 
 def settings(**kw: object) -> Settings:
@@ -49,3 +52,17 @@ def test_the_provider_must_be_a_known_one() -> None:
 
 def test_the_default_provider_is_anthropic() -> None:
     assert Settings().llm_provider == "anthropic"
+
+
+def test_recorded_replays_from_a_directory_and_needs_no_key(tmp_path: Path) -> None:
+    client = build_client(settings(llm_provider="recorded", recorded_dir=str(tmp_path)))
+    assert isinstance(client, RecordedClient) and client.model == "claude-sonnet-5"
+
+
+def test_recorded_without_a_directory_is_not_configured() -> None:
+    assert build_client(settings(llm_provider="recorded", recorded_dir="")) is None
+
+
+def test_recorded_is_refused_in_production() -> None:
+    with pytest.raises(ValidationError, match="recorded"):
+        settings(llm_provider="recorded", recorded_dir="/x", app_env="production")

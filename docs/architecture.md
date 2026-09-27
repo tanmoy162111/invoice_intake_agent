@@ -261,7 +261,9 @@ browser ── cookie ──▶ Next.js server ── Bearer <session> ──▶
 - **Acting (M8b-2a):** Server Actions in `app/(app)/invoices/[id]/actions.ts` call the API's review endpoints
   (approve, reject, request-info, corrections, exception close, bank reveal) through `lib/api/server.ts`, then
   revalidate the page. `lib/review-input.ts` holds the pure form rules. The API remains the authority.
-- **Not yet:** the browser test in CI and a recorded model provider for it (M8b-2b).
+- **Browser test (M8b-2b):** `apps/web/e2e` (Playwright) runs against a live stack started by `scripts/e2e.sh`
+  (`make e2e`, and a separate CI job). The worker uses `LLM_PROVIDER=recorded`, which replays saved answers from
+  `RECORDED_DIR` through the normal client interface; it is refused when `APP_ENV=production`.
 
 ## The review API (M8a)
 

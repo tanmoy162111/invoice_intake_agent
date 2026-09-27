@@ -42,7 +42,9 @@ class Settings(BaseSettings):
     max_image_pixels: int = 25_000_000
 
     # Which model backend reads invoices. "ollama" is an optional local, demo-only backend.
-    llm_provider: Literal["anthropic", "ollama"] = "anthropic"
+    # "recorded" replays saved answers from RECORDED_DIR (browser tests and CI; never production).
+    llm_provider: Literal["anthropic", "ollama", "recorded"] = "anthropic"
+    recorded_dir: str = ""
     ollama_base_url: str = "http://localhost:11434"
     ollama_num_ctx: int = 8192
 
@@ -92,6 +94,12 @@ class Settings(BaseSettings):
     def _no_date_override_in_production(self) -> "Settings":
         if self.app_env == "production" and self.validation_today is not None:
             raise ValueError("VALIDATION_TODAY must not be set when APP_ENV=production")
+        return self
+
+    @model_validator(mode="after")
+    def _no_recorded_answers_in_production(self) -> "Settings":
+        if self.app_env == "production" and self.llm_provider == "recorded":
+            raise ValueError("LLM_PROVIDER=recorded must not be used when APP_ENV=production")
         return self
 
     @property

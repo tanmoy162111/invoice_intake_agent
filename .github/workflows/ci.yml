@@ -56,3 +56,49 @@ jobs:
       - run: pnpm build
         env:
           API_URL: http://localhost:8000
+
+  e2e:
+    # The browser test: the real API, worker and web app on a scratch database, with recorded model
+    # answers (LLM_PROVIDER=recorded), so it never calls a model and costs nothing.
+    runs-on: ubuntu-latest
+    needs: [api, web]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: intake
+          POSTGRES_PASSWORD: intake
+          POSTGRES_DB: intake
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U intake" --health-interval 3s
+          --health-timeout 3s --health-retries 20
+    env:
+      E2E_DATABASE_URL: postgresql+psycopg://intake:intake@localhost:5432/intake
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+        working-directory: apps/api
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: ./scripts/e2e.sh
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7
