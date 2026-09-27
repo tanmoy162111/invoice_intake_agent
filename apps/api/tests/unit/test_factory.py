@@ -13,7 +13,15 @@ from intake.extract.recorded import RecordedClient
 
 
 def settings(**kw: object) -> Settings:
-    base: dict[str, object] = {"anthropic_api_key": "", "extraction_model": "claude-sonnet-5"}
+    # Every provider setting is pinned here, not just Anthropic's, so these tests are isolated from
+    # whatever a developer's own local .env happens to set (e.g. LLM_PROVIDER=openrouter while
+    # trying the OpenRouter backend by hand) unless a test explicitly overrides it.
+    base: dict[str, object] = {
+        "llm_provider": "anthropic",
+        "anthropic_api_key": "",
+        "extraction_model": "claude-sonnet-5",
+        "openrouter_api_key": "",
+    }
     return Settings(**{**base, **kw})  # type: ignore[arg-type]
 
 
@@ -52,7 +60,9 @@ def test_the_provider_must_be_a_known_one() -> None:
 
 
 def test_the_default_provider_is_anthropic() -> None:
-    assert Settings().llm_provider == "anthropic"
+    # _env_file=None: the class default, regardless of a developer's own local .env (e.g. while
+    # trying LLM_PROVIDER=openrouter by hand).
+    assert Settings(_env_file=None).llm_provider == "anthropic"  # type: ignore[call-arg]
 
 
 def test_recorded_replays_from_a_directory_and_needs_no_key(tmp_path: Path) -> None:

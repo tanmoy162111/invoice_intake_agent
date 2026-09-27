@@ -13,11 +13,13 @@ only, never real client data (see CLAUDE.md). API details follow openrouter.ai/d
 No `response_format` is sent: OpenRouter fans out to many different upstream providers with
 inconsistent support for it, so the schema is only carried in the prompt (like the Ollama client),
 and an answer that does not parse or does not fit is a retryable `LlmOutputError`, same as every
-other client.
+other client. Observed live (2026-09-28, qwen/qwen2.5-vl-72b-instruct): the answer often arrives
+wrapped in a ```json markdown fence rather than bare JSON, so a fence is stripped before parsing.
 """
 
 import base64
 import json
+import re
 import time
 import urllib.error
 import urllib.request
@@ -34,6 +36,7 @@ from intake.extract.llm import (
 )
 
 _URL_SUFFIX = "/chat/completions"
+_FENCE = re.compile(r"^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$", re.DOTALL)
 
 
 def _post_json(url: str, body: dict[str, Any], api_key: str, timeout_s: float) -> dict[str, Any]:
@@ -55,6 +58,13 @@ def _post_json(url: str, body: dict[str, Any], api_key: str, timeout_s: float) -
         raise TransientLlmError("provider unreachable") from None
     except json.JSONDecodeError:
         raise TransientLlmError("provider sent an unreadable reply") from None
+
+
+def _strip_code_fence(content: str) -> str:
+    """Some models wrap the answer in a ```json ... ``` fence despite the prompt asking for bare
+    JSON. Strip one if present; otherwise return the content unchanged."""
+    m = _FENCE.match(content)
+    return m.group(1) if m else content
 
 
 def _messages(request: LlmRequest) -> list[dict[str, Any]]:
@@ -121,7 +131,10 @@ class OpenRouterClient:
         if choice.get("finish_reason") == "length":
             raise LlmOutputError("answer was cut off at the token limit", **result_usage)
         try:
-            payload = json.loads(choice["message"]["content"])
+            content = choice["message"]["content"]
+            payload = json.loads(
+                _strip_code_fence(content) if isinstance(content, str) else content
+            )
         except (KeyError, TypeError, json.JSONDecodeError):
             raise LlmOutputError("answer was not valid JSON", **result_usage) from None
         if not isinstance(payload, dict):

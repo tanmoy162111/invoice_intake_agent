@@ -13,7 +13,7 @@ from intake.extract.llm import (
     PermanentLlmError,
     TransientLlmError,
 )
-from intake.extract.openrouter import OpenRouterClient
+from intake.extract.openrouter import OpenRouterClient, _strip_code_fence
 
 MODEL = "qwen/qwen2.5-vl-72b-instruct"
 
@@ -82,6 +82,29 @@ def ok_reply(content: str = '{"a": "1"}', **extra: Any) -> dict[str, Any]:
         "usage": {"prompt_tokens": 900, "completion_tokens": 120},
         **extra,
     }
+
+
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [
+        ('{"a": "1"}', '{"a": "1"}'),
+        ('```json\n{"a": "1"}\n```', '{"a": "1"}'),
+        ('```\n{"a": "1"}\n```', '{"a": "1"}'),
+        ('  ```json\n{"a": "1"}\n```  ', '{"a": "1"}'),
+        ("not fenced at all", "not fenced at all"),
+    ],
+)
+def test_strip_code_fence(content: str, expected: str) -> None:
+    assert _strip_code_fence(content) == expected
+
+
+def test_a_markdown_fenced_answer_still_parses(serve: Callable[[int, Any], Server]) -> None:
+    # Observed live from qwen/qwen2.5-vl-72b-instruct on 2026-09-28: the model wraps its JSON
+    # answer in a ```json fence despite the prompt asking for bare JSON.
+    fenced = '```json\n{\n  "a": "1"\n}\n```'
+    server = serve(200, ok_reply(fenced))
+    result = OpenRouterClient(model=MODEL, api_key="k", base_url=server.url).extract(REQ)
+    assert result.payload == {"a": "1"}
 
 
 def test_request_shape_and_result(serve: Callable[[int, Any], Server]) -> None:
