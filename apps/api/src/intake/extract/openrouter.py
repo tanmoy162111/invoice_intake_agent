@@ -15,6 +15,11 @@ inconsistent support for it, so the schema is only carried in the prompt (like t
 and an answer that does not parse or does not fit is a retryable `LlmOutputError`, same as every
 other client. Observed live (2026-09-28, qwen/qwen2.5-vl-72b-instruct): the answer often arrives
 wrapped in a ```json markdown fence rather than bare JSON, so a fence is stripped before parsing.
+
+Also observed live: HTTP 402 with `"in_flight_budget_exhausted"` ("this request would exceed your
+available credits given your current in-flight requests... retry after in-flight requests settle")
+is OpenRouter's own advice to retry, not a rejection of the request itself - treated as transient,
+like a rate limit, rather than permanent.
 """
 
 import base64
@@ -39,6 +44,17 @@ _URL_SUFFIX = "/chat/completions"
 _FENCE = re.compile(r"^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$", re.DOTALL)
 
 
+def _is_in_flight_budget_error(exc: urllib.error.HTTPError) -> bool:
+    """OpenRouter's 402 for a request that would exceed the account's in-flight budget names this
+    reason and explicitly asks for a retry; a 402 for any other reason (e.g. truly out of credits)
+    does not, and stays permanent. Never raises: an unreadable body just means "not this reason"."""
+    try:
+        body = json.loads(exc.read())
+        return bool(body["error"]["metadata"]["reason"] == "in_flight_budget_exhausted")
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 def _post_json(url: str, body: dict[str, Any], api_key: str, timeout_s: float) -> dict[str, Any]:
     req = urllib.request.Request(  # noqa: S310 - url is always https://openrouter.ai/...
         url,
@@ -53,6 +69,10 @@ def _post_json(url: str, body: dict[str, Any], api_key: str, timeout_s: float) -
     except urllib.error.HTTPError as exc:
         if exc.code >= 500 or exc.code in (408, 429):
             raise TransientLlmError("provider unavailable or rate limited") from None
+        if exc.code == 402 and _is_in_flight_budget_error(exc):
+            raise TransientLlmError(
+                "provider asked to retry once in-flight requests settle"
+            ) from None
         raise PermanentLlmError(f"provider rejected the request (HTTP {exc.code})") from None
     except (urllib.error.URLError, ConnectionError, TimeoutError):
         raise TransientLlmError("provider unreachable") from None

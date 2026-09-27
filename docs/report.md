@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M8b-2 (deciding from the browser, and the browser test), 2026-09-27.
+> **Last updated:** after M10 (the evaluation harness), 2026-09-28.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -27,14 +27,16 @@ You can read only the first layer of each chapter and still understand the whole
 - **Why.** Accounts-payable teams do not lose time typing. They lose it on *exceptions*: an amount
   that does not match the purchase order, a duplicate, goods that never arrived, a supplier whose
   bank account suddenly changed. The product is built around explaining and routing those.
-- **Where we are.** Eight of fourteen milestones are built (M0 to M7 are merged) and M8 is well under way: the review API is merged and the review screens (sign in, queue, invoice, upload) are in review; acting from the browser is next.
+- **Where we are.** Eight of fourteen milestones are built (M0 to M8 built or well under way) and
+  **M10's evaluation harness now exists and has been run for real**: the pipeline's accuracy is
+  measured, not assumed.
   A file can be uploaded, safely stored, deduplicated, turned into page images, classified, and now
   *read into fields*: supplier, dates, amounts and lines, each with a confidence score, and then *checked*: does the maths add up, are the dates sane, is the supplier known, did the bank account change, and has this invoice been received before. A realistic
   demo world of 120 invoices exists to test against.
-- **What is not built yet.** Audit timeline (M9),
-  accuracy report (M10), dashboard (M11), export (M12), demo polish (M13). The reading step has been
-  proved end to end with recorded answers; its accuracy with a real model has **not** been measured yet.
-- **Health.** 885 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
+- **What is not built yet.** Audit timeline (M9), dashboard (M11), export (M12), demo polish (M13).
+  M10's first real report used an OpenRouter/open-weight model, not Claude (a non-reference build,
+  clearly labelled); the Claude-based reference numbers still await a run with an Anthropic key.
+- **Health.** 1190 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
   checks (CI) pass on the earlier pull requests.
 
 ### Status board
@@ -51,7 +53,7 @@ You can read only the first layer of each chapter and still understand the whole
 | M7 | Exceptions and routing | Plain-language explanation and next step for every problem | Built, merged (PR #8) |
 | M8 | Review queue UI | A reviewer clears the queue in a browser | M8a (the API) merged (PR #9); M8b-1 (the screens) merged (PR #10); M8b-2a (deciding from the browser) and M8b-2b (the browser test in CI) built |
 | M9 | Audit timeline | Full readable history per invoice | Planned |
-| M10 | Evaluation harness | Honest, published accuracy numbers | Planned |
+| M10 | Evaluation harness | Honest, published accuracy numbers | Built |
 | M11 | Metrics dashboard | Business value at a glance | Planned |
 | M12 | Export and connectors | Approved invoices leave the system | Planned |
 | M13 | Demo polish | Rehearsed demo, reset button, video | Planned |
@@ -1057,13 +1059,121 @@ what was assumed; a selector matched the framework's own announcer), each fixed 
 
 ---
 
+### M10: Evaluation harness
+
+*Goal: we can publish honest accuracy numbers.*
+
+**In plain words.** Until now, "does the reader work?" was answered by tests built from the answer
+key - proof the pipeline plumbing works, never proof the model reads correctly. This milestone runs
+the real pipeline over the 60-document golden set and measures it: how often each field is read
+correctly, split by whether the document was a clean PDF, a scan, or a phone photo; how many of the
+lines match; how many planted problems were caught and how many false alarms were raised; how much
+of the queue would need no person at all (touchless); the cost and time per invoice; and, the number
+that matters most, **the false clear rate - how many invoices with a real problem were let straight
+through without a check.** It must be 0%, and now it is measured, not assumed.
+
+**How it works.**
+
+```
+eval/run_eval.py
+  ingest 60 golden docs ─▶ the real job queue (whichever model backend is configured)
+        │
+        └─▶ pipeline settles ─▶ read back what actually landed in the database
+                                    │
+                    compare each invoice against data/golden/truth/*.json
+                                    │
+                        aggregate ─▶ eval/reports/YYYY-MM-DD-<sha>.md
+```
+
+1. **`make eval`** resets the pipeline tables (same as `make seed`), ingests the golden set, and
+   drains the real job queue with the project's real handlers - the same extraction, validation,
+   duplicate, matching and routing code every invoice already goes through, not a shortcut.
+2. **Facts come from the database**, after the pipeline has settled: the invoice row, its lines,
+   its field extractions, its exceptions, its model calls. The bank account is decrypted (never
+   stored in the clear) purely so accuracy on that field can be measured too, the same way a
+   reviewer's reveal already works.
+3. **Each invoice is compared against its ground truth**: field by field (exact match on the same
+   typed value the pipeline itself decided with - an amount in minor units, a date, normalized
+   text), lines by amount and quantity, planted problems against exceptions actually raised, and
+   whether it was routed straight through against whether it truly had no problem.
+4. **The report** states the false clear rate first, then touchless rate, exception recall and
+   precision, line-item F1, cost and latency, then a full field-accuracy table, overall and split by
+   document quality. A run with anything other than the Claude backend is stamped a non-reference
+   build in the report itself.
+5. **`make eval-ci`** replays a small subset from real, previously-captured answers, so CI proves
+   the harness and comparison logic still work on every change, for free.
+
+**Under the hood.**
+- **Pure core** `core/eval_metrics.py`: `compare_invoice` (one invoice's facts against its truth) and
+  `aggregate` (every metric in playbook §8.2). `intake/eval_report.py` renders the markdown. Neither
+  touches a database, a file, or the network - test-first, 100% covered.
+- **Script** `eval/run_eval.py`: ingestion, job draining (with backoff, not just one pass),
+  reassembling `core.extraction.Interpreted` from the stored rows, and writing the report and an
+  `eval_runs` row. Reuses the real `HANDLERS` and `build_client`, so model choice stays configuration,
+  never eval-specific code (ADR 0011).
+- **CI** (`.github/workflows/ci.yml`): a new job runs `make eval-ci` against a fresh database with
+  real, committed fixtures in `data/golden/recorded/` - free and deterministic, but real model output.
+- ADR 0011 records the design decisions (reusing the real pipeline, reconstructing facts from the
+  database rather than capturing them in flight, decrypting the bank account for comparison only).
+
+**What we proved.**
+
+*First real run: `qwen/qwen2.5-vl-72b-instruct` through OpenRouter (a non-reference build - see the
+banner in the committed report; the Claude-based reference numbers still await a run with an
+Anthropic key). Only 3 of the 60 golden documents, not the full set - see why below - so this is
+proof the harness is mechanically correct end to end against a live model, not a statistically
+meaningful accuracy claim. The false clear rate, in particular, needs the full golden set to mean
+anything; 0 false clears out of 3 is not evidence it stays 0 out of 60.*
+
+| Metric | Result (3 invoices) |
+|---|---|
+| False clear rate (must be 0%) | 0% (0 of 3) - too small a sample to draw a conclusion from |
+| Touchless rate | 66.7% (2 of 3 routed straight through) |
+| Exception recall / precision | 100% / 50% |
+| Line-item F1 | 100% |
+| Field accuracy | 100% on every field except `supplier_bank_account` (0%, an artefact of this
+  recovery run losing its encryption key when the process was interrupted, not a real misread -
+  explained in the committed report) |
+| Mean cost per invoice | $0.0059 |
+| Latency (p50 / p95) | inflated by the retries below (89 s / 321 s); not representative of steady state |
+| Automated tests | 1190 pass; `core/eval_metrics.py` and `intake/eval_report.py` 100% covered |
+
+Full breakdown, with the caveats above stated in the file itself:
+[`eval/reports/2026-09-27-a-partial-run.md`](../eval/reports/2026-09-27-a-partial-run.md).
+
+**Why only 3 invoices.** The full 59-document run surfaced two real bugs in the same session, both
+fixed with regression tests (`extract/openrouter.py`): a 402 OpenRouter returns when a request would
+exceed its "in-flight budget" is its own advice to retry, not a rejection, and was wrongly treated as
+permanent; separately, `EXTRACT_MAX_OUTPUT_TOKENS` (8000) needed lowering to fit what the trial
+account could afford per request. After both fixes, the account's trial credits ran out entirely
+partway through - a real external limit, not a bug - after 3 invoices had already completed cleanly.
+Stopping there and reporting exactly what was proven, rather than waiting on more credits or padding
+the numbers, matched what was asked for at the time.
+
+**Left open.**
+- **The full 60-document golden-set run has not happened yet.** It needs either more OpenRouter
+  credits or an `ANTHROPIC_API_KEY` for the reference build; nothing about the harness itself blocks
+  it.
+- The harness runs one invoice at a time (no worker concurrency in the script), so a full 60-document
+  run takes on the order of half an hour with a real model, longer again if the account hits rate
+  limits on a shared/free routing pool (observed: `qwen/qwen2.5-vl-72b-instruct` via OpenRouter's
+  shared pool).
+- No trend over time yet: `eval_runs` rows land wherever `DATABASE_URL` points, which is typically a
+  database meant to be reset; the durable artifact is the committed report file (a dashboard reading
+  `eval_runs` for a trend arrives with M11).
+- `data/golden/recorded/` (the CI subset) only has 3 real fixtures for now, matching what actually
+  completed; `make eval-ci`'s default `SUBSET` is 3 until more are captured.
+- `RECORDED_DIR` fixtures are tied to the model and prompt version they were captured with, same as
+  every other `RecordedClient` use.
+
+---
+
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
 |---|---|---|
 | **M8b-2 Reviewer actions** | Correct a field, close exceptions, approve, reject and ask for information from the browser, with a browser test (upload, review, approve) that runs in CI. | Clear the review queue |
 | **M9 Audit timeline** | A readable history of everything that happened to an invoice. | Answer "what happened to this invoice?" |
-| **M10 Accuracy report** | Measured accuracy per field and per document quality on the fixed golden set. | Publish honest numbers; false clear rate 0% |
 | **M11 Dashboard** | Invoices processed, touchless rate, exceptions by reason, cost per invoice, estimated savings (assumptions labelled). | Show business value |
 | **M12 Export** | Approved invoices leave as CSV or JSON, through a connector design that lets accounting systems be added later. Only approved invoices can be exported. | Hand data to accounting |
 | **M13 Demo polish** | Rehearsed 2 to 3 minute demo, one-command reset, recording. | Show it to clients |
@@ -1142,6 +1252,8 @@ The build gates on decision-logic coverage of at least 90%.
 | Bank accounts are shown masked; revealing one is a logged action | Playbook section 10 | M8a |
 | Local (Ollama) backend is optional and demo-only | No data leaves the machine, but accuracy is lower and does not transfer | M3 |
 | An OpenRouter backend is optional and demo/manual-testing-only; structured output is asked for by prompt only, never `response_format` or tools; cost is a static table entry, never OpenRouter's own per-request figure | Reuses the same `LlmClient` seam and downstream pipeline unchanged; a model with no price entry is refused, not guessed | M3, ADR 0010 |
+| The eval harness reuses the real pipeline and reads facts back from the database, rather than capturing them in flight or re-implementing extraction | Measures what actually landed in the database - the same place a reviewer or an export would read from | M10, ADR 0011 |
+| A non-Anthropic eval run is stamped `⚠ Non-reference build` in the report itself, not only in a doc | A report from an alternate backend can never be mistaken for the Claude-based reference numbers | M10, ADR 0010, ADR 0011 |
 
 ## 7. Risks and open questions
 

@@ -291,3 +291,37 @@ POST corrections | exceptions/{id}/close | approve | reject | request-info | ban
 - **Re-check.** After a correction the stages run in-process with `stop_waiting=True`; the routing stage skips
   exceptions a person already closed (`is_carried_over`).
 - **Not yet:** the browser screen (M8b), line corrections, a waiting status, and the history view (M9).
+
+## Evaluation harness (M10)
+
+```
+eval/run_eval.py
+  ingest 60 golden docs ─▶ the real job queue (HANDLERS, whichever LLM_PROVIDER is configured)
+        │
+        └─▶ pipeline settles ─▶ read back Invoice, InvoiceLine, FieldExtraction,
+                                 InvoiceException, LlmCall rows
+                                    │
+                    core/eval_metrics.compare_invoice (per invoice, vs data/golden/truth/*.json)
+                                    │
+                    core/eval_metrics.aggregate ─▶ Metrics ─▶ intake/eval_report.render_report
+                                    │
+                        eval/reports/YYYY-MM-DD-<sha>.md  +  an eval_runs row
+```
+
+- **Reuses the real pipeline**, not a shortcut: `UploadIngestor` and the project's actual `HANDLERS`
+  (`make_extract_handler()`'s default client factory is `build_client`, so whatever `LLM_PROVIDER` /
+  `EXTRACTION_MODEL` is configured runs automatically - no eval-specific model-selection code).
+  `eval/run_eval.py::drain` waits out a transient failure's backoff instead of stopping the moment
+  nothing is immediately claimable.
+- **Pure core** `core/eval_metrics.py`: `compare_invoice` (one invoice's DB-reconstructed
+  `Interpreted` against its golden truth - exact match on typed values, never a formatted string) and
+  `aggregate` (every metric in playbook §8.2, overall and split by `doc_quality`). `intake/eval_report.py`
+  renders the markdown; a non-`anthropic` provider gets a `⚠ Non-reference build` banner (ADR 0010).
+- **The bank account is decrypted for comparison only**: `field_extractions.normalized_value` is a
+  keyed hash by design, so the eval script decrypts the sealed raw value with the same `BankVault`
+  to measure accuracy without weakening what is actually stored (ADR 0011).
+- **CI subset** (`make eval-ci`): a small `SUBSET` replayed from real, previously-captured answers in
+  `data/golden/recorded/` via `RecordedClient` - free, deterministic, but real model output, not a
+  synthetic fixture.
+- **Not yet:** the dashboard reading `eval_runs` for a trend over time (M11); worker concurrency in
+  the harness itself (one invoice at a time, ~30-40 min for a full 60-document run).

@@ -183,6 +183,35 @@ def test_client_errors_are_permanent_and_do_not_leak_the_reply(
     assert "secret" not in str(info.value)
 
 
+def test_402_in_flight_budget_exhausted_is_retryable_not_permanent(
+    serve: Callable[[int, Any], Server],
+) -> None:
+    # Observed live: OpenRouter's own advice is "retry after in-flight requests settle".
+    reply = {
+        "error": {
+            "message": "This request would exceed your available credits...",
+            "code": 402,
+            "metadata": {"reason": "in_flight_budget_exhausted"},
+        }
+    }
+    server = serve(402, reply)
+    with pytest.raises(TransientLlmError):
+        OpenRouterClient(model=MODEL, api_key="k", base_url=server.url).extract(REQ)
+
+
+def test_402_for_any_other_reason_stays_permanent(serve: Callable[[int, Any], Server]) -> None:
+    reply = {"error": {"message": "insufficient credits", "code": 402, "metadata": {}}}
+    server = serve(402, reply)
+    with pytest.raises(PermanentLlmError):
+        OpenRouterClient(model=MODEL, api_key="k", base_url=server.url).extract(REQ)
+
+
+def test_402_with_an_unreadable_body_stays_permanent(serve: Callable[[int, Any], Server]) -> None:
+    server = serve(402, b"not json")
+    with pytest.raises(PermanentLlmError):
+        OpenRouterClient(model=MODEL, api_key="k", base_url=server.url).extract(REQ)
+
+
 def test_unreachable_server_is_retryable() -> None:
     with pytest.raises(TransientLlmError):
         OpenRouterClient(

@@ -57,6 +57,36 @@ jobs:
         env:
           API_URL: http://localhost:8000
 
+  eval:
+    # The evaluation harness's CI subset (playbook §8.3, M10): a handful of golden-set invoices
+    # replayed from real, previously-captured answers (data/golden/recorded/), so it never calls a
+    # model and costs nothing, but still catches a gross pipeline regression. The full golden-set
+    # report (`make eval`) is run by hand, costs real model spend, and is committed manually.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: intake
+          POSTGRES_PASSWORD: intake
+          POSTGRES_DB: intake
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U intake" --health-interval 3s
+          --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+psycopg://intake:intake@localhost:5432/intake
+      STORAGE_DIR: /tmp/eval-storage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+        working-directory: apps/api
+      - run: uv run alembic upgrade head
+        working-directory: apps/api
+      - run: make eval-ci
+
   e2e:
     # The browser test: the real API, worker and web app on a scratch database, with recorded model
     # answers (LLM_PROVIDER=recorded), so it never calls a model and costs nothing.

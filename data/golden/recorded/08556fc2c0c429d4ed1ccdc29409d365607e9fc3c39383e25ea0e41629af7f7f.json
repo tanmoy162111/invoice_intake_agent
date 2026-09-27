@@ -1,0 +1,137 @@
+{
+  "input_tokens": 6318,
+  "output_tokens": 911,
+  "payload": {
+    "currency": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "$"
+    },
+    "due_date": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "2026-08-25"
+    },
+    "invoice_date": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "2026-07-26"
+    },
+    "invoice_number": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "BL-2026-0540"
+    },
+    "lines": [
+      {
+        "amount": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "$129.00"
+        },
+        "description": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "Ballpoint pens, box of 50"
+        },
+        "quantity": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "10"
+        },
+        "sku": {
+          "page": null,
+          "self_confidence": "high",
+          "value": null
+        },
+        "tax_rate": {
+          "page": null,
+          "self_confidence": "high",
+          "value": null
+        },
+        "unit_price": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "$12.90"
+        }
+      },
+      {
+        "amount": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "$895.00"
+        },
+        "description": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "Toner cartridge, black"
+        },
+        "quantity": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "10"
+        },
+        "sku": {
+          "page": null,
+          "self_confidence": "high",
+          "value": null
+        },
+        "tax_rate": {
+          "page": null,
+          "self_confidence": "high",
+          "value": null
+        },
+        "unit_price": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "$89.50"
+        }
+      }
+    ],
+    "payment_terms": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "Net 30"
+    },
+    "po_number": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "PO-10089"
+    },
+    "subtotal": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "$1,024.00"
+    },
+    "supplier_address": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "347 Harbour Rd, Portland, OR"
+    },
+    "supplier_bank_account": {
+      "page": null,
+      "self_confidence": "high",
+      "value": null
+    },
+    "supplier_name": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "Brightline Office Supplies Inc."
+    },
+    "supplier_tax_id": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "69-9397618"
+    },
+    "tax_total": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "$81.92"
+    },
+    "total": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "$1,105.92"
+    }
+  }
+}

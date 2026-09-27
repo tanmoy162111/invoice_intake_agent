@@ -33,8 +33,13 @@ gen-api:        ## regenerate the web app's API types from the code (or from a r
 demo-pipeline:  ## run the seed invoices through the real pipeline with recorded answers (needs DATABASE_URL, STORAGE_DIR)
 	uv run --project apps/api python scripts/load-demo-pipeline.py
 
-eval:           ## full evaluation (costs money; arrives in M10)
-	@echo "eval: not implemented yet (M10)"
+eval:           ## full evaluation on the golden set (costs money: uses the configured model backend)
+	uv run --project apps/api python eval/run_eval.py
+
+eval-ci:        ## free, deterministic eval subset with recorded answers (what CI runs)
+	RECORDED_DIR=data/golden/recorded SUBSET=$${SUBSET:-3} LLM_PROVIDER=recorded \
+		EXTRACTION_MODEL=qwen/qwen2.5-vl-72b-instruct \
+		uv run --project apps/api python eval/run_eval.py
 
 demo-reset:     ## reset to the clean demo state (arrives in M13)
 	@echo "demo-reset: not implemented yet (M13)"

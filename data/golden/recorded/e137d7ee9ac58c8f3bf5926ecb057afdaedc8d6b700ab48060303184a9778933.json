@@ -1,0 +1,105 @@
+{
+  "input_tokens": 6304,
+  "output_tokens": 720,
+  "payload": {
+    "currency": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "$"
+    },
+    "due_date": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "July 19, 2026"
+    },
+    "invoice_date": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "June 19, 2026"
+    },
+    "invoice_number": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "MIP-2026-0893"
+    },
+    "lines": [
+      {
+        "amount": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "$758.40"
+        },
+        "description": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "Industrial lubricant, 5L"
+        },
+        "quantity": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "12"
+        },
+        "sku": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "MIP-LUB-5L"
+        },
+        "tax_rate": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "6%"
+        },
+        "unit_price": {
+          "page": 1,
+          "self_confidence": "high",
+          "value": "$63.20"
+        }
+      }
+    ],
+    "payment_terms": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "Net 30"
+    },
+    "po_number": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "PO-10042"
+    },
+    "subtotal": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "$758.40"
+    },
+    "supplier_address": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "422 Oak Ave, Austin, TX"
+    },
+    "supplier_bank_account": {
+      "page": null,
+      "self_confidence": "high",
+      "value": null
+    },
+    "supplier_name": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "Meridian Industrial Parts LLC"
+    },
+    "supplier_tax_id": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "38-2698816"
+    },
+    "tax_total": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "$45.50"
+    },
+    "total": {
+      "page": 1,
+      "self_confidence": "high",
+      "value": "$803.90"
+    }
+  }
+}
