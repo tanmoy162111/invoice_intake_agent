@@ -36,7 +36,7 @@ You can read only the first layer of each chapter and still understand the whole
 - **What is not built yet.** Audit timeline (M9), dashboard (M11), export (M12), demo polish (M13).
   M10's first real report used an OpenRouter/open-weight model, not Claude (a non-reference build,
   clearly labelled); the Claude-based reference numbers still await a run with an Anthropic key.
-- **Health.** 1190 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
+- **Health.** 1191 automated tests pass. The decision-logic code has 99.9% test coverage. Automated
   checks (CI) pass on the earlier pull requests.
 
 ### Status board
@@ -1136,10 +1136,10 @@ anything; 0 false clears out of 3 is not evidence it stays 0 out of 60.*
   explained in the committed report) |
 | Mean cost per invoice | $0.0059 |
 | Latency (p50 / p95) | inflated by the retries below (89 s / 321 s); not representative of steady state |
-| Automated tests | 1190 pass; `core/eval_metrics.py` and `intake/eval_report.py` 100% covered |
+| Automated tests | 1191 pass; `core/eval_metrics.py` and `intake/eval_report.py` 100% covered |
 
 Full breakdown, with the caveats above stated in the file itself:
-[`eval/reports/2026-09-27-a-partial-run.md`](../eval/reports/2026-09-27-a-partial-run.md).
+[`eval/reports/2026-09-27-af27b81.md`](../eval/reports/2026-09-27-af27b81.md).
 
 **Why only 3 invoices.** The full 59-document run surfaced two real bugs in the same session, both
 fixed with regression tests (`extract/openrouter.py`): a 402 OpenRouter returns when a request would
