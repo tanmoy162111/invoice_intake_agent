@@ -152,7 +152,13 @@ def text_in_text(value: str, text: str) -> bool:
 
 
 _UNAMBIGUOUS = {"EUR": "€", "GBP": "£"}
-_AMBIGUOUS = {"USD": "$", "JPY": "¥"}  # $ is also CAD/AUD and ¥ is also CNY
+# `A$`, `AU$` and `NZ$` name their currency (not preceded by a letter, so not `CA$`).
+_PREFIXED_DOLLAR = {
+    "AUD": re.compile(r"(?<![A-Za-z])A\$|(?<![A-Za-z])AU\$"),
+    "NZD": re.compile(r"(?<![A-Za-z])NZ\$"),
+}
+_BARE_DOLLAR = re.compile(r"(?<![A-Za-z])\$")
+_AMBIGUOUS = {"USD": "$", "JPY": "¥"}  # $ is also CAD/AUD/NZD and ¥ is also CNY
 
 
 def currency_agreement(code: str, text: str) -> bool | None:
@@ -162,6 +168,10 @@ def currency_agreement(code: str, text: str) -> bool | None:
         return True
     if (symbol := _UNAMBIGUOUS.get(code)) and symbol in text:
         return True
+    if (prefixed := _PREFIXED_DOLLAR.get(code)) and prefixed.search(text):
+        return True
+    if code in _PREFIXED_DOLLAR and _BARE_DOLLAR.search(text):
+        return None  # a bare $ is not evidence either way
     if (symbol := _AMBIGUOUS.get(code)) and symbol in text:
         return None
     return False

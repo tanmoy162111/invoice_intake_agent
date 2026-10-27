@@ -1,0 +1,64 @@
+{
+  "id": "inv-903",
+  "file": "Ironbark-IB-5520.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 903,
+  "readable": true,
+  "supplier_key": "ironbark",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Ironbark Industrial Supplies Pty Ltd",
+    "supplier_tax_id": "48 757 092 402",
+    "supplier_address": "9 Wharf Road, Brisbane QLD 4000",
+    "supplier_bank_account": "BSB 124-001 / Acct 3305 7716",
+    "invoice_number": "IB-5520",
+    "invoice_date": "2026-09-21",
+    "due_date": "2026-10-21",
+    "po_number": "PO-AU902",
+    "currency": "AUD",
+    "subtotal_minor": 129600,
+    "tax_total_minor": 12960,
+    "total_minor": 142560,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "M10 x 50 bolts, box of 100",
+      "sku": null,
+      "quantity": 15,
+      "unit_price_minor": 3880,
+      "amount_minor": 58200,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "M10 washers, box of 500",
+      "sku": null,
+      "quantity": 8,
+      "unit_price_minor": 2475,
+      "amount_minor": 19800,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Cut-resistant gloves, large",
+      "sku": null,
+      "quantity": 40,
+      "unit_price_minor": 1290,
+      "amount_minor": 51600,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": [],
+  "supplement": "au_nz"
+}

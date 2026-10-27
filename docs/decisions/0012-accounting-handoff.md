@@ -20,7 +20,8 @@ timeout can mean "created" or "not created".
 - **`unknown` is a real state.** After a possible write, nothing is retried; reconciliation or a person decides.
   Only failures the provider cannot have acted on (no connection, HTTP 429) are retried, three times at most.
 - **AUD and NZD** are added to the supported currencies (two decimals). This is a change to a shared rule; it only
-  adds currencies that were previously rejected.
+  adds currencies that were previously rejected. It was only half the job (a printed `$`, `A$` or `NZ$` was
+  not read as AUD or NZD); that was found when the AUD/NZD golden supplement was built and fixed in ADR 0013.
 - **No automatic contact creation, no expense account, no tax guessing** in this version.
 - **Tokens** are Fernet-encrypted with their own key and refreshed under a row lock; one connection per tenant
   because refresh tokens rotate.

@@ -1,0 +1,64 @@
+{
+  "id": "inv-905",
+  "file": "Kowhai-KS-70412.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 905,
+  "readable": true,
+  "supplier_key": "kowhai",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Kowhai Stationery Limited",
+    "supplier_tax_id": null,
+    "supplier_address": "52 Queen Street, Auckland 1010",
+    "supplier_bank_account": "12-3042-0198557-00",
+    "invoice_number": "KS-70412",
+    "invoice_date": "2026-09-10",
+    "due_date": "2026-10-10",
+    "po_number": "PO-NZ904",
+    "currency": "NZD",
+    "subtotal_minor": 108925,
+    "tax_total_minor": 16339,
+    "total_minor": 125264,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Exercise books, 80 page, pack of 20",
+      "sku": null,
+      "quantity": 30,
+      "unit_price_minor": 2490,
+      "amount_minor": 74700,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Whiteboard markers, box of 12",
+      "sku": null,
+      "quantity": 15,
+      "unit_price_minor": 1850,
+      "amount_minor": 27750,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Staples 26/6, 20 boxes",
+      "sku": null,
+      "quantity": 5,
+      "unit_price_minor": 1295,
+      "amount_minor": 6475,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": [],
+  "supplement": "au_nz"
+}

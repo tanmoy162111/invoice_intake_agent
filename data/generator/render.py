@@ -208,11 +208,18 @@ LAYOUTS: dict[str, Layout] = {
 # ----------------------------------------------------------------------------- formatting
 
 
-def fmt_amount(minor: int, currency: str) -> str:
+def fmt_amount(minor: int, currency: str, style: str = "symbol") -> str:
     sign = "-" if minor < 0 else ""
     whole, frac = divmod(abs(minor), 100)
     if currency == "EUR":
         return f"{sign}{whole:,}".replace(",", ".") + f",{frac:02d} EUR"
+    if currency in ("AUD", "NZD"):
+        number = f"{whole:,}.{frac:02d}"
+        if style == "prefixed":
+            return f"{sign}{'A' if currency == 'AUD' else 'NZ'}${number}"
+        if style == "code":
+            return f"{sign}{currency} {number}"
+        return f"{sign}${number}"
     symbol = {"USD": "$", "GBP": "£"}[currency]
     return f"{sign}{symbol}{whole:,}.{frac:02d}"
 
@@ -281,7 +288,13 @@ def draw_invoice(
     cv.put(sup_x, y, inv.supplier_address, size=9, align=sup_align)
     if cfg.show_tax_id:
         y -= 12
-        cv.put(sup_x, y, f"{cfg.labels['tax_id']}: {inv.supplier_tax_id}", size=9, align=sup_align)
+        cv.put(
+            sup_x,
+            y,
+            f"{inv.tax_id_label or cfg.labels['tax_id']}: {inv.supplier_tax_id}",
+            size=9,
+            align=sup_align,
+        )
 
     # --- meta block
     meta: list[tuple[str, str, str | None]] = [
@@ -347,9 +360,9 @@ def draw_invoice(
             "desc": _fit(ln.description, cfg.font, 9, xs["desc"][1] - xs["desc"][0] - 8),
             "sku": ln.sku,
             "qty": str(ln.qty),
-            "price": fmt_amount(ln.unit_price_minor, cur),
+            "price": fmt_amount(ln.unit_price_minor, cur, inv.money_style),
             "tax": fmt_rate(inv.tax_rate_bp),
-            "amount": fmt_amount(ln.amount_minor, cur),
+            "amount": fmt_amount(ln.amount_minor, cur, inv.money_style),
         }
         for k in cols:
             x0, x1 = xs[k]
@@ -366,22 +379,32 @@ def draw_invoice(
 
     # --- totals
     sub_l, tax_l, tot_l = cfg.totals
+    if inv.tax_label:
+        tax_l = inv.tax_label
     if cfg.tax_label_with_rate:
         tax_l = f"{tax_l} ({fmt_rate(inv.tax_rate_bp)})"
     ty = y - 14
     lx, vx = W - M - 170, W - M - 4
     cv.put(lx, ty, sub_l, size=9)
-    cv.put(vx, ty, fmt_amount(inv.subtotal_minor, cur), size=9, align="right")
+    cv.put(vx, ty, fmt_amount(inv.subtotal_minor, cur, inv.money_style), size=9, align="right")
     ty -= 14
     cv.put(lx, ty, tax_l, size=9)
-    cv.put(vx, ty, fmt_amount(inv.tax_minor, cur), size=9, align="right")
+    cv.put(vx, ty, fmt_amount(inv.tax_minor, cur, inv.money_style), size=9, align="right")
     ty -= 22
     if cfg.boxed_total:
         c.setStrokeColor(accent)
         c.setLineWidth(1.2)
         c.rect(lx - 8, ty - 7, 178, 24, stroke=1, fill=0)
     cv.put(lx, ty, tot_l, size=11, bold=True)
-    cv.put(vx, ty, fmt_amount(inv.total_minor, cur), size=11, bold=True, align="right", key="total")
+    cv.put(
+        vx,
+        ty,
+        fmt_amount(inv.total_minor, cur, inv.money_style),
+        size=11,
+        bold=True,
+        align="right",
+        key="total",
+    )
 
     # --- footer
     fy = 150.0

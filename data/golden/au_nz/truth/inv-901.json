@@ -1,0 +1,64 @@
+{
+  "id": "inv-901",
+  "file": "Wattle-WC-2026-0101.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 901,
+  "readable": true,
+  "supplier_key": "wattle",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Wattle & Co Office Supplies Pty Ltd",
+    "supplier_tax_id": "44 934 937 193",
+    "supplier_address": "14 Bridge Street, Sydney NSW 2000",
+    "supplier_bank_account": "BSB 062-000 / Acct 4471 2290",
+    "invoice_number": "WC-2026-0101",
+    "invoice_date": "2026-09-07",
+    "due_date": "2026-10-07",
+    "po_number": "PO-AU900",
+    "currency": "AUD",
+    "subtotal_minor": 86130,
+    "tax_total_minor": 8613,
+    "total_minor": 94743,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "A4 copy paper, 5 ream carton",
+      "sku": null,
+      "quantity": 12,
+      "unit_price_minor": 4950,
+      "amount_minor": 59400,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Ballpoint pens, box of 50",
+      "sku": null,
+      "quantity": 6,
+      "unit_price_minor": 1895,
+      "amount_minor": 11370,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Lever arch folders",
+      "sku": null,
+      "quantity": 24,
+      "unit_price_minor": 640,
+      "amount_minor": 15360,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": [],
+  "supplement": "au_nz"
+}

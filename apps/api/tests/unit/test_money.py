@@ -147,3 +147,25 @@ def test_comma_before_three_digits_is_thousands_for_two_decimal_currencies() -> 
 def test_australian_and_new_zealand_dollars_have_two_decimals(code: str) -> None:
     assert parse_money("1,234.50", code) == Money(123450, code)
     assert format_money(Money(123450, code)) == f"{code} 1,234.50"
+
+
+@pytest.mark.parametrize(
+    ("text", "currency"),
+    [("$1,234.50", "AUD"), ("$1,234.50", "NZD"), ("$1,234.50", "USD"), ("A$1,234.50", "AUD"),
+     ("AU$1,234.50", "AUD"), ("NZ$1,234.50", "NZD"), ("-A$1,234.50", "AUD"),
+     ("(NZ$1,234.50)", "NZD"), ("A$ 1,234.50", "AUD"), ("1,234.50 AUD", "AUD")],
+)  # fmt: skip
+def test_dollar_amounts_parse_in_their_own_currency(text: str, currency: str) -> None:
+    got = parse_money(text, currency)
+    assert got == Money(-123450 if text.startswith(("-", "(")) else 123450, currency)
+
+
+@pytest.mark.parametrize(
+    ("text", "currency"),
+    [("$1.00", "EUR"), ("$1.00", "GBP"), ("$1.00", "JPY"), ("A$1.00", "NZD"), ("A$1.00", "USD"),
+     ("NZ$1.00", "AUD"), ("NZ$1.00", "USD"), ("AU$1.00", "NZD"), ("CA$1.00", "AUD"),
+     ("US$1.00", "AUD"), ("€1.00", "AUD"), ("£1.00", "NZD"), ("¥100", "AUD")],
+)  # fmt: skip
+def test_a_symbol_for_another_currency_is_refused_never_converted(text: str, currency: str) -> None:
+    with pytest.raises(ValueError):
+        parse_money(text, currency)

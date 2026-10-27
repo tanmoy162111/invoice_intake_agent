@@ -22,7 +22,9 @@ DATE_FORMATS = {
 }
 SKU_LAYOUTS = {"C", "D"}  # only these layouts print a SKU column
 RATE_LAYOUTS = {"D"}  # only this layout prints a tax % per line
-CURRENCY_TEXT = {"USD": "$", "GBP": "£", "EUR": "EUR"}
+CURRENCY_TEXT = {"USD": "$", "GBP": "£", "EUR": "EUR", "AUD": "$", "NZD": "$"}
+# How an AUD/NZD document prints money: a bare $, A$ / NZ$, or the code.
+DOLLAR_PREFIX = {"AUD": "A$", "NZD": "NZ$"}
 
 
 def load_truths(quality: str | None = "clean") -> list[dict[str, Any]]:
@@ -36,26 +38,42 @@ def seed_file(truth: dict[str, Any]) -> Path:
     return DEFAULT_SEED_DIR / "invoices" / truth["file"]
 
 
-def money_text(minor: int, currency: str) -> str:
+def printed_currency(currency: str, style: str = "symbol") -> str:
+    """What the currency field of a perfect answer says: symbol, prefixed symbol or code."""
+    if currency in DOLLAR_PREFIX and style == "prefixed":
+        return DOLLAR_PREFIX[currency]
+    if currency in DOLLAR_PREFIX and style == "code":
+        return currency
+    return CURRENCY_TEXT[currency]
+
+
+def money_text(minor: int, currency: str, style: str = "symbol") -> str:
     whole, frac = divmod(abs(minor), 100)
     sign = "-" if minor < 0 else ""
     if currency == "EUR":
         return f"{sign}{whole:,}".replace(",", ".") + f",{frac:02d} EUR"
-    return f"{sign}{CURRENCY_TEXT[currency]}{whole:,}.{frac:02d}"
+    if currency in DOLLAR_PREFIX and style == "code":
+        return f"{sign}{currency} {whole:,}.{frac:02d}"
+    symbol = (
+        DOLLAR_PREFIX[currency]
+        if style == "prefixed" and currency in DOLLAR_PREFIX
+        else (CURRENCY_TEXT[currency])
+    )
+    return f"{sign}{symbol}{whole:,}.{frac:02d}"
 
 
 def _f(value: str | None, page: int = 1) -> dict[str, Any]:
     return {"value": value, "self_confidence": "high", "page": page if value is not None else None}
 
 
-def payload_from_truth(truth: dict[str, Any]) -> dict[str, Any]:
+def payload_from_truth(truth: dict[str, Any], style: str = "symbol") -> dict[str, Any]:
     h, layout, cur = truth["header"], truth["layout"], truth["header"]["currency"]
 
     def day(iso: str | None) -> str | None:
         return date.fromisoformat(iso).strftime(DATE_FORMATS[layout]) if iso else None
 
     def money(minor: int | None) -> str | None:
-        return None if minor is None else money_text(minor, cur)
+        return None if minor is None else money_text(minor, cur, style)
 
     out: dict[str, Any] = {
         "supplier_name": _f(h["supplier_name"]),
@@ -66,7 +84,7 @@ def payload_from_truth(truth: dict[str, Any]) -> dict[str, Any]:
         "invoice_date": _f(day(h["invoice_date"])),
         "due_date": _f(day(h["due_date"])),
         "po_number": _f(h["po_number"]),
-        "currency": _f(CURRENCY_TEXT[cur]),
+        "currency": _f(printed_currency(cur, style)),
         "subtotal": _f(money(h["subtotal_minor"])),
         "tax_total": _f(money(h["tax_total_minor"])),
         "total": _f(money(h["total_minor"])),

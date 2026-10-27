@@ -1,0 +1,55 @@
+{
+  "id": "inv-902",
+  "file": "Harbourline-HP-26-3318.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "B",
+  "received_order": 902,
+  "readable": true,
+  "supplier_key": "harbourline",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Harbourline Packaging Pty Ltd",
+    "supplier_tax_id": null,
+    "supplier_address": "220 Collins Street, Melbourne VIC 3000",
+    "supplier_bank_account": "BSB 033-120 / Acct 8812 6403",
+    "invoice_number": "HP-26-3318",
+    "invoice_date": "2026-09-14",
+    "due_date": "2026-10-14",
+    "po_number": "PO-AU901",
+    "currency": "AUD",
+    "subtotal_minor": 186600,
+    "tax_total_minor": 18660,
+    "total_minor": 205260,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Corrugated carton, medium",
+      "sku": null,
+      "quantity": 400,
+      "unit_price_minor": 285,
+      "amount_minor": 114000,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Packing tape 48mm, 36 pack",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 7260,
+      "amount_minor": 72600,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": [],
+  "supplement": "au_nz"
+}

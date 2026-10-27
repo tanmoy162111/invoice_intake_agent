@@ -87,6 +87,10 @@ class InvoiceSpec:
     duplicate_of: str | None = None
     obscure: str | None = None  # header field hidden by a smudge
     unreadable: str | None = None  # "blur" | "blank"
+    # How the document prints money and tax. The defaults reproduce every existing document.
+    money_style: str = "symbol"  # AUD/NZD: "symbol" ($), "prefixed" (A$, NZ$) or "code" (AUD 1.00)
+    tax_id_label: str | None = None  # e.g. "ABN"; None uses the layout's own label
+    tax_label: str | None = None  # e.g. "GST"; None uses the layout's own label
 
     @property
     def must_raise(self) -> list[str]:

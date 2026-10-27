@@ -1,0 +1,55 @@
+{
+  "id": "inv-906",
+  "file": "Pohutukawa-PC-2026-0881.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "D",
+  "received_order": 906,
+  "readable": true,
+  "supplier_key": "pohutukawa",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Pohutukawa Cleaning Services Limited",
+    "supplier_tax_id": "987-428-651",
+    "supplier_address": "31 Lambton Quay, Wellington 6011",
+    "supplier_bank_account": "03-1502-0771342-00",
+    "invoice_number": "PC/2026/0881",
+    "invoice_date": "2026-09-28",
+    "due_date": "2026-10-28",
+    "po_number": "PO-NZ905",
+    "currency": "NZD",
+    "subtotal_minor": 129500,
+    "tax_total_minor": 19425,
+    "total_minor": 148925,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Weekly office clean, per visit",
+      "sku": "PC-WKL",
+      "quantity": 4,
+      "unit_price_minor": 21500,
+      "amount_minor": 86000,
+      "tax_rate_bp": 1500
+    },
+    {
+      "line_no": 2,
+      "description": "Carpet steam clean, per room",
+      "sku": "PC-CAR",
+      "quantity": 3,
+      "unit_price_minor": 14500,
+      "amount_minor": 43500,
+      "tax_rate_bp": 1500
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": [],
+  "supplement": "au_nz"
+}

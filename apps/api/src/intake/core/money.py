@@ -10,10 +10,19 @@ from intake.core.numbers import parse_number
 # rather than guessed (uncertain means human).
 CURRENCY_EXPONENT: dict[str, int] = {"USD": 2, "EUR": 2, "GBP": 2, "JPY": 0, "AUD": 2, "NZD": 2}
 
-# Symbols and the one currency each stands for. `$` and `¥` are also used by other currencies, so
-# `normalize_currency` treats them as ambiguous; here we only require the symbol to match the
-# currency the caller already settled on.
-_SYMBOL_CODE = {"$": "USD", "€": "EUR", "£": "GBP", "¥": "JPY"}
+# Symbols and the currencies each can stand for. `$` and `¥` are also used by other currencies, so
+# `normalize_currency` treats them as ambiguous; here we only require the symbol to be one the
+# currency the caller already settled on can be written with. Longer symbols come first so that
+# `NZ$` is taken whole and not as a `$`.
+_SYMBOL_CODES: dict[str, frozenset[str]] = {
+    "NZ$": frozenset({"NZD"}),
+    "AU$": frozenset({"AUD"}),
+    "A$": frozenset({"AUD"}),
+    "$": frozenset({"USD", "AUD", "NZD"}),
+    "€": frozenset({"EUR"}),
+    "£": frozenset({"GBP"}),
+    "¥": frozenset({"JPY"}),
+}
 
 
 def _strip_currency_code(raw: str, currency: str) -> str:
@@ -59,9 +68,9 @@ class Money:
 
 def _strip_symbols(raw: str, currency: str) -> str:
     """Remove currency symbols, refusing one that belongs to a different currency."""
-    for symbol, code in _SYMBOL_CODE.items():
+    for symbol, codes in _SYMBOL_CODES.items():
         if symbol in raw:
-            if code != currency:
+            if currency not in codes:
                 raise ValueError(f"amount uses {symbol} but the currency is {currency}")
             raw = raw.replace(symbol, "")
     return raw.strip()

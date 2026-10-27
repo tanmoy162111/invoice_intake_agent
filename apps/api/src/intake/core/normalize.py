@@ -84,19 +84,24 @@ class AmbiguousCurrencyError(ValueError):
     """A bare symbol for more than one currency ($ is also CAD and AUD, ¥ is also CNY)."""
 
 
-_UNAMBIGUOUS_SYMBOLS = {"€": "EUR", "£": "GBP"}
-_AMBIGUOUS_SYMBOLS = {"$": "USD", "¥": "JPY"}
+# `A$`, `AU$` and `NZ$` name their dollar; a bare `$` could be any of the dollars below, and is only
+# read as the supplier's own currency when that is one of them (the hint), never guessed otherwise.
+_UNAMBIGUOUS_SYMBOLS = {"€": "EUR", "£": "GBP", "A$": "AUD", "AU$": "AUD", "NZ$": "NZD"}
+_AMBIGUOUS_SYMBOLS: dict[str, frozenset[str]] = {
+    "$": frozenset({"USD", "AUD", "NZD"}),
+    "¥": frozenset({"JPY"}),
+}
 
 
 def normalize_currency(text: str, *, hint: str | None = None) -> str:
     """ISO 4217 code from a printed code or symbol. A bare `$` or `¥` is ambiguous and raises,
-    unless `hint` (the supplier's default currency) is the one currency it would stand for.
+    unless `hint` (the supplier's default currency) is one of the currencies it would stand for.
     Unsupported currencies raise."""
     raw = text.strip()
     if raw in _UNAMBIGUOUS_SYMBOLS:
         return _UNAMBIGUOUS_SYMBOLS[raw]
     if raw in _AMBIGUOUS_SYMBOLS:
-        if hint == _AMBIGUOUS_SYMBOLS[raw]:
+        if hint is not None and hint in _AMBIGUOUS_SYMBOLS[raw]:
             return hint
         raise AmbiguousCurrencyError(f"{raw!r} could be more than one currency")
     code = raw.upper()
