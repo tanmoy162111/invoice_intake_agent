@@ -59,3 +59,30 @@ def session(engine: Engine) -> Iterator[Session]:
     with Session(engine) as s:
         yield s
         s.rollback()
+
+
+ACCOUNTING_MODULES = ("test_handoff_service", "test_handoff_api", "test_accounting_tokens")
+
+
+@pytest.fixture(autouse=True)
+def _remove_accounting_test_rows(request: pytest.FixtureRequest) -> Iterator[None]:
+    """The accounting tests commit real rows (they exercise claims, locks and threads). The other
+    suites share the database and assume it holds only their own rows, so remove everything these
+    tests made. Tenants stay: audit_events (append-only) references them."""
+    yield
+    if request.module.__name__.rsplit(".", 1)[-1] not in ACCOUNTING_MODULES:
+        return
+    eng = create_engine(request.getfixturevalue("migrated_db_url"))
+    mine = "select id from tenants where name like 'acct-test-%'"
+    with eng.begin() as conn:
+        for table in (
+            "accounting_handoffs",
+            "supplier_accounting_links",
+            "accounting_connections",
+            "invoice_lines",
+            "invoices",
+            "documents",
+            "suppliers",
+        ):
+            conn.execute(text(f"delete from {table} where tenant_id in ({mine})"))
+    eng.dispose()

@@ -53,3 +53,14 @@ class JobStatus(StrEnum):
     RUNNING = "running"
     DONE = "done"
     FAILED = "failed"
+
+
+class HandoffStatus(StrEnum):
+    """Where a hand-off to an accounting system stands (Project B). `unknown` means the request may
+    have reached the provider: nothing is written again until the outcome is found out."""
+
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown"

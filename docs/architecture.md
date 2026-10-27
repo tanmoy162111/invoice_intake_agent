@@ -291,3 +291,30 @@ POST corrections | exceptions/{id}/close | approve | reject | request-info | ban
 - **Re-check.** After a correction the stages run in-process with `stop_waiting=True`; the routing stage skips
   exceptions a person already closed (`is_carried_over`).
 - **Not yet:** the browser screen (M8b), line corrections, a waiting status, and the history view (M9).
+
+
+## Accounting handoff (Project B)
+
+```
+reviewer ─▶ POST /invoices/{id}/handoff ─▶ handoff/service.request_handoff
+   1 lock invoice ─▶ core.handoff_problem (approved? no other handoff?) ─▶ claim row `in_progress` ─▶ commit
+   2 connector.find_contacts/get_contact ─▶ core.match_contact ─▶ core.map_invoice (writes nothing)
+   3 lock invoice again ─▶ still approved? ─▶ audit `draft_bill_attempted` ─▶ commit
+   4 connector.create_draft_bill (once; only 429 / connect failure retried, bounded)
+   5 core.verify_created ─▶ `succeeded` | `unknown` (+ audit) ─▶ commit
+connector = MockAccounting (offline) | XeroConnector (httpx; PUT /Invoices, Status DRAFT)
+```
+
+- **Pure rules** in `core/accounting.py` (eligibility, `handoff_key`, `map_invoice`, `match_contact`,
+  `verify_created`, `decide_after_failure`, `explain`) and `core/oauth.py`. No I/O.
+- **Tables** (migration 0009): `accounting_connections` (encrypted tokens), `supplier_accounting_links`,
+  `accounting_handoffs` (unique per tenant, invoice, provider, organisation; unique `handoff_key`).
+- **States:** `pending`, `in_progress`, `succeeded`, `failed`, `unknown`. `unknown` leaves only by
+  `reconcile` (exactly one matching draft created by this application) or `resolve` (a person).
+- **Audit events:** `handoff_requested`, `handoff_refused`, `contact_not_resolved`, `mapping_passed`,
+  `mapping_failed`, `draft_bill_attempted`, `draft_bill_retry`, `draft_bill_created`, `handoff_failed`,
+  `handoff_outcome_unknown`, `handoff_critical`, `handoff_reconciled`, `reconciliation_inconclusive`,
+  `handoff_resolved_found`, `handoff_resolved_absent`, `accounting_connected`. Codes and ids only.
+- **Project A and C:** the canonical invoice schema and the extraction output are unchanged; the mapping reads
+  approved invoice rows and builds provider data separately. The only shared change is AUD/NZD in the money
+  model. See `docs/connectors.md` and ADR 0012.

@@ -1,11 +1,12 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from intake.api import documents, extraction, invoices, jobs, login
+from intake.api import accounting, documents, extraction, invoices, jobs, login
 from intake.api.deps import require_token
 from intake.api.guard import UploadGuard
 from intake.api.health import router as health_router
 from intake.config import Settings, get_settings
+from intake.connectors.mock import MockAccounting
 from intake.core.session import LoginThrottle
 from intake.db.session import make_engine
 from intake.ingest.service import UploadIngestor
@@ -28,6 +29,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.storage = storage
     app.state.ingestor = UploadIngestor(settings, storage)
     app.state.throttle = LoginThrottle()
+    app.state.mock_accounting = MockAccounting(echo_contacts=True)  # the offline demo provider
     app.add_middleware(UploadGuard, settings=settings)
     app.add_middleware(
         CORSMiddleware,
@@ -43,6 +45,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(extraction.router, dependencies=protected)
     app.include_router(invoices.router, dependencies=protected)
     app.include_router(invoices.exceptions_router, dependencies=protected)
+    app.include_router(accounting.router, dependencies=protected)
+    app.include_router(accounting.invoice_router, dependencies=protected)
 
     @app.get("/openapi.json", include_in_schema=False, dependencies=protected)
     def openapi_schema() -> dict[str, object]:

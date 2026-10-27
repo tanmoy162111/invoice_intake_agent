@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Manual
 
 > **Living document.** Updated in every milestone pull request, as new abilities appear.
-> **Describes:** the system after M8b-2 (deciding from the browser, and a browser test in CI), 2026-09-27.
+> **Describes:** the system after M8b-2 (deciding from the browser, and a browser test in CI) plus Project B (sending approved invoices to an accounting system as draft bills), 2026-10-27.
 > Companion: [`report.md`](report.md) explains what was built and why. This manual explains how to
 > *use and run* it.
 
@@ -523,6 +523,64 @@ reaches the browser (the web server holds the session in a cookie that scripts c
 document is shown as plain text, never as markup. Amounts are shown from whole minor units (cents), so what is
 on screen is what the checks used.
 
+### 4.17 Send an approved invoice to the accounting system
+
+> **Creates draft bills only. A human must review and approve bills in the accounting platform.**
+
+**In plain words.** After you approve an invoice, its page shows an *Accounting system* panel. *Create draft bill*
+sends the invoice to the accounting system as a draft, which still has to be approved and paid there by a person.
+This system never approves or pays anything. Pressing the button twice cannot create two bills.
+
+**Try it offline.** With `ACCOUNTING_PROVIDER=mock` (the default) the panel works against an in-memory stand-in
+labelled *Offline demo*: nothing leaves your computer and no real accounting system is touched. Approve an invoice,
+open it, press *Create draft bill*. Reload the page: the bill reference is still there.
+
+**The states.**
+
+| Status on screen | Meaning | What to do |
+|---|---|---|
+| *Not sent* | Nothing has been created | *Create draft bill* (when connected and the invoice is approved) |
+| *Sending* | A handoff is running | Wait; the page refreshes when you act again |
+| *Draft bill created* | The accounting system returned a draft bill with the right contact and totals | Open it in the accounting system, review, approve |
+| *Not sent* with a reason | It stopped before anything was created | Fix the reason below, then *Try again* |
+| *Outcome uncertain* | The bill may or may not exist | Press *Look for the bill*. If that is inconclusive, check the accounting system yourself and *Record what I found* |
+
+**Why it stops, and what to do.** Every code below means nothing was created unless it says otherwise.
+
+| Code | What it means | Fix |
+|---|---|---|
+| `NOT_APPROVED` | Only an approved invoice can be sent | Approve it first |
+| `ALREADY_HANDED_OFF` | A draft bill already exists | Nothing; open it in the accounting system |
+| `HANDOFF_IN_PROGRESS` | Another handoff is running | Wait for it |
+| `OUTCOME_UNKNOWN` | We could not tell if the bill was created | Look for it, or check and record (below) |
+| `INVOICE_NUMBER_MISSING`, `INVOICE_DATE_MISSING` | The invoice lacks it | Correct the field in the review screen |
+| `CURRENCY_UNSUPPORTED` | Missing or unsupported currency (AUD, NZD, USD, EUR, GBP, JPY are supported) | Correct the currency |
+| `NO_LINES`, `LINE_DESCRIPTION_MISSING`, `LINE_AMOUNT_MISSING` | A bill needs line items with a description and amount | Correct the invoice |
+| `TOTALS_MISSING`, `TOTALS_MISMATCH` | Subtotal, tax or total missing, or the lines do not add up | Correct the invoice; nothing is ever adjusted for you |
+| `TAX_MAPPING_MISSING` | A line's tax rate has no tax type in `ACCOUNTING_TAX_TYPES` | An administrator adds the mapping; it is never guessed |
+| `TAX_MISMATCH` | The tax on the lines is not the invoice tax, so the accounting system would calculate another total | Correct the invoice |
+| `NOT_A_BILL` | Credit notes and zero-value invoices are not sent in this version | Enter it in the accounting system by hand |
+| `CONTACT_NOT_FOUND` | No matching supplier in the accounting system | Create or link the contact there first |
+| `CONTACT_AMBIGUOUS` | More than one matches | Link the right one; never chosen for you |
+| `CONTACT_CONFLICT` | A supplier matched by name has a different ABN/NZBN | Check which supplier it really is |
+| `BILL_ALREADY_EXISTS` | The accounting system already has a bill from this supplier with this number | Check it there; nothing was created |
+| `WORKER_INTERRUPTED` | The handoff stopped part-way (outcome uncertain) | Look for the bill |
+| `UNEXPECTED_BILL_STATUS`, `RESPONSE_MISMATCH` | A bill exists but is not a draft, or differs from what was sent (outcome uncertain) | Check and fix it in the accounting system; this system will not touch it |
+| `connect_failed`, `rate_limited` | The accounting system could not be reached or asked us to wait; retried up to three times | Try again later |
+| `unauthorised`, `forbidden` | The connection lost its access or permission | Connect again with the right permissions |
+| `rejected` | The accounting system refused the bill as invalid | Check the invoice and the tax mapping |
+| `timeout`, `connection_lost`, `server_error`, `bad_response`, `conflict` | The request may have been received (outcome uncertain; never retried automatically) | Look for the bill |
+| `unexpected_status` | A bill came back that is not a draft | Check it in the accounting system |
+
+**Look for the bill / Record what I found.** *Look for the bill* searches the accounting system for a draft bill this
+application created for the same supplier and number. Exactly one match with the same totals settles it as created.
+Zero or several settle nothing, because a missing bill might simply not be visible yet. Then open the accounting system
+yourself: choose *There is a bill* and enter its reference, or *There is no bill*, which lets you try again. Both are
+recorded with your name.
+
+**Connecting Xero.** See [`connectors.md`](connectors.md). Xero has never been contacted from this project: the first
+real run must be against the Xero Demo Company.
+
 ---
 
 ## 5. Reference
@@ -560,6 +618,13 @@ invoice exception (section 6).
 | `POST /invoices/{invoice_id}/reject` | Reject, with a reason | Reviewer session |
 | `POST /invoices/{invoice_id}/request-info` | Record that information was requested | Reviewer session |
 | `POST /invoices/{invoice_id}/bank/reveal` | Show the bank account (logged) | Reviewer session |
+| `GET /accounting/connection` | Which accounting system is selected and whether it is connected (never any credentials) | Yes |
+| `POST /accounting/xero/connect` | Where to send the reviewer to sign in to Xero | Reviewer session |
+| `POST /accounting/xero/callback` | Finish connecting Xero (checks the sign-in answer, stores the tokens encrypted) | Reviewer session |
+| `GET /invoices/{invoice_id}/handoff` | Where this invoice stands with the accounting system | Yes |
+| `POST /invoices/{invoice_id}/handoff` | Send the approved invoice as a draft bill (cannot create a second bill) | Reviewer session |
+| `POST /invoices/{invoice_id}/handoff/reconcile` | Look in the accounting system for a bill that may have been created | Reviewer session |
+| `POST /invoices/{invoice_id}/handoff/resolve` | Record what a person found in the accounting system | Reviewer session |
 | `GET /openapi.json` | Machine-readable description of the API | Yes |
 
 Send the token as `Authorization: Bearer <token>`. Two kinds are accepted: the static `API_TOKEN` (for
@@ -596,6 +661,12 @@ refuses everything except `/health` and the login.
 | `JOB_VISIBILITY_TIMEOUT_S` | 300 | When a running job counts as stuck |
 | `WORKER_POLL_INTERVAL_S` | 2 | How often the worker looks for work |
 | `LLM_PROVIDER` | `anthropic` | `anthropic`, `ollama` (local, demo only), or `recorded` (replays saved answers from `RECORDED_DIR`; browser test and CI only, refused when `APP_ENV=production`) |
+| `ACCOUNTING_PROVIDER` | `mock` | `mock` (offline stand-in, nothing is sent anywhere) or `xero`. Draft bills only; a person approves them in the accounting system |
+| `ACCOUNTING_ENCRYPTION_KEY` | empty | Fernet key that encrypts the stored accounting tokens. Separate from `BANK_ENCRYPTION_KEY` |
+| `ACCOUNTING_TAX_TYPES` | empty | JSON, tax rate in basis points to your accounting tax type, e.g. `{"1000": "INPUT"}`. A rate not listed stops the handoff |
+| `XERO_CLIENT_ID`, `XERO_CLIENT_SECRET`, `XERO_REDIRECT_URI` | empty | Your Xero app. The secret is never committed |
+| `XERO_SCOPES` | `offline_access accounting.transactions accounting.contacts.read` | What the Xero app was granted (granular or broad) |
+| `XERO_ORGANISATION_ID` | empty | Needed only if the sign-in grants more than one organisation |
 | `RECORDED_DIR` | empty | Where the saved answers are, for `LLM_PROVIDER=recorded` |
 | `ANTHROPIC_API_KEY` | empty | Your key. Empty means reading is paused, not failed |
 | `EXTRACTION_MODEL` | `claude-sonnet-5` | Which model reads invoices. Must have a known price, or it is refused |
@@ -756,6 +827,10 @@ hardening, the database password and encryption of stored files.
 | Sign-in succeeds but the next page asks for sign-in | The site is on plain http but the cookie is marked Secure | Set `COOKIE_INSECURE=1` for the web service (Compose does) |
 | Everyone gets "too many attempts" at sign-in | The login throttle sees the web server as a single client, so one person's wrong passwords count for all | Behind a reverse proxy set `TRUSTED_PROXIES` and `TRUST_FORWARDED_FOR=1` (section 5.4); on a local demo, wait a minute |
 | The site cannot be opened from another computer | Compose publishes the web and API ports on this machine only, because the demo cookie is not Secure | Put a reverse proxy with https in front (remove `COOKIE_INSECURE`), or change the `127.0.0.1:` in `docker-compose.yml` knowingly |
+| *Create draft bill* is missing on an approved invoice | No accounting system is connected, or a handoff already exists | Read the panel text; `GET /accounting/connection` |
+| The panel says *Outcome uncertain* | A timeout or a crash happened after the request may have been received | Section 4.17: look for the bill, then record what you found |
+| `POST /accounting/xero/connect` says `XERO_NOT_CONFIGURED` | Client id, redirect address, encryption key or session secret is missing | Set them in `.env` (section 5.4) |
+| Connecting says `CHOOSE_ORGANISATION` | The sign-in granted several Xero organisations | Set `XERO_ORGANISATION_ID`, connect again |
 | A page image does not appear | The document has no rendered pages yet, or the API is down | Wait for reading to finish; check `/jobs` |
 | An invoice stays `checking` | The routing job has not run: an earlier stage is waiting, or the worker is stopped | Look at `/jobs` for `route_invoice`, `match_invoice` and `detect_duplicates` (section 4.4) |
 | Almost every scanned or photographed invoice goes to review | Its invoice number has no text layer to confirm it, so confidence is 75%, below the 80% minimum | Expected with the current confidence rules; measured in M10, and a reviewer confirms the field (M8) |

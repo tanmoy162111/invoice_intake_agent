@@ -4,6 +4,60 @@
  */
 
 export interface paths {
+    "/accounting/connection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Connection */
+        get: operations["connection_accounting_connection_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounting/xero/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Xero Callback */
+        post: operations["xero_callback_accounting_xero_callback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounting/xero/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xero Connect
+         * @description Where to send the reviewer to sign in to Xero (authorization code flow with PKCE).
+         */
+        post: operations["xero_connect_accounting_xero_connect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -227,6 +281,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invoices/{invoice_id}/handoff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Handoff Status */
+        get: operations["handoff_status_invoices__invoice_id__handoff_get"];
+        put?: never;
+        /**
+         * Handoff Request
+         * @description Send the approved invoice to the accounting system as a draft bill. Safe to repeat: it can
+         *     never create a second bill.
+         */
+        post: operations["handoff_request_invoices__invoice_id__handoff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}/handoff/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Handoff Reconcile
+         * @description Look in the accounting system for a bill we may have created. Never writes a bill.
+         */
+        post: operations["handoff_reconcile_invoices__invoice_id__handoff_reconcile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoice_id}/handoff/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Handoff Resolve
+         * @description A person checked the accounting system: give the bill they found, or none if there is none
+         *     (which allows the handoff to be requested again).
+         */
+        post: operations["handoff_resolve_invoices__invoice_id__handoff_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invoices/{invoice_id}/pages/{page}": {
         parameters: {
             query?: never;
@@ -302,6 +419,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AuthorizeOut */
+        AuthorizeOut: {
+            /** Url */
+            url: string;
+        };
         /** BankOut */
         BankOut: {
             /** Masked */
@@ -313,6 +435,15 @@ export interface components {
         Body_upload_document_documents_post: {
             /** File */
             file: string;
+        };
+        /** CallbackIn */
+        CallbackIn: {
+            /** Code */
+            code?: string | null;
+            /** Error */
+            error?: string | null;
+            /** State */
+            state?: string | null;
         };
         /** CheckOut */
         CheckOut: {
@@ -330,6 +461,25 @@ export interface components {
              * @enum {string}
              */
             resolution: "resolved" | "dismissed";
+        };
+        /** ConnectionOut */
+        ConnectionOut: {
+            /** Connected */
+            connected: boolean;
+            /**
+             * Note
+             * @default Creates draft bills only. A human must review and approve bills in the accounting platform.
+             */
+            note: string;
+            /** Organisation Name */
+            organisation_name: string | null;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "mock" | "xero";
+            /** Tax Types Configured */
+            tax_types_configured: boolean;
         };
         /** CorrectionIn */
         CorrectionIn: {
@@ -474,6 +624,43 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HandoffOut */
+        HandoffOut: {
+            /** Attempts */
+            attempts: number;
+            /** Can Reconcile */
+            can_reconcile: boolean;
+            /** Can Request */
+            can_request: boolean;
+            /** Connected */
+            connected: boolean;
+            /** External Bill Id */
+            external_bill_id: string | null;
+            /** Failure Code */
+            failure_code: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Manual Action */
+            manual_action: boolean;
+            /** Message */
+            message: string;
+            /**
+             * Note
+             * @default Creates draft bills only. A human must review and approve bills in the accounting platform.
+             */
+            note: string;
+            /** Organisation Name */
+            organisation_name: string | null;
+            /** Provider */
+            provider: string | null;
+            /** Started At */
+            started_at: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_started" | "pending" | "in_progress" | "succeeded" | "failed" | "unknown";
         };
         /** HeaderOut */
         HeaderOut: {
@@ -682,6 +869,14 @@ export interface components {
             /** Total Minor */
             total_minor: number | null;
         };
+        /**
+         * ResolveIn
+         * @description The bill a person found in the accounting system, or none if they confirmed there is none.
+         */
+        ResolveIn: {
+            /** Bill Id */
+            bill_id?: string | null;
+        };
         /** RevealOut */
         RevealOut: {
             /** Account */
@@ -724,6 +919,103 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    connection_accounting_connection_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    xero_callback_accounting_xero_callback_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallbackIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    xero_connect_accounting_xero_connect_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthorizeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_auth_login_post: {
         parameters: {
             query?: never;
@@ -1135,6 +1427,142 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvoiceDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    handoff_status_invoices__invoice_id__handoff_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    handoff_request_invoices__invoice_id__handoff_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    handoff_reconcile_invoices__invoice_id__handoff_reconcile_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    handoff_resolve_invoices__invoice_id__handoff_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffOut"];
                 };
             };
             /** @description Validation Error */

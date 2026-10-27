@@ -1,7 +1,7 @@
 # Invoice Intake Agent: Project Report
 
 > **Living document.** Every milestone adds its own chapter in the same pull request as the code.
-> **Last updated:** after M8b-2 (deciding from the browser, and the browser test), 2026-09-27.
+> **Last updated:** after M8b-2 (deciding from the browser, and the browser test) and Project B (accounting handoff, built and mock-tested, not yet run against Xero), 2026-10-27.
 > Companion: [`manual.md`](manual.md) explains how to *use and run* the system. This report explains
 > *what was built, why, how it works, and what was proved*.
 
@@ -55,6 +55,7 @@ You can read only the first layer of each chapter and still understand the whole
 | M11 | Metrics dashboard | Business value at a glance | Planned |
 | M12 | Export and connectors | Approved invoices leave the system | Planned |
 | M13 | Demo polish | Rehearsed demo, reset button, video | Planned |
+| B1 | Accounting handoff (Project B) | An approved invoice becomes a draft bill in Xero, never approved or paid by us | Built and tested against a mock and recorded Xero-shaped responses; **not yet run against Xero** |
 
 ---
 
@@ -1055,6 +1056,61 @@ what was assumed; a selector matched the framework's own announcer), each fixed 
 
 ---
 
+### B1: Accounting handoff (Project B)
+
+*Goal: an invoice a person approved can become a draft supplier bill in an accounting system, and a person still approves and pays it there.*
+
+**In plain words.** Once a reviewer approves an invoice, a button on the invoice page sends it to the
+accounting system as a **draft** bill, the kind that sits waiting for a person to look at it. The system never
+approves it and never pays it; those stay with a person in the accounting system. If anything is unclear (two
+suppliers that could match, a tax rate nobody has mapped, totals that do not add up) it stops and says what, rather
+than guessing. Pressing the button twice, or the network dropping at the wrong moment, can never create two bills.
+If the system cannot tell whether a bill was created, it says so, shows "Outcome uncertain", and waits for a
+person or a safe lookup to settle it. Nothing in this chapter has talked to a real Xero yet: it is built
+and tested against a stand-in and against recorded answers shaped like Xero's.
+
+**How it works.**
+
+1. The reviewer opens an approved invoice. The *Accounting system* panel shows whether an accounting system is
+   connected and offers *Create draft bill*.
+2. The system locks the invoice, checks it is still approved and that no handoff exists, and writes down that it
+   is starting. Then it finds the supplier's contact (a saved link, then the ABN/NZBN, then an exact name) and builds
+   the bill from the invoice, changing no amount.
+3. Just before sending, it checks approval again and records the attempt. It sends the bill once, as a draft.
+4. It checks the answer: a draft, for the same contact and totals. Only then does it say *Draft bill created*, with the
+   bill's reference. Every step is written to the history.
+5. If the answer is lost, the state is *Outcome uncertain*. *Look for the bill* searches the accounting system for a
+   draft this application created; exactly one match settles it. Otherwise a person checks and records what they found.
+
+**Under the hood.**
+- **Rules in `core/accounting.py`** (pure, 100% covered): eligibility, a stable `handoff_key`, `map_invoice` (every
+  problem listed, exact totals and per-line tax checks, quantity and unit price sent only when they give exactly the
+  line amount), `match_contact`, `verify_created`, `decide_after_failure`, and a sentence for every code.
+- **`accounting_handoffs`** (migration 0009) holds one row per invoice, provider and organisation; unique constraints
+  are the duplicate guard. `handoff/service.py` orders the work: claim, read, record, write once, record.
+- **Connectors:** a four-method interface with no approve or pay; a mock that can lose a response; a Xero adapter
+  (`PUT /Invoices`, `Status: DRAFT`, decimals written exactly, never floats) with failures sorted into "cannot have been
+  acted on" and "may have been".
+- **Connecting:** OAuth authorization code flow with PKCE, a signed state bound to the signed-in reviewer, tokens
+  encrypted at rest and refreshed under a row lock.
+- **Shared change:** AUD and NZD added to the supported currencies; nothing else in Projects A or C changed.
+
+**What we proved.** The new tests cover: refusing every non-approved status; one bill for repeated and simultaneous
+requests; a provider that creates the bill and loses the answer (unknown, then reconciled, never rewritten); a worker that
+dies after the provider wrote; a bill returned as not-a-draft; bounded retries with `Retry-After`; ambiguous and conflicting
+contacts; the Xero adapter's requests and error mapping against recorded responses; encrypted, race-free token refresh; state
+and PKCE checks; and source guards that nothing approves, pays or voids and the template holds no secret. See
+[`STATUS.md`](../STATUS.md) for the exact commands and counts.
+
+**Left open.**
+- **Never run against Xero or its Demo Company.** Several API details are unverified (`docs/connectors.md`).
+- Expense accounts are blank and tax types come from configuration; contacts are never created automatically.
+- Credit notes and zero-value invoices are not sent. No roles: any signed-in reviewer can trigger a handoff.
+- MYOB is not built. The web screen for connecting Xero is not built (the API calls are).
+- The evaluation (`make eval`) was not run for the currency addition.
+
+---
+
 ## 4. Roadmap: what each remaining milestone will add
 
 | # | In plain words | You will be able to |
@@ -1098,6 +1154,7 @@ The build gates on decision-logic coverage of at least 90%.
 | Compose host ports configurable | Developer machines often have 8000, 5432 or 3000 taken | ADR 0002 |
 | Bank accounts encrypted, compared by keyed hash | Never need the plain number to compare | M1, `security.py` |
 | Golden set fixed and never overwritten | Keeps accuracy results comparable over time | M1, guard hook |
+| Accounting handoff creates draft bills only; an uncertain outcome is never retried blindly | A timeout does not prove the provider failed; approving and paying stay with a person | ADR 0012 |
 | Interim bearer-token login on every route except health | Playbook forbids public endpoints; real login arrives in M8 | M2 |
 | Reject corrupt or password-protected files at upload | Illegible-but-openable files go on and raise a normal exception | M2 |
 | Job errors record only the exception class | Messages could echo document content | M2 |
