@@ -18,6 +18,7 @@ from intake.core.accounting import (
 @dataclass
 class MockAccounting:
     contacts: list[ContactCandidate] = field(default_factory=list)
+    echo_contacts: bool = False  # the offline demo: every supplier has exactly one contact
     provider: str = "mock"
     organisation_id: str = "mock-org"
     bills: list[tuple[ReturnedBill, str, bool]] = field(default_factory=list)  # bill, number, ours
@@ -53,9 +54,13 @@ class MockAccounting:
 
     # ---- the connector interface ----------------------------------------------------------------
     def find_contacts(self, name: str, tax_id: str | None) -> list[ContactCandidate]:
+        if self.echo_contacts:
+            return [ContactCandidate(f"demo-{name}", name, tax_id)]
         return list(self.contacts)
 
     def get_contact(self, contact_id: str) -> ContactCandidate | None:
+        if self.echo_contacts:
+            return ContactCandidate(contact_id, contact_id.removeprefix("demo-"), None)
         return next((c for c in self.contacts if c.contact_id == contact_id), None)
 
     def find_bills(

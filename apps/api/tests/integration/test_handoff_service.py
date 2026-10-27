@@ -94,6 +94,20 @@ class Case:
             s.expunge(h)
             return h
 
+    def row_count(self) -> int:
+        with Session(self.engine) as s:
+            return len(
+                s.scalars(
+                    select(AccountingHandoff).where(AccountingHandoff.invoice_id == self.invoice)
+                ).all()
+            )
+
+    def tenant_events(self) -> list[str]:
+        with Session(self.engine) as s:
+            return list(
+                s.scalars(select(AuditEvent.event_type).where(AuditEvent.tenant_id == self.tenant))
+            )
+
     def events(self) -> list[str]:
         with Session(self.engine) as s:
             return list(

@@ -1,6 +1,19 @@
 {
   "components": {
     "schemas": {
+      "AuthorizeOut": {
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "AuthorizeOut",
+        "type": "object"
+      },
       "BankOut": {
         "properties": {
           "masked": {
@@ -38,6 +51,48 @@
           "file"
         ],
         "title": "Body_upload_document_documents_post",
+        "type": "object"
+      },
+      "CallbackIn": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          }
+        },
+        "title": "CallbackIn",
         "type": "object"
       },
       "CheckOut": {
@@ -85,6 +140,50 @@
           "resolution"
         ],
         "title": "CloseIn",
+        "type": "object"
+      },
+      "ConnectionOut": {
+        "properties": {
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "note": {
+            "default": "Creates draft bills only. A human must review and approve bills in the accounting platform.",
+            "title": "Note",
+            "type": "string"
+          },
+          "organisation_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisation Name"
+          },
+          "provider": {
+            "enum": [
+              "mock",
+              "xero"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "tax_types_configured": {
+            "title": "Tax Types Configured",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "provider",
+          "connected",
+          "organisation_name",
+          "tax_types_configured"
+        ],
+        "title": "ConnectionOut",
         "type": "object"
       },
       "CorrectionIn": {
@@ -529,6 +628,134 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HandoffOut": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "can_reconcile": {
+            "title": "Can Reconcile",
+            "type": "boolean"
+          },
+          "can_request": {
+            "title": "Can Request",
+            "type": "boolean"
+          },
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "external_bill_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Bill Id"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "manual_action": {
+            "title": "Manual Action",
+            "type": "boolean"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "note": {
+            "default": "Creates draft bills only. A human must review and approve bills in the accounting platform.",
+            "title": "Note",
+            "type": "string"
+          },
+          "organisation_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisation Name"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "enum": [
+              "not_started",
+              "pending",
+              "in_progress",
+              "succeeded",
+              "failed",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "provider",
+          "organisation_name",
+          "external_bill_id",
+          "failure_code",
+          "manual_action",
+          "attempts",
+          "started_at",
+          "finished_at",
+          "message",
+          "can_request",
+          "can_reconcile",
+          "connected"
+        ],
+        "title": "HandoffOut",
         "type": "object"
       },
       "HeaderOut": {
@@ -1302,6 +1529,25 @@
         "title": "RelatedInvoice",
         "type": "object"
       },
+      "ResolveIn": {
+        "description": "The bill a person found in the accounting system, or none if they confirmed there is none.",
+        "properties": {
+          "bill_id": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bill Id"
+          }
+        },
+        "title": "ResolveIn",
+        "type": "object"
+      },
       "RevealOut": {
         "properties": {
           "account": {
@@ -1391,6 +1637,164 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/accounting/connection": {
+      "get": {
+        "operationId": "connection_accounting_connection_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Connection",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/accounting/xero/callback": {
+      "post": {
+        "operationId": "xero_callback_accounting_xero_callback_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallbackIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Xero Callback",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/accounting/xero/connect": {
+      "post": {
+        "description": "Where to send the reviewer to sign in to Xero (authorization code flow with PKCE).",
+        "operationId": "xero_connect_accounting_xero_connect_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Xero Connect",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "The demo reviewer signs in. This is the one route besides /health that needs no token.",
@@ -2151,6 +2555,253 @@
         "summary": "Correct",
         "tags": [
           "invoices"
+        ]
+      }
+    },
+    "/invoices/{invoice_id}/handoff": {
+      "get": {
+        "operationId": "handoff_status_invoices__invoice_id__handoff_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Handoff Status",
+        "tags": [
+          "accounting"
+        ]
+      },
+      "post": {
+        "description": "Send the approved invoice to the accounting system as a draft bill. Safe to repeat: it can\nnever create a second bill.",
+        "operationId": "handoff_request_invoices__invoice_id__handoff_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Handoff Request",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/invoices/{invoice_id}/handoff/reconcile": {
+      "post": {
+        "description": "Look in the accounting system for a bill we may have created. Never writes a bill.",
+        "operationId": "handoff_reconcile_invoices__invoice_id__handoff_reconcile_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Handoff Reconcile",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/invoices/{invoice_id}/handoff/resolve": {
+      "post": {
+        "description": "A person checked the accounting system: give the bill they found, or none if there is none\n(which allows the handoff to be requested again).",
+        "operationId": "handoff_resolve_invoices__invoice_id__handoff_resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Handoff Resolve",
+        "tags": [
+          "accounting"
         ]
       }
     },

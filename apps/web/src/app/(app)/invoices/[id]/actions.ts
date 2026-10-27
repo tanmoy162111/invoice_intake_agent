@@ -7,7 +7,10 @@ import {
   approveInvoice,
   closeException,
   correctField,
+  reconcileHandoff,
   rejectInvoice,
+  requestHandoff,
+  resolveHandoff,
   requestInfo,
   revealBank,
 } from "@/lib/api/server";
@@ -111,4 +114,23 @@ export async function revealBankAction(id: string): Promise<RevealState> {
     if (!(error instanceof ApiError)) throw error;
     return { ok: false, message: message(error) };
   }
+}
+
+/** Sends the approved invoice to the accounting system as a draft bill. */
+export async function handoffAction(id: string): Promise<ActionState> {
+  return run(id, () => requestHandoff(id));
+}
+
+/** Looks in the accounting system for a bill that may already have been created. Writes nothing there. */
+export async function reconcileAction(id: string): Promise<ActionState> {
+  return run(id, () => reconcileHandoff(id));
+}
+
+/** A person checked the accounting system. A bill id means it exists; none means it does not. */
+export async function resolveHandoffAction(id: string, _previous: ActionState, form: FormData): Promise<ActionState> {
+  const found = text(form, "found");
+  const billId = text(form, "bill_id").trim();
+  if (found === "yes" && !billId) return { ok: false, message: "Enter the bill reference you found." };
+  if (billId.length > 100) return { ok: false, message: "That reference is too long." };
+  return run(id, () => resolveHandoff(id, found === "yes" ? billId : null));
 }

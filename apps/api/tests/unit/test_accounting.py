@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from intake.core.accounting import (
+    EXPLANATIONS,
     HANDOFF_TRANSITIONS,
     STALE_AFTER_S,
     BillDraft,
@@ -19,6 +20,7 @@ from intake.core.accounting import (
     Problem,
     ReturnedBill,
     decide_after_failure,
+    explain,
     handoff_key,
     handoff_problem,
     is_stale,
@@ -50,7 +52,7 @@ def facts(**kw: object) -> InvoiceFacts:
     return InvoiceFacts(**base)  # type: ignore[arg-type]
 
 
-# ---- who may be handed off ---------------------------------------------------------------------
+# ---- who may be handed off ------------------------------------------------------------------
 
 
 def test_only_an_approved_invoice_with_no_handoff_is_eligible() -> None:
@@ -89,7 +91,7 @@ def test_unknown_outcome_never_goes_straight_back_to_in_progress() -> None:
     assert HANDOFF_TRANSITIONS[HandoffStatus.SUCCEEDED] == frozenset()
 
 
-# ---- the idempotency key -------------------------------------------------------------------------
+# ---- the idempotency key --------------------------------------------------------------------
 
 INV = uuid.UUID("11111111-1111-4111-8111-111111111111")
 TEN = uuid.UUID("22222222-2222-4222-8222-222222222222")
@@ -114,7 +116,7 @@ def test_handoff_key_changes_with_every_part(other: tuple[uuid.UUID, str, str, u
     assert handoff_key(*other) != handoff_key(TEN, "xero", "org-1", INV)
 
 
-# ---- mapping an invoice to a draft bill ----------------------------------------------------------
+# ---- mapping an invoice to a draft bill -----------------------------------------------------
 
 
 def test_a_good_invoice_maps_to_a_draft_bill_without_changing_a_cent() -> None:
@@ -229,7 +231,7 @@ def test_every_problem_is_reported_not_just_the_first() -> None:
     assert {Problem.INVOICE_NUMBER_MISSING, Problem.INVOICE_DATE_MISSING} <= set(result.problems)
 
 
-# ---- choosing the supplier's contact ----------------------------------------------------------
+# ---- choosing the supplier's contact --------------------------------------------------------
 
 
 def cand(cid: str, name: str, tax: str | None = None, active: bool = True) -> ContactCandidate:
@@ -296,7 +298,7 @@ def test_a_name_made_only_of_punctuation_matches_nobody() -> None:
     assert d.problem is Problem.CONTACT_NOT_FOUND
 
 
-# ---- checking what the provider says it created ------------------------------------------------
+# ---- checking what the provider says it created ---------------------------------------------
 
 
 def draft() -> BillDraft:
@@ -338,7 +340,7 @@ def test_a_bill_that_differs_from_what_was_sent_is_not_trusted(change: dict[str,
     assert verify_created(draft(), returned(**change)) is Problem.RESPONSE_MISMATCH
 
 
-# ---- what to do when a call fails ---------------------------------------------------------------
+# ---- what to do when a call fails -----------------------------------------------------------
 
 
 @pytest.mark.parametrize("failure", [Failure.CONNECT_FAILED, Failure.RATE_LIMITED])
@@ -382,10 +384,34 @@ def test_a_wrong_status_in_the_response_is_critical() -> None:
     assert decide_after_failure(Failure.UNEXPECTED_STATUS, 1, None).next is Next.CRITICAL
 
 
-# ---- a handoff left running by a crashed worker --------------------------------------------------
+# ---- a handoff left running by a crashed worker ---------------------------------------------
 
 
 def test_a_handoff_still_running_long_after_it_started_is_stale() -> None:
     now = datetime(2026, 3, 1, 12, 0, tzinfo=UTC)
     assert not is_stale(now - timedelta(seconds=STALE_AFTER_S - 1), now)
     assert is_stale(now - timedelta(seconds=STALE_AFTER_S), now)
+
+
+# ---- plain-language explanations ------------------------------------------------------------
+
+
+def test_every_problem_and_failure_has_an_explanation() -> None:
+    for code in [*Problem, *Failure]:
+        assert EXPLANATIONS[code.value].endswith(".")
+
+
+def test_success_is_only_claimed_for_succeeded_and_says_a_person_approves() -> None:
+    text = explain(HandoffStatus.SUCCEEDED, None)
+    assert "draft" in text and "approve" in text
+    for status in (HandoffStatus.FAILED, HandoffStatus.UNKNOWN):
+        assert "created." not in explain(status, "timeout").split("may")[0]
+        assert not explain(status, "timeout").startswith("A draft bill was created")
+
+
+def test_explanations_for_running_unknown_and_unexpected_codes() -> None:
+    assert "Sending" in explain(HandoffStatus.IN_PROGRESS, None)
+    assert explain(HandoffStatus.FAILED, None) == "The handoff did not complete."
+    assert explain(HandoffStatus.FAILED, "SOMETHING_NEW") == "The handoff did not complete."
+    assert "unexpected" in explain(HandoffStatus.FAILED, "INTERNAL_ERROR:ValueError").lower()
+    assert explain(HandoffStatus.FAILED, "CONTACT_AMBIGUOUS") == EXPLANATIONS["CONTACT_AMBIGUOUS"]

@@ -382,3 +382,68 @@ def decide_after_failure(failure: Failure, attempt: int, retry_after_s: int | No
     if failure is Failure.UNEXPECTED_STATUS:
         return Decision(Next.CRITICAL, manual_action=True)
     return Decision(Next.FAIL, manual_action=True)  # unauthorised, forbidden, rejected
+
+
+# ---- what to tell the person ---------------------------------------------------------------------
+
+_PROBLEM_TEXT: dict[str, str] = {
+    "NOT_APPROVED": "Only an invoice a reviewer has approved can be sent to the accounting system.",
+    "ALREADY_HANDED_OFF": "This invoice already has a draft bill in the accounting system.",
+    "HANDOFF_IN_PROGRESS": "A handoff for this invoice is already running. Wait for it to finish.",
+    "OUTCOME_UNKNOWN": "We could not tell whether the draft bill was created. Check the accounting "
+    "system, then record what you found.",
+    "INVOICE_NUMBER_MISSING": "The invoice has no invoice number. Add it in the review screen.",
+    "INVOICE_DATE_MISSING": "The invoice has no invoice date. Add it in the review screen.",
+    "CURRENCY_UNSUPPORTED": "The invoice currency is missing or not supported.",
+    "NO_LINES": "The invoice has no line items to put on a bill.",
+    "LINE_DESCRIPTION_MISSING": "A line item has no description.",
+    "LINE_AMOUNT_MISSING": "A line item has no amount.",
+    "TOTALS_MISSING": "The subtotal, tax or total is missing.",
+    "TOTALS_MISMATCH": "The line items do not add up to the invoice totals. Nothing was changed.",
+    "TAX_MAPPING_MISSING": "A line has a tax rate with no approved accounting tax type. Ask an "
+    "administrator to map it; it is never guessed.",
+    "TAX_MISMATCH": "The tax on the lines does not equal the invoice tax, so the accounting system "
+    "would calculate a different total. Nothing was changed.",
+    "NOT_A_BILL": "Credit notes and zero-value invoices are not sent in this version.",
+    "CONTACT_NOT_FOUND": "No matching supplier was found in the accounting system. Create or link "
+    "the contact there first.",
+    "CONTACT_AMBIGUOUS": "More than one supplier in the accounting system matches. Link the right "
+    "one; this is never chosen automatically.",
+    "CONTACT_CONFLICT": "A supplier matched by name has a different tax number (ABN/NZBN) "
+    "than ours.",
+    "BILL_ALREADY_EXISTS": "The accounting system already has a bill from this supplier with this "
+    "invoice number. Nothing was created.",
+    "WORKER_INTERRUPTED": "The handoff stopped part-way, so it may or may not have created a bill.",
+    "UNEXPECTED_BILL_STATUS": "The accounting system returned a bill that is not a draft. It was "
+    "left as it is; check it there.",
+    "RESPONSE_MISMATCH": "The bill the accounting system created differs from what was sent. Check "
+    "it there.",
+}
+_FAILURE_TEXT: dict[str, str] = {
+    "connect_failed": "The accounting system could not be reached. Nothing was created.",
+    "rate_limited": "The accounting system asked us to slow down. Nothing was created.",
+    "unauthorised": "The connection to the accounting system is no longer authorised. Reconnect "
+    "it.",
+    "forbidden": "The connection does not have permission to do this.",
+    "rejected": "The accounting system refused the bill as invalid. Nothing was created.",
+    "timeout": "The accounting system did not answer in time. The bill may have been created.",
+    "connection_lost": "The connection dropped. The bill may have been created.",
+    "server_error": "The accounting system reported an error. The bill may have been created.",
+    "bad_response": "The answer could not be understood. The bill may have been created.",
+    "conflict": "The accounting system reported a conflict. The bill may have been created.",
+    "unexpected_status": "The accounting system returned a bill that is not a draft.",
+}
+EXPLANATIONS: dict[str, str] = {**_PROBLEM_TEXT, **_FAILURE_TEXT}
+
+
+def explain(status: HandoffStatus, code: str | None) -> str:
+    """One plain sentence for the screen. Success is only claimed when it is proven."""
+    if status is HandoffStatus.SUCCEEDED:
+        return "A draft bill was created. Review and approve it in the accounting system."
+    if status is HandoffStatus.PENDING or status is HandoffStatus.IN_PROGRESS:
+        return "Sending the draft bill to the accounting system."
+    if code is None:
+        return "The handoff did not complete."
+    if code.startswith("INTERNAL_ERROR"):
+        return "Something unexpected stopped the handoff before anything was sent."
+    return EXPLANATIONS.get(code, "The handoff did not complete.")

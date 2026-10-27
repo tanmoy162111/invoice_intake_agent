@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import type { QueueStatus } from "../queue-params";
 import { getSessionToken } from "../session";
 import type { ExceptionCode } from "../labels";
-import type { InvoiceDetail, LoginOut, QueueOut, UploadOut } from "./types";
+import type { HandoffOut, InvoiceDetail, LoginOut, QueueOut, UploadOut } from "./types";
 
 const apiUrl = process.env.API_URL ?? "http://localhost:8000";
 
@@ -149,4 +149,23 @@ export function closeException(
 export async function revealBank(id: string): Promise<string> {
   const out = await post<{ account: string }>(`${invoicePath(id)}/bank/reveal`, {});
   return out.account;
+}
+
+/** Where this invoice stands with the accounting system. Never throws for a missing connection. */
+export async function getHandoff(id: string): Promise<HandoffOut> {
+  return json<HandoffOut>(await authed(`${invoicePath(id)}/handoff`));
+}
+
+/** Sends the approved invoice as a draft bill. Safe to repeat: the API never creates a second bill. */
+export function requestHandoff(id: string): Promise<HandoffOut> {
+  return post(`${invoicePath(id)}/handoff`, {});
+}
+
+export function reconcileHandoff(id: string): Promise<HandoffOut> {
+  return post(`${invoicePath(id)}/handoff/reconcile`, {});
+}
+
+/** A person checked the accounting system: the bill they found, or null if there is none. */
+export function resolveHandoff(id: string, billId: string | null): Promise<HandoffOut> {
+  return post(`${invoicePath(id)}/handoff/resolve`, { bill_id: billId });
 }
