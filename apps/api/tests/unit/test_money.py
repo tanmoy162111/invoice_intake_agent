@@ -141,3 +141,9 @@ def test_matching_symbols_are_accepted(text: str, currency: str, minor: int) -> 
 
 def test_comma_before_three_digits_is_thousands_for_two_decimal_currencies() -> None:
     assert parse_money("1,234", "USD") == Money(123400, "USD")
+
+
+@pytest.mark.parametrize("code", ["AUD", "NZD"])
+def test_australian_and_new_zealand_dollars_have_two_decimals(code: str) -> None:
+    assert parse_money("1,234.50", code) == Money(123450, code)
+    assert format_money(Money(123450, code)) == f"{code} 1,234.50"

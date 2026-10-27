@@ -8,7 +8,7 @@ from intake.core.numbers import parse_number
 
 # Minor-unit exponents for the currencies we support. Unknown currencies are rejected
 # rather than guessed (uncertain means human).
-CURRENCY_EXPONENT: dict[str, int] = {"USD": 2, "EUR": 2, "GBP": 2, "JPY": 0}
+CURRENCY_EXPONENT: dict[str, int] = {"USD": 2, "EUR": 2, "GBP": 2, "JPY": 0, "AUD": 2, "NZD": 2}
 
 # Symbols and the one currency each stands for. `$` and `¥` are also used by other currencies, so
 # `normalize_currency` treats them as ambiguous; here we only require the symbol to match the
