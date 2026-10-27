@@ -35,6 +35,22 @@ class Settings(BaseSettings):
     # and the login throttle then sees the web server as the only client.
     trusted_proxies: str = ""
 
+    # Accounting hand-off (Project B). Creates draft bills only; a person approves them in the
+    # accounting system. "mock" is an in-memory stand-in: no network, nothing real is contacted.
+    accounting_provider: Literal["mock", "xero"] = "mock"
+    # Fernet key for the stored OAuth tokens. Separate from the bank key. Empty: no connecting.
+    accounting_encryption_key: str = ""
+    # JSON: tax rate in basis points -> the accounting system's tax type, e.g. {"1000": "INPUT"}.
+    # A rate that is not listed stops the handoff; nothing is guessed.
+    accounting_tax_types: str = ""
+    xero_client_id: str = ""
+    xero_client_secret: str = ""
+    xero_redirect_uri: str = ""
+    # Broad or granular, depending on when the Xero app was created: set what the app was given.
+    xero_scopes: str = "offline_access accounting.transactions accounting.contacts.read"
+    # Only needed when the sign-in grants access to more than one organisation.
+    xero_organisation_id: str = ""
+
     # Ingestion limits (playbook §6.1)
     max_upload_bytes: int = 15 * 1024 * 1024
     max_pages: int = 10
