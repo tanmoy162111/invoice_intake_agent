@@ -14,6 +14,7 @@ EXPECTED_TABLES = {
     "tenants", "suppliers", "purchase_orders", "po_lines", "goods_receipts", "receipt_lines",
     "documents", "invoices", "invoice_lines", "field_extractions", "check_results",
     "exceptions", "review_actions", "audit_events", "llm_calls", "jobs", "eval_runs",
+    "accounting_connections", "supplier_accounting_links", "accounting_handoffs",
 }  # fmt: skip
 
 

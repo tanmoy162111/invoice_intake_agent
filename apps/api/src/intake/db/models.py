@@ -29,6 +29,7 @@ from intake.core.statuses import (
     ActorType,
     DocQuality,
     ExceptionStatus,
+    HandoffStatus,
     InvoiceStatus,
     JobStatus,
     ReviewAction,
@@ -337,3 +338,76 @@ class EvalRun(Base):
     prompt_version: Mapped[str] = mapped_column(Text, nullable=False)
     metrics: Mapped[dict[str, Any]] = mapped_column(Json, nullable=False)
     created_at: Mapped[datetime] = created_at()
+
+
+class AccountingConnection(Base):
+    """One accounting organisation a tenant has authorised. The tokens are kept encrypted
+    (Fernet, ACCOUNTING_ENCRYPTION_KEY) and are never returned by the API or written to a log."""
+
+    __tablename__ = "accounting_connections"
+    __table_args__ = (UniqueConstraint("tenant_id", "provider", "organisation_id"),)
+    id: Mapped[uuid.UUID] = uuid_pk()
+    tenant_id: Mapped[uuid.UUID] = tenant_fk()
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    organisation_id: Mapped[str] = mapped_column(Text, nullable=False)
+    organisation_name: Mapped[str | None] = mapped_column(Text)
+    tokens_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
+    scopes: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    created_at: Mapped[datetime] = created_at()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class SupplierAccountingLink(Base):
+    """A person-confirmed link from a supplier to its contact in an accounting organisation."""
+
+    __tablename__ = "supplier_accounting_links"
+    __table_args__ = (UniqueConstraint("tenant_id", "supplier_id", "provider", "organisation_id"),)
+    id: Mapped[uuid.UUID] = uuid_pk()
+    tenant_id: Mapped[uuid.UUID] = tenant_fk()
+    supplier_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("suppliers.id"), nullable=False, index=True
+    )
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    organisation_id: Mapped[str] = mapped_column(Text, nullable=False)
+    contact_id: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = created_at()
+
+
+class AccountingHandoff(Base):
+    """The durable record of handing one approved invoice to one accounting organisation as a
+    draft bill. The unique constraints are the guard against a second bill: whatever the retries,
+    double clicks or restarts, there is at most one row per invoice, provider and organisation."""
+
+    __tablename__ = "accounting_handoffs"
+    __table_args__ = (
+        one_of("status", HandoffStatus, "status"),
+        UniqueConstraint("tenant_id", "invoice_id", "provider", "organisation_id"),
+        UniqueConstraint("handoff_key"),
+    )
+    id: Mapped[uuid.UUID] = uuid_pk()
+    tenant_id: Mapped[uuid.UUID] = tenant_fk()
+    invoice_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("invoices.id"), nullable=False, index=True
+    )
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    organisation_id: Mapped[str] = mapped_column(Text, nullable=False)
+    handoff_key: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=HandoffStatus.PENDING.value, index=True
+    )
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    contact_id: Mapped[str | None] = mapped_column(Text)
+    external_bill_id: Mapped[str | None] = mapped_column(Text)
+    failure_code: Mapped[str | None] = mapped_column(Text)
+    manual_action: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    requested_by: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = created_at()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )

@@ -41,6 +41,8 @@ class Problem(StrEnum):
     TOTALS_MISMATCH = "TOTALS_MISMATCH"
     TAX_MAPPING_MISSING = "TAX_MAPPING_MISSING"
     TAX_MISMATCH = "TAX_MISMATCH"
+    BILL_ALREADY_EXISTS = "BILL_ALREADY_EXISTS"  # same supplier and number already in the books
+    WORKER_INTERRUPTED = "WORKER_INTERRUPTED"  # a handoff began and never reported back
     NOT_A_BILL = "NOT_A_BILL"  # a credit note or an empty invoice: not supported in v1
     # the supplier's contact
     CONTACT_NOT_FOUND = "CONTACT_NOT_FOUND"
