@@ -20,7 +20,9 @@ timeout can mean "created" or "not created".
 - **`unknown` is a real state.** After a possible write, nothing is retried; reconciliation or a person decides.
   Only failures the provider cannot have acted on (no connection, HTTP 429) are retried, three times at most.
 - **AUD and NZD** are added to the supported currencies (two decimals). This is a change to a shared rule; it only
-  adds currencies that were previously rejected.
+  adds currencies that were previously rejected. It is only half the job: a printed `$`, `A$` or `NZ$` is still
+  not read as AUD or NZD (a bare `$` means USD only), so most Australian and New Zealand invoices still go to a
+  person. Found when the AUD/NZD golden supplement was built; fixing it changes a rule and needs an evaluation.
 - **No automatic contact creation, no expense account, no tax guessing** in this version.
 - **Tokens** are Fernet-encrypted with their own key and refreshed under a row lock; one connection per tenant
   because refresh tokens rotate.

@@ -1,0 +1,55 @@
+{
+  "id": "inv-908",
+  "file": "IMG_10356.jpg",
+  "split": "golden",
+  "doc_quality": "photo",
+  "layout": "B",
+  "received_order": 908,
+  "readable": true,
+  "supplier_key": "kowhai",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Kowhai Stationery Limited",
+    "supplier_tax_id": null,
+    "supplier_address": "52 Queen Street, Auckland 1010",
+    "supplier_bank_account": "12-3042-0198557-00",
+    "invoice_number": "KS-70977",
+    "invoice_date": "2026-10-12",
+    "due_date": "2026-11-11",
+    "po_number": "PO-NZ907",
+    "currency": "NZD",
+    "subtotal_minor": 80020,
+    "tax_total_minor": 12003,
+    "total_minor": 92023,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "A3 drawing pads, pack of 10",
+      "sku": null,
+      "quantity": 8,
+      "unit_price_minor": 6890,
+      "amount_minor": 55120,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Exercise books, 80 page, pack of 20",
+      "sku": null,
+      "quantity": 10,
+      "unit_price_minor": 2490,
+      "amount_minor": 24900,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": [],
+  "supplement": "au_nz"
+}

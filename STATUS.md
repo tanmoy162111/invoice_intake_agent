@@ -27,7 +27,12 @@ recorded, Xero-shaped responses. **Never run against Xero or the Xero Demo Compa
 - No web screen for connecting Xero (the API routes exist). The web panel has not been exercised in a browser.
 - MYOB not built (extension point documented). Contacts are never created; expense account left blank.
 - Credit notes and zero-value invoices are not sent. Any signed-in reviewer can trigger a handoff (no roles).
-- `make eval` not run (asks first; costs money). AUD and NZD were added to the supported currencies.
+- AUD and NZD are accepted only as printed codes. A printed `$`, `A$` or `NZ$` is **not** read as AUD or NZD
+  (a bare `$` means USD only), so those invoices go to a person. Fixing it changes a shared rule and needs an
+  evaluation. Two strict `xfail` tests in `tests/unit/test_au_nz_golden.py` pin the desired behaviour.
+- `make eval` (paid) not run. The free recorded subset (3 of 60) gave identical accuracy with and without AUD/NZD.
+- `data/golden/au_nz/` holds 8 synthetic AUD/NZD golden invoices; the evaluation harness (M10, unmerged) does not
+  read them yet.
 
 ### Evidence
 See "Test report" below for commands and results.
@@ -48,6 +53,9 @@ set on the command line because the developer `.env` names a provider that only 
 | `cd apps/api && uv run pytest -q --cov=intake.core --cov-fail-under=90` | **1591 passed**, 0 failed, 2 warnings; `core/` coverage 99% (`core/accounting.py` 100%) |
 | `cd apps/web && pnpm lint && pnpm typecheck && pnpm test && pnpm build` | passed (51 web unit tests) |
 | `bash scripts/gen-api.sh` | API snapshot and types regenerated; the snapshot test passes |
+
+After the AUD/NZD golden supplement (branch `feat/au-nz-golden`): **1626 passed, 4 xfailed** (the 4 are the
+strict `$` / `A$` / `NZ$` tests that fail on purpose today), lint, format and mypy clean, `core/` coverage 99%.
 
 Baseline before Project B on `main`: 1127 unit + 218 integration tests, all passing. Project A and C
 regression suites are part of the 1591 and pass. The M10 evaluation harness lives on another branch and was

@@ -1,0 +1,64 @@
+{
+  "id": "inv-907",
+  "file": "Tui-TH-33907.pdf",
+  "split": "golden",
+  "doc_quality": "clean",
+  "layout": "A",
+  "received_order": 907,
+  "readable": true,
+  "supplier_key": "tui",
+  "supplier_on_file": true,
+  "header": {
+    "supplier_name": "Tui Hardware Supplies Limited",
+    "supplier_tax_id": "390-842-589",
+    "supplier_address": "7 Moorhouse Avenue, Christchurch 8011",
+    "supplier_bank_account": "06-0818-0245119-00",
+    "invoice_number": "TH-33907",
+    "invoice_date": "2026-10-05",
+    "due_date": "2026-11-04",
+    "po_number": "PO-NZ906",
+    "currency": "NZD",
+    "subtotal_minor": 153300,
+    "tax_total_minor": 22995,
+    "total_minor": 176295,
+    "payment_terms": "Net 30"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Cordless drill 18V",
+      "sku": null,
+      "quantity": 3,
+      "unit_price_minor": 23900,
+      "amount_minor": 71700,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 2,
+      "description": "Decking screws 100 x 4.5, 1kg",
+      "sku": null,
+      "quantity": 20,
+      "unit_price_minor": 2190,
+      "amount_minor": 43800,
+      "tax_rate_bp": null
+    },
+    {
+      "line_no": 3,
+      "description": "Aluminium step ladder 2.4m",
+      "sku": null,
+      "quantity": 2,
+      "unit_price_minor": 18900,
+      "amount_minor": 37800,
+      "tax_rate_bp": null
+    }
+  ],
+  "obscured_field": null,
+  "duplicate_of": null,
+  "expected": {
+    "must_raise": [],
+    "may_raise": [],
+    "should_clear": true
+  },
+  "planted": [],
+  "supplement": "au_nz"
+}

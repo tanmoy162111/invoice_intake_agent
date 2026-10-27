@@ -1,4 +1,4 @@
-.PHONY: e2e dev seed ingest-inbox docs-page generate check check-api check-web eval demo-reset gen-api demo-pipeline
+.PHONY: e2e dev seed ingest-inbox docs-page generate generate-au-nz check check-api check-web eval demo-reset gen-api demo-pipeline
 
 dev:            ## start everything (db, api, worker, web)
 	./scripts/ensure-env.sh
@@ -15,6 +15,9 @@ docs-page:      ## build build/handbook.html from docs/report.md and docs/manual
 
 generate:       ## regenerate the synthetic dataset (deterministic; existing golden files are kept)
 	PYTHONPATH=data uv run --project apps/api --group generator python -m generator.generate
+
+generate-au-nz: ## create the AUD/NZD golden supplement in data/golden/au_nz (create-only; never overwrites)
+	PYTHONPATH=data uv run --project apps/api --group generator python -m generator.au_nz
 
 check: check-api check-web   ## lint + types + tests
 

@@ -554,7 +554,7 @@ open it, press *Create draft bill*. Reload the page: the bill reference is still
 | `HANDOFF_IN_PROGRESS` | Another handoff is running | Wait for it |
 | `OUTCOME_UNKNOWN` | We could not tell if the bill was created | Look for it, or check and record (below) |
 | `INVOICE_NUMBER_MISSING`, `INVOICE_DATE_MISSING` | The invoice lacks it | Correct the field in the review screen |
-| `CURRENCY_UNSUPPORTED` | Missing or unsupported currency (AUD, NZD, USD, EUR, GBP, JPY are supported) | Correct the currency |
+| `CURRENCY_UNSUPPORTED` | Missing or unsupported currency. AUD, NZD, USD, EUR, GBP and JPY are accepted as printed codes; a printed `$`, `A$` or `NZ$` is not yet read as AUD or NZD, so those invoices go to a person | Correct the currency |
 | `NO_LINES`, `LINE_DESCRIPTION_MISSING`, `LINE_AMOUNT_MISSING` | A bill needs line items with a description and amount | Correct the invoice |
 | `TOTALS_MISSING`, `TOTALS_MISMATCH` | Subtotal, tax or total missing, or the lines do not add up | Correct the invoice; nothing is ever adjusted for you |
 | `TAX_MAPPING_MISSING` | A line's tax rate has no tax type in `ACCOUNTING_TAX_TYPES` | An administrator adds the mapping; it is never guessed |
@@ -640,6 +640,7 @@ refuses everything except `/health` and the login.
 | `make seed` | Load the demo master data; stage invoice files in `data/inbox/` (safe to repeat) |
 | `make ingest-inbox` | Feed `data/inbox/` through ingestion |
 | `make generate` | Rebuild the synthetic dataset (developers; existing golden files are kept) |
+| `make generate-au-nz` | Create the 8 synthetic AUD/NZD golden invoices in `data/golden/au_nz` (developers; create-only, never overwrites) |
 | `make check` | Run every automated quality check |
 | `make e2e` | The browser test: starts a scratch stack (needs Docker; first run `cd apps/web && pnpm exec playwright install chromium`), runs it with recorded model answers, and removes it. Costs nothing |
 | `make gen-api` | Refresh the web app's API types |

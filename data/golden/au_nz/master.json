@@ -1,0 +1,470 @@
+{
+  "tenant": {
+    "id": "00000000-0000-4000-8000-00000000d3a0",
+    "name": "Demo Tenant",
+    "settings": {
+      "approval_amount_limit_minor": 1000000,
+      "approval_amount_limits_minor": {
+        "EUR": 1000000,
+        "GBP": 1000000,
+        "AUD": 1000000,
+        "NZD": 1000000
+      },
+      "price_tolerance_pct": 2.0,
+      "qty_tolerance_pct": 0.0,
+      "auto_approve_cleared": false
+    }
+  },
+  "suppliers": [
+    {
+      "id": "1612da41-1046-5842-bb69-7c5c32aafc9f",
+      "key": "wattle",
+      "name": "Wattle & Co Office Supplies Pty Ltd",
+      "aliases": [
+        "Wattle Office"
+      ],
+      "tax_id": "44 934 937 193",
+      "bank_account": "BSB 062-000 / Acct 4471 2290",
+      "default_currency": "AUD",
+      "tax_rate_bp": 1000
+    },
+    {
+      "id": "84dc1a50-3b7d-53db-9c8d-25a1b79b5eda",
+      "key": "harbourline",
+      "name": "Harbourline Packaging Pty Ltd",
+      "aliases": [
+        "Harbourline"
+      ],
+      "tax_id": "64 788 801 182",
+      "bank_account": "BSB 033-120 / Acct 8812 6403",
+      "default_currency": "AUD",
+      "tax_rate_bp": 1000
+    },
+    {
+      "id": "b529722d-2d47-5a49-981d-efcf445545a7",
+      "key": "ironbark",
+      "name": "Ironbark Industrial Supplies Pty Ltd",
+      "aliases": [
+        "Ironbark Industrial"
+      ],
+      "tax_id": "48 757 092 402",
+      "bank_account": "BSB 124-001 / Acct 3305 7716",
+      "default_currency": "AUD",
+      "tax_rate_bp": 1000
+    },
+    {
+      "id": "ac78be41-b8aa-59dd-b5de-46eeac51f8fd",
+      "key": "kowhai",
+      "name": "Kowhai Stationery Limited",
+      "aliases": [
+        "Kowhai"
+      ],
+      "tax_id": "523-183-338",
+      "bank_account": "12-3042-0198557-00",
+      "default_currency": "NZD",
+      "tax_rate_bp": 1500
+    },
+    {
+      "id": "17457d6c-b1fe-50be-87e6-7fda3ed1b957",
+      "key": "pohutukawa",
+      "name": "Pohutukawa Cleaning Services Limited",
+      "aliases": [
+        "Pohutukawa Cleaning"
+      ],
+      "tax_id": "987-428-651",
+      "bank_account": "03-1502-0771342-00",
+      "default_currency": "NZD",
+      "tax_rate_bp": 1500
+    },
+    {
+      "id": "d291f055-fa10-514d-9400-c7acaae51569",
+      "key": "tui",
+      "name": "Tui Hardware Supplies Limited",
+      "aliases": [
+        "Tui Hardware"
+      ],
+      "tax_id": "390-842-589",
+      "bank_account": "06-0818-0245119-00",
+      "default_currency": "NZD",
+      "tax_rate_bp": 1500
+    }
+  ],
+  "purchase_orders": [
+    {
+      "id": "e18c56c6-9ba5-5dfe-b1a1-a056fe481c86",
+      "po_number": "PO-AU900",
+      "supplier_key": "wattle",
+      "currency": "AUD",
+      "total_minor": 86130,
+      "lines": [
+        {
+          "id": "e753ca5a-0d3b-5f52-abce-3bad740df6eb",
+          "line_no": 1,
+          "sku": "WC-A4-5",
+          "description": "A4 copy paper, 5 ream carton",
+          "qty": 12,
+          "unit_price_minor": 4950
+        },
+        {
+          "id": "45eca388-f8de-526c-827a-90644d8b2b82",
+          "line_no": 2,
+          "sku": "WC-PEN-B",
+          "description": "Ballpoint pens, box of 50",
+          "qty": 6,
+          "unit_price_minor": 1895
+        },
+        {
+          "id": "5d9f2345-c443-550e-bb7d-bdbd11a958fa",
+          "line_no": 3,
+          "sku": "WC-FLD-L",
+          "description": "Lever arch folders",
+          "qty": 24,
+          "unit_price_minor": 640
+        }
+      ],
+      "receipts": [
+        {
+          "id": "4771d704-5ae2-5ddd-9081-5b6ca87d8a57",
+          "received_at": "2026-09-04",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 12
+            },
+            {
+              "line_no": 2,
+              "qty_received": 6
+            },
+            {
+              "line_no": 3,
+              "qty_received": 24
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7c9ba95b-39e1-5134-8576-c021b573f3de",
+      "po_number": "PO-AU901",
+      "supplier_key": "harbourline",
+      "currency": "AUD",
+      "total_minor": 186600,
+      "lines": [
+        {
+          "id": "f489a290-e380-5e20-851e-7f9db8b420ec",
+          "line_no": 1,
+          "sku": "HP-BX-M",
+          "description": "Corrugated carton, medium",
+          "qty": 400,
+          "unit_price_minor": 285
+        },
+        {
+          "id": "4c767fcc-d8ac-5373-83d9-1114019905cd",
+          "line_no": 2,
+          "sku": "HP-TP-48",
+          "description": "Packing tape 48mm, 36 pack",
+          "qty": 10,
+          "unit_price_minor": 7260
+        }
+      ],
+      "receipts": [
+        {
+          "id": "96961b97-e5e9-5348-b238-3feffcb7a687",
+          "received_at": "2026-09-11",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 400
+            },
+            {
+              "line_no": 2,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "abae7c8f-c641-5614-9d1e-37792eef82d8",
+      "po_number": "PO-AU902",
+      "supplier_key": "ironbark",
+      "currency": "AUD",
+      "total_minor": 129600,
+      "lines": [
+        {
+          "id": "063adbbf-4f43-5842-89a5-153528b3a1d2",
+          "line_no": 1,
+          "sku": "IB-M10-50",
+          "description": "M10 x 50 bolts, box of 100",
+          "qty": 15,
+          "unit_price_minor": 3880
+        },
+        {
+          "id": "0e4a6221-2ddf-53ed-8d5e-5be72369a87b",
+          "line_no": 2,
+          "sku": "IB-WSH-10",
+          "description": "M10 washers, box of 500",
+          "qty": 8,
+          "unit_price_minor": 2475
+        },
+        {
+          "id": "e942b9aa-3f7b-54d1-86f6-443b5a69dd1d",
+          "line_no": 3,
+          "sku": "IB-GLV-L",
+          "description": "Cut-resistant gloves, large",
+          "qty": 40,
+          "unit_price_minor": 1290
+        }
+      ],
+      "receipts": [
+        {
+          "id": "c4de93ea-cafa-5566-b03e-222c08dd5272",
+          "received_at": "2026-09-18",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 15
+            },
+            {
+              "line_no": 2,
+              "qty_received": 8
+            },
+            {
+              "line_no": 3,
+              "qty_received": 40
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "53e1c8a4-dcb8-575d-bd81-9f98a41f057b",
+      "po_number": "PO-AU903",
+      "supplier_key": "wattle",
+      "currency": "AUD",
+      "total_minor": 105500,
+      "lines": [
+        {
+          "id": "473276fb-9c79-5e9e-88f5-111be8dc365d",
+          "line_no": 1,
+          "sku": "WC-TNR-12",
+          "description": "Toner cartridge, black",
+          "qty": 4,
+          "unit_price_minor": 18950
+        },
+        {
+          "id": "7b094930-aa7e-5f8a-8fa3-8dccbea425a7",
+          "line_no": 2,
+          "sku": "WC-A4-5",
+          "description": "A4 copy paper, 5 ream carton",
+          "qty": 6,
+          "unit_price_minor": 4950
+        }
+      ],
+      "receipts": [
+        {
+          "id": "973ada31-fdcf-53a9-a14b-2b106fba2be0",
+          "received_at": "2026-09-29",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 4
+            },
+            {
+              "line_no": 2,
+              "qty_received": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c653aba2-c6a1-523c-bb02-58273b9ced4d",
+      "po_number": "PO-NZ904",
+      "supplier_key": "kowhai",
+      "currency": "NZD",
+      "total_minor": 108925,
+      "lines": [
+        {
+          "id": "932f4fdc-74ca-5cc0-9f0c-b14f579aaec2",
+          "line_no": 1,
+          "sku": "KS-EXB-80",
+          "description": "Exercise books, 80 page, pack of 20",
+          "qty": 30,
+          "unit_price_minor": 2490
+        },
+        {
+          "id": "f38cd7ae-890b-5dd9-9603-6659acfa6c01",
+          "line_no": 2,
+          "sku": "KS-MKR-W",
+          "description": "Whiteboard markers, box of 12",
+          "qty": 15,
+          "unit_price_minor": 1850
+        },
+        {
+          "id": "8c26e3ef-ff8f-5b6e-b9b3-b49cd3cb2744",
+          "line_no": 3,
+          "sku": "KS-STP-26",
+          "description": "Staples 26/6, 20 boxes",
+          "qty": 5,
+          "unit_price_minor": 1295
+        }
+      ],
+      "receipts": [
+        {
+          "id": "7ff84087-ad76-54fc-8aaa-400e37d23775",
+          "received_at": "2026-09-07",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 30
+            },
+            {
+              "line_no": 2,
+              "qty_received": 15
+            },
+            {
+              "line_no": 3,
+              "qty_received": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "0144d752-f220-535a-8f30-f4ae0cb6882d",
+      "po_number": "PO-NZ905",
+      "supplier_key": "pohutukawa",
+      "currency": "NZD",
+      "total_minor": 129500,
+      "lines": [
+        {
+          "id": "485f3741-ab35-5672-983f-5a99e35c5ef3",
+          "line_no": 1,
+          "sku": "PC-WKL",
+          "description": "Weekly office clean, per visit",
+          "qty": 4,
+          "unit_price_minor": 21500
+        },
+        {
+          "id": "29a2ffb1-a7b0-5e81-bc49-74167a54bf30",
+          "line_no": 2,
+          "sku": "PC-CAR",
+          "description": "Carpet steam clean, per room",
+          "qty": 3,
+          "unit_price_minor": 14500
+        }
+      ],
+      "receipts": [
+        {
+          "id": "88ccc96d-d530-5eef-8603-1432a973c80f",
+          "received_at": "2026-09-25",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 4
+            },
+            {
+              "line_no": 2,
+              "qty_received": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4ddc3bff-eff0-5641-8a73-2abbe03910f3",
+      "po_number": "PO-NZ906",
+      "supplier_key": "tui",
+      "currency": "NZD",
+      "total_minor": 153300,
+      "lines": [
+        {
+          "id": "3f8868d3-016d-55b4-9c08-f83b3f2dc6b2",
+          "line_no": 1,
+          "sku": "TH-DRL-18",
+          "description": "Cordless drill 18V",
+          "qty": 3,
+          "unit_price_minor": 23900
+        },
+        {
+          "id": "4a514297-1583-5efa-9c29-34e69b8f5bd9",
+          "line_no": 2,
+          "sku": "TH-SCR-100",
+          "description": "Decking screws 100 x 4.5, 1kg",
+          "qty": 20,
+          "unit_price_minor": 2190
+        },
+        {
+          "id": "9111428c-02d5-54f9-afe3-d31ef1bc158c",
+          "line_no": 3,
+          "sku": "TH-LDR-24",
+          "description": "Aluminium step ladder 2.4m",
+          "qty": 2,
+          "unit_price_minor": 18900
+        }
+      ],
+      "receipts": [
+        {
+          "id": "050c870e-7d4e-501b-8576-71d0a3c14d1e",
+          "received_at": "2026-10-02",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 3
+            },
+            {
+              "line_no": 2,
+              "qty_received": 20
+            },
+            {
+              "line_no": 3,
+              "qty_received": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bc48dcdc-f329-573e-84eb-5b219087335a",
+      "po_number": "PO-NZ907",
+      "supplier_key": "kowhai",
+      "currency": "NZD",
+      "total_minor": 80020,
+      "lines": [
+        {
+          "id": "36d622f8-73c2-564a-bfeb-21e60e61fc2a",
+          "line_no": 1,
+          "sku": "KS-A3-PD",
+          "description": "A3 drawing pads, pack of 10",
+          "qty": 8,
+          "unit_price_minor": 6890
+        },
+        {
+          "id": "3cd54a64-bf53-5c49-8197-2d5fc4a49faf",
+          "line_no": 2,
+          "sku": "KS-EXB-80",
+          "description": "Exercise books, 80 page, pack of 20",
+          "qty": 10,
+          "unit_price_minor": 2490
+        }
+      ],
+      "receipts": [
+        {
+          "id": "6b1aa88c-3c78-5574-b231-feb900e8fdd2",
+          "received_at": "2026-10-09",
+          "lines": [
+            {
+              "line_no": 1,
+              "qty_received": 8
+            },
+            {
+              "line_no": 2,
+              "qty_received": 10
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
