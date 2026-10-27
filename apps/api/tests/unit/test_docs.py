@@ -185,3 +185,19 @@ def test_manual_describes_every_web_page() -> None:
     for route in routes - {"/"}:
         shown = route.replace("[id]", "<id>")
         assert shown in section or shown in MANUAL, f"{route} is not described in the manual"
+
+
+def test_manual_explains_every_accounting_handoff_code() -> None:
+    from intake.core.accounting import Failure, Problem
+
+    section = MANUAL.split("### 4.17")[1].split("## 5. Reference")[0]
+    for code in [*(p.value for p in Problem), *(f.value for f in Failure)]:
+        assert f"`{code}`" in section, f"{code} is not explained in manual section 4.17"
+    assert "Creates draft bills only. A human must review and approve bills" in section
+
+
+@pytest.mark.parametrize(
+    "name", [n for n in Settings.model_fields if n.startswith(("accounting_", "xero_"))]
+)
+def test_manual_lists_every_accounting_setting(name: str) -> None:
+    assert name.upper() in MANUAL, f"{name.upper()} is missing from manual section 5.4"

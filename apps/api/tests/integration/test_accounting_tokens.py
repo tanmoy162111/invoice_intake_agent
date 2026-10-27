@@ -20,7 +20,7 @@ NOW = 1_800_000_000.0
 
 def connect(engine: Engine, vault: TokenVault, tokens: Tokens) -> uuid.UUID:
     with Session(engine) as s:
-        t = Tenant(name="tok")
+        t = Tenant(name=f"acct-test-tok-{uuid.uuid4().hex[:6]}")
         s.add(t)
         s.flush()
         s.add(

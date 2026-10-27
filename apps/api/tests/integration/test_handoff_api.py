@@ -410,3 +410,16 @@ def test_no_request_to_the_provider_ever_approves_or_pays(
         assert "payment" not in low and "approve" not in low and "authorised" not in low
         if q.method == "PUT" and q.url.path.endswith("/Invoices"):
             assert json.loads(q.content)["Invoices"][0]["Status"] == "DRAFT"
+
+
+def test_the_offline_mock_is_never_connected_in_production(
+    engine: Engine, migrated_db_url: str
+) -> None:
+    case = Case(engine)
+    app = create_app(settings_for(migrated_db_url, str(case.tenant), app_env="production"))
+    with TestClient(app) as client:
+        api = Api(client)
+        assert api.get("/accounting/connection").json()["connected"] is False
+        r = api.post(url(case))
+    assert r.status_code == 409 and r.json()["detail"]["code"] == "NOT_CONNECTED"
+    assert case.mock.create_calls == 0 and case.row_count() == 0

@@ -63,6 +63,8 @@ def connect(
 ) -> Connected | None:
     """The tenant's connector, or None when no accounting system is connected."""
     if settings.accounting_provider == "mock":
+        if settings.app_env == "production":
+            return None  # a stand-in would report bills that do not exist
         return Connected(mock, mock.organisation_id, "Offline demo (nothing is sent anywhere)")
     row = xero_connection(session, settings, tenant_id)
     if row is None or not settings.accounting_encryption_key or not settings.xero_client_id:

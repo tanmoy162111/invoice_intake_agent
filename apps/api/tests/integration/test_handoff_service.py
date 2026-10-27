@@ -42,7 +42,7 @@ class Case:
     def __init__(self, engine: Engine, status: InvoiceStatus = InvoiceStatus.APPROVED) -> None:
         self.engine = engine
         with Session(engine) as s:
-            tenant = Tenant(name=f"t-{uuid.uuid4().hex[:6]}")
+            tenant = Tenant(name=f"acct-test-{uuid.uuid4().hex[:6]}")
             s.add(tenant)
             s.flush()
             sup = Supplier(
