@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv sync --frozen
+      - run: uv sync --frozen --group generator  # the dataset tests import the generator (numpy, reportlab)
       - run: uv run ruff check . ../../data/generator
       - run: uv run ruff format --check . ../../data/generator
       - run: uv run mypy
