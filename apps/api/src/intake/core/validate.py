@@ -19,7 +19,11 @@ from rapidfuzz import fuzz
 from intake.core.money import line_amount_minor
 
 RULE_VERSION = "v1"
-_SYMBOL_CURRENCY = {"$": "USD", "€": "EUR", "£": "GBP", "¥": "JPY"}
+# The currencies a printed symbol can mean. A bare `$` is any of the dollars.
+_SYMBOL_CURRENCIES = {
+    "$": {"USD", "AUD", "NZD"}, "€": {"EUR"}, "£": {"GBP"}, "¥": {"JPY"},
+    "A$": {"AUD"}, "AU$": {"AUD"}, "NZ$": {"NZD"},
+}  # fmt: skip
 
 
 class CheckCode(StrEnum):
@@ -352,9 +356,9 @@ def _check_currency(f: InvoiceFacts, sup: SupplierRecord | None) -> CheckResult:
         )
         return CheckResult(CheckCode.CURRENCY_MISMATCH, outcome, details)
     printed = (f.printed_currency or "").strip()
-    if printed in _SYMBOL_CURRENCY:  # a symbol that could not be settled on its own
+    if printed in _SYMBOL_CURRENCIES:  # a symbol that could not be settled on its own
         outcome = (
-            Outcome.PASS if _SYMBOL_CURRENCY[printed] == sup.default_currency else Outcome.FAIL
+            Outcome.PASS if sup.default_currency in _SYMBOL_CURRENCIES[printed] else Outcome.FAIL
         )
     elif re.fullmatch(r"[A-Za-z]{3}", printed):  # a code we do not support
         outcome = Outcome.PASS if printed.upper() == sup.default_currency else Outcome.FAIL

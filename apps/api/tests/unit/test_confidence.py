@@ -232,3 +232,26 @@ def test_number_in_text_absent(text: str) -> None:
 def test_number_in_text_fraction() -> None:
     assert number_in_text(D("2.5"), "Qty 2,5")
     assert number_in_text(D("2.5"), "Qty 2.50")
+
+
+@pytest.mark.parametrize(
+    ("code", "text"),
+    [("AUD", "Total A$1,105.92"), ("AUD", "Total AU$ 9.00"), ("NZD", "Total NZ$1,105.92"),
+     ("AUD", "Total (A$9.00) and $9.00")],
+)  # fmt: skip
+def test_a_prefixed_dollar_supports_its_own_currency(code: str, text: str) -> None:
+    assert currency_agreement(code, text) is True
+
+
+@pytest.mark.parametrize(("code", "text"), [("AUD", "Total $1,105.92"), ("NZD", "Total $1,105.92")])
+def test_a_bare_dollar_is_not_evidence_for_aud_or_nzd_either(code: str, text: str) -> None:
+    assert currency_agreement(code, text) is None
+
+
+@pytest.mark.parametrize(
+    ("code", "text"),
+    [("NZD", "Total A$9.00"), ("AUD", "Total NZ$9.00"), ("AUD", "Total CA$9.00"),
+     ("AUD", "Total US$9.00"), ("NZD", "Total 9,00 EUR")],
+)  # fmt: skip
+def test_another_dollar_contradicts_not_supports(code: str, text: str) -> None:
+    assert currency_agreement(code, text) is False

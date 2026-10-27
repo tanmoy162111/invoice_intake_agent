@@ -177,3 +177,38 @@ def test_a_tax_rate_below_one_with_a_percent_sign_is_a_percentage() -> None:
     assert parse_tax_rate("0,075%") == Decimal("0.075")
     assert parse_tax_rate("0%") == Decimal("0")
     assert parse_tax_rate("0") == Decimal("0")
+
+
+# ---- Australian and New Zealand dollars -----------------------------------------------------
+
+
+@pytest.mark.parametrize("hint", ["USD", "AUD", "NZD"])
+def test_a_bare_dollar_sign_is_the_suppliers_own_dollar(hint: str) -> None:
+    assert normalize_currency("$", hint=hint) == hint
+
+
+@pytest.mark.parametrize("hint", [None, "EUR", "GBP", "JPY", "CAD", "CHF"])
+def test_a_bare_dollar_sign_is_still_ambiguous_without_a_dollar_supplier(hint: str | None) -> None:
+    with pytest.raises(AmbiguousCurrencyError):
+        normalize_currency("$", hint=hint)
+
+
+@pytest.mark.parametrize("hint", ["AUD", "NZD", "USD", None])
+def test_a_yen_sign_is_never_a_dollar(hint: str | None) -> None:
+    with pytest.raises(AmbiguousCurrencyError):
+        normalize_currency("¥", hint=hint)
+
+
+@pytest.mark.parametrize(
+    ("text", "code"),
+    [("A$", "AUD"), ("AU$", "AUD"), ("NZ$", "NZD"), ("AUD", "AUD"), ("nzd", "NZD")],
+)
+def test_prefixed_dollars_and_codes_name_their_currency(text: str, code: str) -> None:
+    assert normalize_currency(text) == code
+    assert normalize_currency(text, hint="EUR") == code  # the printed symbol beats the supplier's
+
+
+@pytest.mark.parametrize("text", ["CA$", "US$", "S$", "HK$", "NZ", "A $"])
+def test_other_dollar_symbols_are_unsupported_not_guessed(text: str) -> None:
+    with pytest.raises(ValueError):
+        normalize_currency(text, hint="AUD")

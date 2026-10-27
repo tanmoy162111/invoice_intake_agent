@@ -554,7 +554,7 @@ open it, press *Create draft bill*. Reload the page: the bill reference is still
 | `HANDOFF_IN_PROGRESS` | Another handoff is running | Wait for it |
 | `OUTCOME_UNKNOWN` | We could not tell if the bill was created | Look for it, or check and record (below) |
 | `INVOICE_NUMBER_MISSING`, `INVOICE_DATE_MISSING` | The invoice lacks it | Correct the field in the review screen |
-| `CURRENCY_UNSUPPORTED` | Missing or unsupported currency. AUD, NZD, USD, EUR, GBP and JPY are accepted as printed codes; a printed `$`, `A$` or `NZ$` is not yet read as AUD or NZD, so those invoices go to a person | Correct the currency |
+| `CURRENCY_UNSUPPORTED` | Missing or unsupported currency. AUD, NZD, USD, EUR, GBP and JPY are supported (a printed `$` counts as the supplier's own dollar; `A$` and `NZ$` name theirs) | Correct the currency |
 | `NO_LINES`, `LINE_DESCRIPTION_MISSING`, `LINE_AMOUNT_MISSING` | A bill needs line items with a description and amount | Correct the invoice |
 | `TOTALS_MISSING`, `TOTALS_MISMATCH` | Subtotal, tax or total missing, or the lines do not add up | Correct the invoice; nothing is ever adjusted for you |
 | `TAX_MAPPING_MISSING` | A line's tax rate has no tax type in `ACCOUNTING_TAX_TYPES` | An administrator adds the mapping; it is never guessed |
@@ -729,8 +729,8 @@ Shown in `signals.normalize_error` of `field_extractions`. Confidence is 0 for a
 |---|---|
 | `AMBIGUOUS_DATE` | Could be day-first or month-first (`03/04/2026`). Dotted dates (`07.06.2026`) are read day-first |
 | `AMBIGUOUS_NUMBER` | Could be a thousands mark or a decimal mark (`1.200`, `1.234` as an amount) |
-| `AMBIGUOUS_CURRENCY` | A bare `$` or `¥`, and the supplier's usual currency does not settle it |
-| `UNSUPPORTED_CURRENCY` | A currency we do not handle yet (supported: USD, EUR, GBP, JPY) |
+| `AMBIGUOUS_CURRENCY` | A bare `$` or `¥`, and the supplier's usual currency does not settle it. A `$` is settled by a USD, AUD or NZD supplier; `A$` and `NZ$` need no help |
+| `UNSUPPORTED_CURRENCY` | A currency we do not handle yet (supported: USD, EUR, GBP, JPY, AUD, NZD; `CA$`, `US$` and other dollars are not) |
 | `NO_CURRENCY` | An amount was printed but the currency is unknown, so the amount was not read |
 | `UNPARSEABLE` | Not a date or number we can read (`about a thousand`, `1.234.56`, a currency that does not match) |
 

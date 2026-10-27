@@ -2,9 +2,7 @@
 generator, the arithmetic and tax numbers are right, each document prints money the way its answer
 key says, and the main golden set is not touched.
 
-Two strict `xfail` tests state what the system must do with a printed `$` for these currencies.
-They fail today on purpose (the system routes such invoices to a person) and flip to a failure the
-day the behaviour is fixed, so the fix cannot land without removing them."""
+The last tests state what the system does with a printed `$`, `A$` and `NZ$`."""
 
 import json
 from decimal import Decimal
@@ -187,7 +185,7 @@ def test_generating_again_changes_nothing(tmp_path: Path) -> None:
     assert before == after
 
 
-# ---- what the system does with them today ---------------------------------------------------
+# ---- what the system does with them ---------------------------------------------------
 
 
 @pytest.mark.parametrize("code", ["AUD", "NZD"])
@@ -197,14 +195,12 @@ def test_a_printed_code_works(code: str) -> None:
     assert parse_money("1,234.50", code) == Money(123450, code)
 
 
-@pytest.mark.xfail(strict=True, reason="a bare $ is only ever read as USD (docs/connectors.md)")
 @pytest.mark.parametrize("code", ["AUD", "NZD"])
 def test_a_dollar_sign_is_read_as_the_suppliers_own_dollar(code: str) -> None:
     assert normalize_currency("$", hint=code) == code
     assert parse_money("$1,234.50", code) == Money(123450, code)
 
 
-@pytest.mark.xfail(strict=True, reason="A$ and NZ$ are not recognised symbols yet")
 @pytest.mark.parametrize(("text", "code"), [("A$", "AUD"), ("NZ$", "NZD")])
 def test_a_prefixed_dollar_sign_names_its_currency(text: str, code: str) -> None:
     assert normalize_currency(text) == code

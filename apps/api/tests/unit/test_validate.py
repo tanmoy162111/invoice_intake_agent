@@ -365,6 +365,25 @@ def test_currency_that_differs_fails_with_both_currencies() -> None:
     assert (r.details["invoice_currency"], r.details["supplier_currency"]) == ("EUR", "USD")
 
 
+@pytest.mark.parametrize(
+    ("printed", "supplier_currency", "outcome"),
+    [
+        ("$", "AUD", Outcome.PASS), ("$", "NZD", Outcome.PASS), ("$", "USD", Outcome.PASS),
+        ("$", "EUR", Outcome.FAIL), ("$", "GBP", Outcome.FAIL), ("$", "JPY", Outcome.FAIL),
+        ("A$", "AUD", Outcome.PASS), ("A$", "NZD", Outcome.FAIL), ("A$", "USD", Outcome.FAIL),
+        ("NZ$", "NZD", Outcome.PASS), ("NZ$", "AUD", Outcome.FAIL),
+    ],
+)  # fmt: skip
+def test_a_dollar_symbol_agrees_with_any_dollar_supplier_and_no_other(
+    printed: str, supplier_currency: str, outcome: Outcome
+) -> None:
+    supplier = replace(ACME, default_currency=supplier_currency)
+    _, results = validate(
+        facts(currency=None, printed_currency=printed), [supplier], ValidationSettings(), TODAY
+    )
+    assert {x.code: x for x in results}[CheckCode.CURRENCY_MISMATCH].outcome is outcome
+
+
 def test_an_unsettled_symbol_is_compared_with_the_suppliers_currency() -> None:
     eur_supplier = replace(ACME, default_currency="EUR")
     _, results = validate(

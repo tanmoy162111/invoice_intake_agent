@@ -1107,9 +1107,9 @@ and PKCE checks; and source guards that nothing approves, pays or voids and the 
 - Expense accounts are blank and tax types come from configuration; contacts are never created automatically.
 - Credit notes and zero-value invoices are not sent. No roles: any signed-in reviewer can trigger a handoff.
 - MYOB is not built. The web screen for connecting Xero is not built (the API calls are).
-- AUD and NZD are accepted as printed codes only. A `$`, `A$` or `NZ$` is not yet read as AUD or NZD, so those
-  invoices go to a person. The AUD/NZD golden supplement (`data/golden/au_nz`) measures this once the evaluation
-  harness (M10) is pointed at it.
+- A printed `$` is read as the supplier's own dollar (USD, AUD, NZD) and `A$` / `NZ$` name theirs (ADR 0013),
+  proven with a perfect-reader answer on the AUD/NZD golden supplement (`data/golden/au_nz`). A real model's reading
+  of those documents is not measured until the evaluation harness (M10) is pointed at them and run.
 - The free recorded evaluation subset gave identical accuracy with and without the currency addition; the full
   paid evaluation was not run.
 
